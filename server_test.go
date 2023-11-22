@@ -1,9 +1,12 @@
-package songvote
+package songvote_test
 
 import (
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
+
+	"github.com/et-codes/songvote"
 )
 
 func TestGetSongs(t *testing.T) {
@@ -11,13 +14,18 @@ func TestGetSongs(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodGet, "/songs/would", nil)
 		response := httptest.NewRecorder()
 
-		SongVoteServer(response, request)
+		songvote.Server(response, request)
 
 		got := response.Body.String()
 		want := "Would?"
 
-		if got != want {
-			t.Errorf("got %q, want %q", got, want)
-		}
+		assertEqual(t, got, want)
 	})
+}
+
+func assertEqual(t testing.TB, got, want any) {
+	t.Helper()
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
 }

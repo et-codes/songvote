@@ -5,6 +5,6 @@ import (
 	"net/http"
 )
 
-func SongVoteServer(w http.ResponseWriter, r *http.Request) {
+func Server(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Would?")
 }
