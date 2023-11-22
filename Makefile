@@ -2,13 +2,13 @@ BINARY = bin/songvote
 SOURCE = cmd/songvote
 
 lint:
-	golangci-lint run
+	@golangci-lint run
 
 build: lint
-	go build -o ${BINARY}	${SOURCE}/*.go
+	@go build -o ${BINARY}	${SOURCE}/*.go
 
 run: build
-	./${BINARY}
+	@./${BINARY}
 
 test: lint
-	go test
+	@go test
