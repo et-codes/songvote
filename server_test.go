@@ -1,31 +1,61 @@
 package songvote_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
+	"net/url"
 	"testing"
 
 	"github.com/et-codes/songvote"
 )
 
+type StubSongStore struct {
+	songs map[string]string
+}
+
+func (s StubSongStore) GetSong(name string) string {
+	return s.songs[name]
+}
+
 func TestGetSongs(t *testing.T) {
-	t.Run("returns a song", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodGet, "/songs/would", nil)
+	store := StubSongStore{
+		map[string]string{
+			"would": "Would",
+			"zero":  "Zero",
+		},
+	}
+	server := songvote.NewServer(store)
+
+	t.Run("returns the song Would", func(t *testing.T) {
+		request := newGetSongRequest("Would")
 		response := httptest.NewRecorder()
 
-		songvote.Server(response, request)
+		server.ServeHTTP(response, request)
 
-		got := response.Body.String()
-		want := "Would?"
+		assertResponseBody(t, response.Body.String(), "Would")
+	})
 
-		assertEqual(t, got, want)
+	t.Run("returns the song Zero", func(t *testing.T) {
+		request := newGetSongRequest("Zero")
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertResponseBody(t, response.Body.String(), "Zero")
 	})
 }
 
-func assertEqual(t testing.TB, got, want any) {
+func assertResponseBody(t testing.TB, got, want string) {
 	t.Helper()
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("got %v, want %v", got, want)
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
 	}
+}
+
+func newGetSongRequest(name string) *http.Request {
+	urlString := fmt.Sprintf("/songs/%s", name)
+	url := url.PathEscape(urlString)
+	request, _ := http.NewRequest(http.MethodGet, url, nil)
+	return request
 }

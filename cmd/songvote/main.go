@@ -12,6 +12,6 @@ const (
 )
 
 func main() {
-	handler := http.HandlerFunc(songvote.Server)
-	log.Fatal(http.ListenAndServe(port, handler))
+	server := &songvote.Server{}
+	log.Fatal(http.ListenAndServe(port, server))
 }
