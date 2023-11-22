@@ -23,5 +23,11 @@ func NewServer(store SongStore) *Server {
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	song := strings.TrimPrefix(r.URL.Path, "/songs/")
 	song = strings.ToLower(song)
-	fmt.Fprint(w, s.store.GetSong(song))
+
+	songName := s.store.GetSong(song)
+	if songName == "" {
+		w.WriteHeader(http.StatusNotFound)
+	}
+
+	fmt.Fprint(w, songName)
 }
