@@ -15,8 +15,7 @@ func (i *InMemorySongStore) GetSong(id int) Song {
 }
 
 func (i *InMemorySongStore) AddSong(song Song) {
-	_, err := i.findSongByID(song.ID)
-	if err == nil {
+	if !i.songExists(song) {
 		i.songs = append(i.songs, song)
 	}
 }
@@ -28,4 +27,13 @@ func (i *InMemorySongStore) findSongByID(id int) (Song, error) {
 		}
 	}
 	return Song{}, fmt.Errorf("song ID %d not found", id)
+}
+
+func (i *InMemorySongStore) songExists(song Song) bool {
+	for _, s := range i.songs {
+		if song.Equals(s) {
+			return true
+		}
+	}
+	return false
 }

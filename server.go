@@ -67,7 +67,6 @@ func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 		log.Printf("could not read message body %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	log.Printf("adding song %+v\n", songToAdd)
 
 	s.store.AddSong(songToAdd)
 	w.WriteHeader(http.StatusAccepted)
