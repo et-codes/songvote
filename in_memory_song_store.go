@@ -6,6 +6,12 @@ type InMemorySongStore struct {
 	songs []Song
 }
 
+func NewInMemorySongStore() *InMemorySongStore {
+	return &InMemorySongStore{
+		songs: []Song{},
+	}
+}
+
 func (i *InMemorySongStore) GetSong(id int) Song {
 	song, err := i.findSongByID(id)
 	if err != nil {
