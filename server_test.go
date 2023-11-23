@@ -44,6 +44,23 @@ func TestGetSongs(t *testing.T) {
 	}
 	server := songvote.NewServer(&store)
 
+	t.Run("returns 405 when wrong method used", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPost, "/songs", nil)
+		response := httptest.NewRecorder()
+		server.ServeHTTP(response, request)
+		assertStatus(t, response.Code, http.StatusMethodNotAllowed)
+
+		request, _ = http.NewRequest(http.MethodPost, "/song/0", nil)
+		response = httptest.NewRecorder()
+		server.ServeHTTP(response, request)
+		assertStatus(t, response.Code, http.StatusMethodNotAllowed)
+
+		request, _ = http.NewRequest(http.MethodGet, "/song", nil)
+		response = httptest.NewRecorder()
+		server.ServeHTTP(response, request)
+		assertStatus(t, response.Code, http.StatusMethodNotAllowed)
+	})
+
 	t.Run("can get all songs", func(t *testing.T) {
 		request := newGetSongsRequest()
 		response := httptest.NewRecorder()
