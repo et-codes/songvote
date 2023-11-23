@@ -1,6 +1,7 @@
 package songvote_test
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -11,11 +12,17 @@ import (
 )
 
 type StubSongStore struct {
-	songs map[string]string
+	songs     map[string]string
+	postCalls []string
 }
 
 func (s *StubSongStore) GetSong(name string) string {
-	return s.songs[name]
+	songName := s.songs[name]
+	return songName
+}
+
+func (s *StubSongStore) AddSong(name string) {
+	s.postCalls = append(s.postCalls, name)
 }
 
 func TestGetSongs(t *testing.T) {
@@ -24,6 +31,7 @@ func TestGetSongs(t *testing.T) {
 			"would": "Would",
 			"zero":  "Zero",
 		},
+		nil,
 	}
 	server := songvote.NewServer(&store)
 
@@ -57,12 +65,45 @@ func TestGetSongs(t *testing.T) {
 	})
 }
 
+func TestStoreSongs(t *testing.T) {
+	store := StubSongStore{
+		map[string]string{},
+		[]string{},
+	}
+	server := songvote.NewServer(&store)
+
+	t.Run("stores song when POST", func(t *testing.T) {
+		newSong := "Creep"
+
+		request := newPostSongRequest(newSong)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Code, http.StatusAccepted)
+
+		if len(store.postCalls) != 1 {
+			t.Errorf("got %d calls to AddSong, want %d", len(store.postCalls), 1)
+		}
+
+		if store.postCalls[0] != newSong {
+			t.Errorf("did not store correct song, got %q, want %q", store.postCalls[0], newSong)
+		}
+	})
+}
+
 // Helper methods
 
 func newGetSongRequest(name string) *http.Request {
 	urlString := fmt.Sprintf("/songs/%s", name)
 	url := url.PathEscape(urlString)
 	request, _ := http.NewRequest(http.MethodGet, url, nil)
+	return request
+}
+
+func newPostSongRequest(name string) *http.Request {
+	bodyReader := bytes.NewReader([]byte(name))
+	request, _ := http.NewRequest(http.MethodPost, "/songs", bodyReader)
 	return request
 }
 
