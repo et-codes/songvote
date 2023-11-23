@@ -5,12 +5,13 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
 type SongStore interface {
-	GetSong(name string) string
-	AddSong(name string)
+	GetSong(id int) Song
+	AddSong(song Song)
 }
 
 type Server struct {
@@ -33,24 +34,41 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
-	song := strings.ToLower(strings.TrimPrefix(r.URL.Path, "/songs/"))
+	idString := strings.TrimPrefix(r.URL.Path, "/songs/")
+	id, err := strconv.Atoi(idString)
+	if err != nil {
+		log.Printf("problem parsing song ID from %s, %v", idString, err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 
-	songName := s.store.GetSong(song)
+	song := s.store.GetSong(id)
 
-	if songName == "" {
+	if song.Name == "" {
 		w.WriteHeader(http.StatusNotFound)
 	}
 
-	fmt.Fprint(w, songName)
+	json, err := song.Marshal()
+	if err != nil {
+		log.Printf("problem marshalling song to JSON, %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	fmt.Fprint(w, json)
 }
 
 func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
-	song, err := io.ReadAll(r.Body)
+	json, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Fatalf("could not read message body %v", err)
+		log.Printf("could not read message body %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
-	log.Printf("adding song %s\n", song)
 
-	s.store.AddSong(string(song))
+	songToAdd := Song{}
+	if err := UnmarshalSong(string(json), &songToAdd); err != nil {
+		log.Printf("could not read message body %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	log.Printf("adding song %+v\n", songToAdd)
+
+	s.store.AddSong(songToAdd)
 	w.WriteHeader(http.StatusAccepted)
 }

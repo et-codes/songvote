@@ -3,9 +3,9 @@ package songvote_test
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"reflect"
 	"testing"
 
@@ -13,51 +13,62 @@ import (
 )
 
 type StubSongStore struct {
-	songs     map[string]string
-	postCalls []string
+	songs     []songvote.Song
+	postCalls []songvote.Song
 }
 
-func (s *StubSongStore) GetSong(name string) string {
-	songName := s.songs[name]
-	return songName
+func (s *StubSongStore) GetSong(id int) songvote.Song {
+	for _, s := range s.songs {
+		if s.ID == id {
+			return s
+		}
+	}
+	return songvote.Song{}
 }
 
-func (s *StubSongStore) AddSong(name string) {
-	s.postCalls = append(s.postCalls, name)
+func (s *StubSongStore) AddSong(song songvote.Song) {
+	s.postCalls = append(s.postCalls, song)
 }
 
 func TestGetSongs(t *testing.T) {
 	store := StubSongStore{
-		map[string]string{
-			"would": "Would",
-			"zero":  "Zero",
+		songs: []songvote.Song{
+			{ID: 0, Name: "Would?", Artist: "Alice in Chains"},
+			{ID: 1, Name: "Zero", Artist: "The Smashing Pumpkins"},
 		},
-		nil,
 	}
 	server := songvote.NewServer(&store)
 
-	t.Run("returns the song Would", func(t *testing.T) {
-		request := newGetSongRequest("Would")
+	t.Run("returns the song Would?", func(t *testing.T) {
+		request := newGetSongRequest(0)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
-
 		assertStatus(t, response.Code, http.StatusOK)
-		assertResponseBody(t, response.Body.String(), "Would")
+
+		want, err := store.songs[0].Marshal()
+		assertNoError(t, err)
+
+		got := response.Body.String()
+		assertResponseBody(t, got, want)
 	})
 
 	t.Run("returns the song Zero", func(t *testing.T) {
-		request := newGetSongRequest("Zero")
+		request := newGetSongRequest(1)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
-
 		assertStatus(t, response.Code, http.StatusOK)
-		assertResponseBody(t, response.Body.String(), "Zero")
+
+		want, err := store.songs[1].Marshal()
+		assertNoError(t, err)
+
+		got := response.Body.String()
+		assertResponseBody(t, got, want)
 	})
 
 	t.Run("returns 404 if song not found", func(t *testing.T) {
-		request := newGetSongRequest("Jeepers Creepers")
+		request := newGetSongRequest(3)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
@@ -68,13 +79,16 @@ func TestGetSongs(t *testing.T) {
 
 func TestStoreSongs(t *testing.T) {
 	store := StubSongStore{
-		map[string]string{},
-		[]string{},
+		songs:     []songvote.Song{},
+		postCalls: []songvote.Song{},
 	}
 	server := songvote.NewServer(&store)
 
 	t.Run("stores song when POST", func(t *testing.T) {
-		newSong := "Creep"
+		newSong := songvote.Song{
+			Name:   "Creep",
+			Artist: "Radiohead",
+		}
 
 		request := newPostSongRequest(newSong)
 		response := httptest.NewRecorder()
@@ -88,22 +102,29 @@ func TestStoreSongs(t *testing.T) {
 		}
 
 		if store.postCalls[0] != newSong {
-			t.Errorf("did not store correct song, got %q, want %q", store.postCalls[0], newSong)
+			t.Errorf("did not store correct song, got %v, want %v", store.postCalls[0], newSong)
 		}
 	})
 }
 
+func TestGetSongByName(t *testing.T) {
+
+}
+
 // Helper methods
 
-func newGetSongRequest(name string) *http.Request {
-	urlString := fmt.Sprintf("/songs/%s", name)
-	url := url.PathEscape(urlString)
+func newGetSongRequest(id int) *http.Request {
+	url := fmt.Sprintf("/songs/%d", id)
 	request, _ := http.NewRequest(http.MethodGet, url, nil)
 	return request
 }
 
-func newPostSongRequest(name string) *http.Request {
-	bodyReader := bytes.NewReader([]byte(name))
+func newPostSongRequest(song songvote.Song) *http.Request {
+	json, err := song.Marshal()
+	if err != nil {
+		log.Fatalf("problem marshalling Song JSON, %v", err)
+	}
+	bodyReader := bytes.NewReader([]byte(json))
 	request, _ := http.NewRequest(http.MethodPost, "/songs", bodyReader)
 	return request
 }
