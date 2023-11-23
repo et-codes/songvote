@@ -35,7 +35,7 @@ func (s *StubSongStore) GetSongs() []songvote.Song {
 	return s.songs
 }
 
-func TestGetSongs(t *testing.T) {
+func TestGetAllSongs(t *testing.T) {
 	store := StubSongStore{
 		songs: []songvote.Song{
 			{ID: 0, Name: "Would?", Artist: "Alice in Chains"},
@@ -43,23 +43,6 @@ func TestGetSongs(t *testing.T) {
 		},
 	}
 	server := songvote.NewServer(&store)
-
-	t.Run("returns 405 when wrong method used", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodPost, "/songs", nil)
-		response := httptest.NewRecorder()
-		server.ServeHTTP(response, request)
-		assertStatus(t, response.Code, http.StatusMethodNotAllowed)
-
-		request, _ = http.NewRequest(http.MethodPost, "/song/0", nil)
-		response = httptest.NewRecorder()
-		server.ServeHTTP(response, request)
-		assertStatus(t, response.Code, http.StatusMethodNotAllowed)
-
-		request, _ = http.NewRequest(http.MethodGet, "/song", nil)
-		response = httptest.NewRecorder()
-		server.ServeHTTP(response, request)
-		assertStatus(t, response.Code, http.StatusMethodNotAllowed)
-	})
 
 	t.Run("can get all songs", func(t *testing.T) {
 		request := newGetSongsRequest()
@@ -74,6 +57,53 @@ func TestGetSongs(t *testing.T) {
 			t.Errorf("could not decode response to JSON %v", err)
 		}
 		assertEqual(t, want, store.songs)
+	})
+
+	t.Run("returns empty array if empty store", func(t *testing.T) {
+		store = StubSongStore{songs: []songvote.Song{}}
+		server = songvote.NewServer(&store)
+
+		request := newGetSongsRequest()
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+		assertStatus(t, response.Code, http.StatusOK)
+
+		want := []songvote.Song{}
+		err := json.NewDecoder(response.Body).Decode(&want)
+		if err != nil {
+			t.Errorf("could not decode response to JSON %v", err)
+		}
+		assertEqual(t, want, store.songs)
+	})
+
+	t.Run("returns 405 when wrong method used", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPost, "/songs", nil)
+		response := httptest.NewRecorder()
+		server.ServeHTTP(response, request)
+		assertStatus(t, response.Code, http.StatusMethodNotAllowed)
+	})
+}
+
+func TestGetSongs(t *testing.T) {
+	store := StubSongStore{
+		songs: []songvote.Song{
+			{ID: 0, Name: "Would?", Artist: "Alice in Chains"},
+			{ID: 1, Name: "Zero", Artist: "The Smashing Pumpkins"},
+		},
+	}
+	server := songvote.NewServer(&store)
+
+	t.Run("returns 405 when wrong method used", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPost, "/song/0", nil)
+		response := httptest.NewRecorder()
+		server.ServeHTTP(response, request)
+		assertStatus(t, response.Code, http.StatusMethodNotAllowed)
+
+		request, _ = http.NewRequest(http.MethodGet, "/song", nil)
+		response = httptest.NewRecorder()
+		server.ServeHTTP(response, request)
+		assertStatus(t, response.Code, http.StatusMethodNotAllowed)
 	})
 
 	t.Run("returns the song Would?", func(t *testing.T) {
@@ -104,7 +134,7 @@ func TestGetSongs(t *testing.T) {
 		assertResponseBody(t, got, want)
 	})
 
-	t.Run("returns 404 if song not found", func(t *testing.T) {
+	t.Run("returns 404 if song ID not found", func(t *testing.T) {
 		request := newGetSongRequest(3)
 		response := httptest.NewRecorder()
 

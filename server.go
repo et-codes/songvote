@@ -19,23 +19,25 @@ type SongStore interface {
 }
 
 type Server struct {
-	store SongStore
+	store  SongStore
+	router *http.ServeMux
 }
 
 func NewServer(store SongStore) *Server {
-	return &Server{
-		store: store,
+	s := &Server{
+		store:  store,
+		router: http.NewServeMux(),
 	}
+
+	s.router.Handle("/songs", http.HandlerFunc(s.getAllSongs)) // GET all songs
+	s.router.Handle("/song/", http.HandlerFunc(s.getSong))     // GET song by ID
+	s.router.Handle("/song", http.HandlerFunc(s.addSong))      // POST song
+
+	return s
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	router := http.NewServeMux()
-
-	router.Handle("/songs", http.HandlerFunc(s.getAllSongs)) // GET all songs
-	router.Handle("/song/", http.HandlerFunc(s.getSong))     // GET song by ID
-	router.Handle("/song", http.HandlerFunc(s.addSong))      // POST song
-
-	router.ServeHTTP(w, r)
+	s.router.ServeHTTP(w, r)
 }
 
 func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
@@ -45,10 +47,6 @@ func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	songs := s.store.GetSongs()
-	if len(songs) == 0 {
-		http.NotFound(w, r)
-		return
-	}
 
 	out := bytes.NewBuffer([]byte{})
 	err := json.NewEncoder(out).Encode(songs)
