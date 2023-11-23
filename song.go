@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"strings"
+	"io"
 )
 
 // Song contains information about a single song.
@@ -33,8 +33,8 @@ func (s Song) Marshal() (string, error) {
 }
 
 // UnmarshalSong returns JSON-encoded string of the Song object.
-func UnmarshalSong(jsonString string, song *Song) error {
-	err := json.NewDecoder(strings.NewReader(jsonString)).Decode(song)
+func UnmarshalSong(input io.Reader, song *Song) error {
+	err := json.NewDecoder(input).Decode(song)
 	if err != nil {
 		return fmt.Errorf("problem decoding song from JSON: %w", err)
 	}

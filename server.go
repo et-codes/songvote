@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -94,15 +93,8 @@ func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("could not read message body %v\n", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
 	songToAdd := Song{}
-	if err := UnmarshalSong(string(json), &songToAdd); err != nil {
+	if err := UnmarshalSong(r.Body, &songToAdd); err != nil {
 		log.Printf("could not read message body %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return

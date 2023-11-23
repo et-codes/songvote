@@ -209,13 +209,6 @@ func assertStatus(t testing.TB, got, want int) {
 	}
 }
 
-func assertTrue(t testing.TB, got bool) {
-	t.Helper()
-	if !got {
-		t.Errorf("got %t, wanted %t", got, true)
-	}
-}
-
 func assertNoError(t testing.TB, err error) {
 	t.Helper()
 	if err != nil {
