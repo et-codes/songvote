@@ -12,11 +12,13 @@
 ## API
 ### Songs
 - `GET /songs` returns a list of all songs
-- `POST /songs` add a song to the list
-- `GET /songs/{id}` info for particular song
-- `POST /songs/{id}` add vote or veto for a song
-- `PATCH /songs/{id}` updates song information
-- `DELETE /songs/{id}` remove a song from the list
+- `POST /song` adds a song to the list
+  - Need to return the ID upon creation
+  - Need to sent 409 Conflict when song already exists
+- `GET /song/{id}` info for particular song
+- `POST /song/{id}` add vote or veto for a song
+- `PATCH /song/{id}` updates song information
+- `DELETE /song/{id}` remove a song from the list
 
 ### Users
 - `POST /users` adds a user

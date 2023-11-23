@@ -46,7 +46,7 @@ func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
 
 	songs := s.store.GetSongs()
 	if len(songs) == 0 {
-		w.WriteHeader(http.StatusNotFound)
+		http.NotFound(w, r)
 		return
 	}
 
@@ -77,7 +77,7 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 	song := s.store.GetSong(id)
 
 	if song.Name == "" {
-		w.WriteHeader(http.StatusNotFound)
+		http.NotFound(w, r)
 		return
 	}
 
