@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
@@ -54,6 +55,8 @@ func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalf("problem encoding songs to JSON, %v", err)
 	}
+
+	w.Header().Add("Content-Type", "application/json")
 	fmt.Fprint(w, out)
 }
 
@@ -84,6 +87,8 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	w.Header().Add("Content-Type", "application/json")
 	fmt.Fprint(w, json)
 }
 
@@ -106,6 +111,8 @@ func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	songToAdd.ID = rand.Intn(32 << 20)
 
 	s.store.AddSong(songToAdd)
 	w.WriteHeader(http.StatusAccepted)
