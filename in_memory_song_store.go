@@ -14,6 +14,10 @@ func (i *InMemorySongStore) GetSong(id int) Song {
 	return song
 }
 
+func (i *InMemorySongStore) GetSongs() []Song {
+	return i.songs
+}
+
 func (i *InMemorySongStore) AddSong(song Song) {
 	if !i.songExists(song) {
 		i.songs = append(i.songs, song)

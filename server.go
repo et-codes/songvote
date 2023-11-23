@@ -1,6 +1,8 @@
 package songvote
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -11,6 +13,7 @@ import (
 
 type SongStore interface {
 	GetSong(id int) Song
+	GetSongs() []Song
 	AddSong(song Song)
 }
 
@@ -25,16 +28,31 @@ func NewServer(store SongStore) *Server {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		s.getSong(w, r)
-	case http.MethodPost:
-		s.addSong(w, r)
+	router := http.NewServeMux()
+
+	router.Handle("/songs", http.HandlerFunc(s.getAllSongs)) // GET all songs
+	router.Handle("/song/", http.HandlerFunc(s.getSong))     // GET song by ID
+	router.Handle("/song", http.HandlerFunc(s.addSong))      // GET song
+
+	router.ServeHTTP(w, r)
+}
+
+func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
+	songs := s.store.GetSongs()
+	if len(songs) == 0 {
+		w.WriteHeader(http.StatusNotFound)
 	}
+
+	out := bytes.NewBuffer([]byte{})
+	err := json.NewEncoder(out).Encode(songs)
+	if err != nil {
+		log.Fatalf("problem encoding songs to JSON, %v", err)
+	}
+	fmt.Fprint(w, out)
 }
 
 func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
-	idString := strings.TrimPrefix(r.URL.Path, "/songs/")
+	idString := strings.TrimPrefix(r.URL.Path, "/song/")
 	id, err := strconv.Atoi(idString)
 	if err != nil {
 		log.Printf("problem parsing song ID from %s, %v", idString, err)

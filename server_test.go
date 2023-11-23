@@ -2,6 +2,7 @@ package songvote_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -30,6 +31,10 @@ func (s *StubSongStore) AddSong(song songvote.Song) {
 	s.postCalls = append(s.postCalls, song)
 }
 
+func (s *StubSongStore) GetSongs() []songvote.Song {
+	return s.songs
+}
+
 func TestGetSongs(t *testing.T) {
 	store := StubSongStore{
 		songs: []songvote.Song{
@@ -38,6 +43,21 @@ func TestGetSongs(t *testing.T) {
 		},
 	}
 	server := songvote.NewServer(&store)
+
+	t.Run("can get all songs", func(t *testing.T) {
+		request := newGetSongsRequest()
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+		assertStatus(t, response.Code, http.StatusOK)
+
+		want := []songvote.Song{}
+		err := json.NewDecoder(response.Body).Decode(&want)
+		if err != nil {
+			t.Errorf("could not decode response to JSON %v", err)
+		}
+		assertEqual(t, want, store.songs)
+	})
 
 	t.Run("returns the song Would?", func(t *testing.T) {
 		request := newGetSongRequest(0)
@@ -107,15 +127,16 @@ func TestStoreSongs(t *testing.T) {
 	})
 }
 
-func TestGetSongByName(t *testing.T) {
-
-}
-
 // Helper methods
 
 func newGetSongRequest(id int) *http.Request {
-	url := fmt.Sprintf("/songs/%d", id)
+	url := fmt.Sprintf("/song/%d", id)
 	request, _ := http.NewRequest(http.MethodGet, url, nil)
+	return request
+}
+
+func newGetSongsRequest() *http.Request {
+	request, _ := http.NewRequest(http.MethodGet, "/songs", nil)
 	return request
 }
 
@@ -125,7 +146,7 @@ func newPostSongRequest(song songvote.Song) *http.Request {
 		log.Fatalf("problem marshalling Song JSON, %v", err)
 	}
 	bodyReader := bytes.NewReader([]byte(json))
-	request, _ := http.NewRequest(http.MethodPost, "/songs", bodyReader)
+	request, _ := http.NewRequest(http.MethodPost, "/song", bodyReader)
 	return request
 }
 
