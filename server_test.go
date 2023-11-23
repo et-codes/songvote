@@ -138,7 +138,7 @@ func TestStoreSongs(t *testing.T) {
 			t.Errorf("got %d calls to AddSong, want %d", len(store.postCalls), 1)
 		}
 
-		if store.postCalls[0] != newSong {
+		if !newSong.Equals(store.postCalls[0]) {
 			t.Errorf("did not store correct song, got %v, want %v", store.postCalls[0], newSong)
 		}
 	})
