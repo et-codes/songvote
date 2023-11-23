@@ -13,8 +13,6 @@
 ### Songs
 - `GET /songs` returns a list of all songs
 - `POST /song` adds a song to the list
-  - Need to return the ID upon creation
-  - Need to sent 409 Conflict when song already exists
 - `GET /song/{id}` info for particular song
 - `POST /song/{id}` add vote or veto for a song
 - `PATCH /song/{id}` updates song information
@@ -24,3 +22,8 @@
 - `POST /users` adds a user
 - `GET /users/{id}` returns user information
 - `DELETE /users/{id}` deletes a user
+
+### TODO
+- Need to return ID upon creation
+- Need to sent 409 Conflict when song/user already exists
+- Add logging

@@ -19,25 +19,23 @@ type SongStore interface {
 }
 
 type Server struct {
-	store  SongStore
-	router *http.ServeMux
+	store SongStore
+	http.Handler
 }
 
 func NewServer(store SongStore) *Server {
-	s := &Server{
-		store:  store,
-		router: http.NewServeMux(),
-	}
+	s := new(Server)
 
-	s.router.Handle("/songs", http.HandlerFunc(s.getAllSongs)) // GET all songs
-	s.router.Handle("/song/", http.HandlerFunc(s.getSong))     // GET song by ID
-	s.router.Handle("/song", http.HandlerFunc(s.addSong))      // POST song
+	s.store = store
+
+	router := http.NewServeMux()
+	router.Handle("/songs", http.HandlerFunc(s.getAllSongs)) // GET all songs
+	router.Handle("/song/", http.HandlerFunc(s.getSong))     // GET song by ID
+	router.Handle("/song", http.HandlerFunc(s.addSong))      // POST song
+
+	s.Handler = router
 
 	return s
-}
-
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.router.ServeHTTP(w, r)
 }
 
 func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {

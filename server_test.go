@@ -36,63 +36,45 @@ func (s *StubSongStore) GetSongs() []songvote.Song {
 }
 
 func TestGetAllSongs(t *testing.T) {
-	store := StubSongStore{
-		songs: []songvote.Song{
-			{ID: 0, Name: "Would?", Artist: "Alice in Chains"},
-			{ID: 1, Name: "Zero", Artist: "The Smashing Pumpkins"},
-		},
-	}
-	server := songvote.NewServer(&store)
+	store := newPopulatedSongStore()
+	server := songvote.NewServer(store)
 
 	t.Run("can get all songs", func(t *testing.T) {
 		request := newGetSongsRequest()
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
-		assertStatus(t, response.Code, http.StatusOK)
 
-		want := []songvote.Song{}
-		err := json.NewDecoder(response.Body).Decode(&want)
-		if err != nil {
-			t.Errorf("could not decode response to JSON %v", err)
-		}
-		assertEqual(t, want, store.songs)
+		assertStatus(t, response.Code, http.StatusOK)
+		assertSongListsEqual(t, response.Body, store.songs)
 	})
 
 	t.Run("returns empty array if empty store", func(t *testing.T) {
-		store = StubSongStore{songs: []songvote.Song{}}
-		server = songvote.NewServer(&store)
+		store = newEmptySongStore()
+		server = songvote.NewServer(store)
 
 		request := newGetSongsRequest()
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
-		assertStatus(t, response.Code, http.StatusOK)
 
-		want := []songvote.Song{}
-		err := json.NewDecoder(response.Body).Decode(&want)
-		if err != nil {
-			t.Errorf("could not decode response to JSON %v", err)
-		}
-		assertEqual(t, want, store.songs)
+		assertStatus(t, response.Code, http.StatusOK)
+		assertSongListsEqual(t, response.Body, store.songs)
 	})
 
 	t.Run("returns 405 when wrong method used", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/songs", nil)
 		response := httptest.NewRecorder()
+
 		server.ServeHTTP(response, request)
+
 		assertStatus(t, response.Code, http.StatusMethodNotAllowed)
 	})
 }
 
 func TestGetSongs(t *testing.T) {
-	store := StubSongStore{
-		songs: []songvote.Song{
-			{ID: 0, Name: "Would?", Artist: "Alice in Chains"},
-			{ID: 1, Name: "Zero", Artist: "The Smashing Pumpkins"},
-		},
-	}
-	server := songvote.NewServer(&store)
+	store := newPopulatedSongStore()
+	server := songvote.NewServer(store)
 
 	t.Run("returns 405 when wrong method used", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/song/0", nil)
@@ -145,11 +127,8 @@ func TestGetSongs(t *testing.T) {
 }
 
 func TestStoreSongs(t *testing.T) {
-	store := StubSongStore{
-		songs:     []songvote.Song{},
-		postCalls: []songvote.Song{},
-	}
-	server := songvote.NewServer(&store)
+	store := newEmptySongStore()
+	server := songvote.NewServer(store)
 
 	t.Run("stores song when POST", func(t *testing.T) {
 		newSong := songvote.Song{
@@ -197,6 +176,23 @@ func newPostSongRequest(song songvote.Song) *http.Request {
 	return request
 }
 
+func newPopulatedSongStore() *StubSongStore {
+	return &StubSongStore{
+		songs: []songvote.Song{
+			{ID: 0, Name: "Would?", Artist: "Alice in Chains"},
+			{ID: 1, Name: "Zero", Artist: "The Smashing Pumpkins"},
+		},
+		postCalls: []songvote.Song{},
+	}
+}
+
+func newEmptySongStore() *StubSongStore {
+	return &StubSongStore{
+		songs:     []songvote.Song{},
+		postCalls: []songvote.Song{},
+	}
+}
+
 // Assertions
 
 func assertResponseBody(t testing.TB, got, want string) {
@@ -232,4 +228,14 @@ func assertEqual(t testing.TB, got, want any) {
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %v, wanted %v", got, want)
 	}
+}
+
+func assertSongListsEqual(t testing.TB, body *bytes.Buffer, songs []songvote.Song) {
+	t.Helper()
+	want := []songvote.Song{}
+	err := json.NewDecoder(body).Decode(&want)
+	if err != nil {
+		t.Errorf("could not decode response to JSON %v", err)
+	}
+	assertEqual(t, want, songs)
 }
