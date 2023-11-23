@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"reflect"
 	"testing"
 
 	"github.com/et-codes/songvote"
@@ -120,5 +121,26 @@ func assertStatus(t testing.TB, got, want int) {
 	t.Helper()
 	if got != want {
 		t.Errorf("wrong status code, got %d, want %d", got, want)
+	}
+}
+
+func assertTrue(t testing.TB, got bool) {
+	t.Helper()
+	if !got {
+		t.Errorf("got %t, wanted %t", got, true)
+	}
+}
+
+func assertNoError(t testing.TB, err error) {
+	t.Helper()
+	if err != nil {
+		t.Errorf("got error but didn't want one, %v", err)
+	}
+}
+
+func assertEqual(t testing.TB, got, want any) {
+	t.Helper()
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v, wanted %v", got, want)
 	}
 }
