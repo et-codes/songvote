@@ -41,7 +41,7 @@ func (i *InMemorySongStore) findSongByID(id int) (Song, error) {
 
 func (i *InMemorySongStore) songExists(song Song) bool {
 	for _, s := range i.songs {
-		if song.Equals(s) {
+		if song.Equal(s) {
 			return true
 		}
 	}

@@ -17,15 +17,15 @@ type Song struct {
 	Vetoed  bool   `json:"vetoed"`   // this song has been vetoed
 }
 
-// (Song).Equals returns whether names and artists of two Song objects are the same.
-func (s Song) Equals(other Song) bool {
+// (Song).Equal returns whether names and artists of two Song objects are the same.
+func (s Song) Equal(other Song) bool {
 	return (s.Name == other.Name) && (s.Artist == other.Artist)
 }
 
-// (Song).Marshal returns JSON-encoded string of the Song object.
-func (s Song) Marshal() (string, error) {
+// MarshalSong returns JSON-encoded string of the Song object.
+func MarshalSong(song Song) (string, error) {
 	output := bytes.NewBuffer([]byte{})
-	err := json.NewEncoder(output).Encode(s)
+	err := json.NewEncoder(output).Encode(song)
 	if err != nil {
 		return "", fmt.Errorf("problem encoding song to JSON: %w", err)
 	}

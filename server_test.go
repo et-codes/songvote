@@ -95,7 +95,7 @@ func TestGetSongs(t *testing.T) {
 		server.ServeHTTP(response, request)
 		assertStatus(t, response.Code, http.StatusOK)
 
-		want, err := store.songs[0].Marshal()
+		want, err := songvote.MarshalSong(store.songs[0])
 		assertNoError(t, err)
 
 		got := response.Body.String()
@@ -109,7 +109,7 @@ func TestGetSongs(t *testing.T) {
 		server.ServeHTTP(response, request)
 		assertStatus(t, response.Code, http.StatusOK)
 
-		want, err := store.songs[1].Marshal()
+		want, err := songvote.MarshalSong(store.songs[1])
 		assertNoError(t, err)
 
 		got := response.Body.String()
@@ -147,7 +147,7 @@ func TestStoreSongs(t *testing.T) {
 			t.Errorf("got %d calls to AddSong, want %d", len(store.postCalls), 1)
 		}
 
-		if !newSong.Equals(store.postCalls[0]) {
+		if !newSong.Equal(store.postCalls[0]) {
 			t.Errorf("did not store correct song, got %v, want %v", store.postCalls[0], newSong)
 		}
 	})
@@ -167,7 +167,7 @@ func newGetSongsRequest() *http.Request {
 }
 
 func newPostSongRequest(song songvote.Song) *http.Request {
-	json, err := song.Marshal()
+	json, err := songvote.MarshalSong(song)
 	if err != nil {
 		log.Fatalf("problem marshalling Song JSON, %v", err)
 	}

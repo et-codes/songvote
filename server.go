@@ -76,7 +76,7 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json, err := song.Marshal()
+	json, err := MarshalSong(song)
 	if err != nil {
 		log.Printf("problem marshalling song to JSON, %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
