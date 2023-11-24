@@ -13,7 +13,7 @@ func TestSongStore(t *testing.T) {
 		Name:   "Creep",
 		Artist: "Radiohead",
 	}
-	storeUnderTest := songvote.NewInMemorySongStore
+	storeUnderTest := songvote.NewSQLSongStore
 
 	t.Run("adding song returns valid ID", func(t *testing.T) {
 		store := storeUnderTest()
@@ -39,5 +39,10 @@ func TestSongStore(t *testing.T) {
 		assert.NoError(t, err)
 		_, err = store.AddSong(newSong)
 		assert.Error(t, err)
+	})
+
+	t.Run("gets all songs in store", func(t *testing.T) {
+		store := storeUnderTest()
+		_, _ = store.AddSong(newSong)
 	})
 }

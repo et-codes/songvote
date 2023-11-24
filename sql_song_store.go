@@ -1,11 +1,40 @@
 package songvote
 
+import (
+	"context"
+	"database/sql"
+	"log"
+
+	_ "modernc.org/sqlite"
+)
+
+const (
+	driver = "sqlite"
+	dbPath = "./db/songs.db"
+)
+
 // SQLSongStore is a song store backed by a SQL database.
-type SQLSongStore struct{}
+type SQLSongStore struct {
+	db  *sql.DB
+	ctx context.Context
+}
 
 // NewSQLSongStore returns a pointer to a newly initialized store.
 func NewSQLSongStore() *SQLSongStore {
-	return &SQLSongStore{}
+	ctx := context.Background()
+	db, err := sql.Open(driver, dbPath)
+	if err != nil {
+		log.Fatalf("error opening db: %v", err)
+	}
+
+	if err := db.PingContext(ctx); err != nil {
+		log.Fatalf("error pinging db: %v", err)
+	}
+
+	return &SQLSongStore{
+		db:  db,
+		ctx: ctx,
+	}
 }
 
 // GetSong returns a Song object with the given ID, or an error if it cannot
