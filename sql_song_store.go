@@ -60,6 +60,10 @@ func (s *SQLSongStore) GetSongs() []Song {
 // an error if there was one.  Error will be returned when attempting to add
 // a song with Name and Artist combination that is already in the store.
 func (s *SQLSongStore) AddSong(song Song) (int64, error) {
+	if s.songExists(song) {
+		return 0, fmt.Errorf("song %q by %q already exists", song.Name, song.Artist)
+	}
+
 	result, err := s.db.ExecContext(s.ctx,
 		`INSERT INTO songs(name, artist, link_url, votes, vetoed) 
 			VALUES ($1, $2, $3, $4, $5)`,
@@ -86,7 +90,7 @@ func (s *SQLSongStore) AddSong(song Song) (int64, error) {
 // createSongsTable creates the database table for Songs if it does not
 // already exist.
 func (s *SQLSongStore) createSongsTable() error {
-	result, err := s.db.ExecContext(s.ctx,
+	_, err := s.db.ExecContext(s.ctx,
 		`CREATE TABLE IF NOT EXISTS songs (
 			id INTEGER PRIMARY KEY,
 			name TEXT NOT NULL,
@@ -101,7 +105,27 @@ func (s *SQLSongStore) createSongsTable() error {
 		return err
 	}
 
-	log.Printf("created user table in db: %v\n", result)
-
 	return nil
+}
+
+func (s *SQLSongStore) songExists(song Song) bool {
+	var (
+		name   string
+		artist string
+	)
+	err := s.db.QueryRowContext(s.ctx,
+		"SELECT name, artist FROM songs WHERE name = $1 AND artist = $2",
+		song.Name,
+		song.Artist,
+	).Scan(&name, &artist)
+
+	switch {
+	case err == sql.ErrNoRows:
+		return false
+	case err != nil:
+		log.Fatalf("error checking for song %q: %v\n", song.Name, err)
+		return false
+	default:
+		return true
+	}
 }

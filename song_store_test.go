@@ -9,9 +9,11 @@ import (
 
 func TestSongStore(t *testing.T) {
 	newSong := songvote.Song{
-		ID:     1,
-		Name:   "Creep",
-		Artist: "Radiohead",
+		Name:    "Creep",
+		Artist:  "Radiohead",
+		LinkURL: "http://test.com",
+		Votes:   12,
+		Vetoed:  true,
 	}
 	storeUnderTest := songvote.NewSQLSongStore
 
