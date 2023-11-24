@@ -38,11 +38,10 @@ func (s *StubSongStore) GetSongs() []songvote.Song {
 func TestGetAllSongs(t *testing.T) {
 	store := newPopulatedSongStore()
 	server := songvote.NewServer(store)
+	request := newGetSongsRequest()
+	response := httptest.NewRecorder()
 
 	t.Run("can get all songs", func(t *testing.T) {
-		request := newGetSongsRequest()
-		response := httptest.NewRecorder()
-
 		server.ServeHTTP(response, request)
 
 		assert.Equal(t, response.Code, http.StatusOK)
@@ -53,9 +52,6 @@ func TestGetAllSongs(t *testing.T) {
 		store = newEmptySongStore()
 		server = songvote.NewServer(store)
 
-		request := newGetSongsRequest()
-		response := httptest.NewRecorder()
-
 		server.ServeHTTP(response, request)
 
 		assert.Equal(t, response.Code, http.StatusOK)
@@ -63,8 +59,8 @@ func TestGetAllSongs(t *testing.T) {
 	})
 
 	t.Run("returns 405 when wrong method used", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodPost, "/songs", nil)
-		response := httptest.NewRecorder()
+		request, _ = http.NewRequest(http.MethodPost, "/songs", nil)
+		response = httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
 
