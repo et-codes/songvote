@@ -12,6 +12,7 @@ const (
 )
 
 func main() {
-	server := songvote.NewServer(songvote.NewInMemorySongStore())
+	store := songvote.NewInMemorySongStore()
+	server := songvote.NewServer(store)
 	log.Fatal(http.ListenAndServe(port, server))
 }
