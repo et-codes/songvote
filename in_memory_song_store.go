@@ -1,14 +1,18 @@
 package songvote
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type InMemorySongStore struct {
-	songs []Song
+	songs  []Song
+	lastId int
 }
 
 func NewInMemorySongStore() *InMemorySongStore {
 	return &InMemorySongStore{
-		songs: []Song{},
+		songs:  []Song{},
+		lastId: 0,
 	}
 }
 
@@ -26,6 +30,8 @@ func (i *InMemorySongStore) GetSongs() []Song {
 
 func (i *InMemorySongStore) AddSong(song Song) {
 	if !i.songExists(song) {
+		song.ID = i.lastId
+		i.lastId++
 		i.songs = append(i.songs, song)
 	}
 }

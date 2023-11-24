@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
@@ -99,8 +98,6 @@ func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	songToAdd.ID = rand.Intn(32 << 20)
 
 	s.store.AddSong(songToAdd)
 	w.WriteHeader(http.StatusAccepted)
