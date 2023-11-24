@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	driver = "sqlite"
-	dbPath = "./db/songs.db"
+	dbDriver = "sqlite"
+	dbPath   = "./db/songs.db"
 )
 
 // SQLSongStore is a song store backed by a SQL database.
@@ -21,9 +21,9 @@ type SQLSongStore struct {
 }
 
 // NewSQLSongStore returns a pointer to a newly initialized store.
-func NewSQLSongStore() *SQLSongStore {
+func NewSQLSongStore(dbPath string) *SQLSongStore {
 	ctx := context.Background()
-	db, err := sql.Open(driver, dbPath)
+	db, err := sql.Open(dbDriver, dbPath)
 	if err != nil {
 		log.Fatalf("error opening db: %v", err)
 	}
@@ -47,7 +47,33 @@ func NewSQLSongStore() *SQLSongStore {
 // GetSong returns a Song object with the given ID, or an error if it cannot
 // be found.
 func (s *SQLSongStore) GetSong(id int64) (Song, error) {
-	return Song{}, nil
+	var (
+		songID  int64
+		name    string
+		artist  string
+		linkURL string
+		votes   int
+		vetoed  bool
+		song    Song
+	)
+
+	err := s.db.QueryRowContext(s.ctx, "SELECT * FROM songs WHERE id = $1", id).
+		Scan(&songID, &name, &artist, &linkURL, &votes, &vetoed)
+
+	switch {
+	case err == sql.ErrNoRows:
+		return song, fmt.Errorf("song ID %d not found", id)
+	case err != nil:
+		return song, fmt.Errorf("error getting song ID %d: %v", id, err)
+	default:
+		song.ID = songID
+		song.Name = name
+		song.Artist = artist
+		song.LinkURL = linkURL
+		song.Votes = votes
+		song.Vetoed = bool(vetoed)
+		return song, nil
+	}
 }
 
 // GetSongs returns a slice of Song objects representing all of the songs in
@@ -87,6 +113,15 @@ func (s *SQLSongStore) AddSong(song Song) (int64, error) {
 	return id, nil
 }
 
+// DeleteSong will delete the given song ID from the table.
+func (s *SQLSongStore) DeleteSong(id int64) error {
+	_, err := s.db.ExecContext(s.ctx, "DELETE FROM songs WHERE id = $1", id)
+	if err != nil {
+		return fmt.Errorf("error deleting song %d: %v", id, err)
+	}
+	return nil
+}
+
 // createSongsTable creates the database table for Songs if it does not
 // already exist.
 func (s *SQLSongStore) createSongsTable() error {
@@ -113,6 +148,7 @@ func (s *SQLSongStore) songExists(song Song) bool {
 		name   string
 		artist string
 	)
+
 	err := s.db.QueryRowContext(s.ctx,
 		"SELECT name, artist FROM songs WHERE name = $1 AND artist = $2",
 		song.Name,
@@ -126,6 +162,7 @@ func (s *SQLSongStore) songExists(song Song) bool {
 		log.Fatalf("error checking for song %q: %v\n", song.Name, err)
 		return false
 	default:
+		log.Printf("found %q by %q in store", name, artist)
 		return true
 	}
 }

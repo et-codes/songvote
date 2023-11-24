@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	port = ":5050"
+	port   = ":5050"
+	dbPath = "./db/songs.db"
 )
 
 func main() {
