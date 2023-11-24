@@ -7,10 +7,10 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 
 	"github.com/et-codes/songvote"
+	"github.com/et-codes/songvote/internal/assert"
 )
 
 type StubSongStore struct {
@@ -45,7 +45,7 @@ func TestGetAllSongs(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Code, http.StatusOK)
+		assert.Equal(t, response.Code, http.StatusOK)
 		assertSongListsEqual(t, response.Body, store.songs)
 	})
 
@@ -58,7 +58,7 @@ func TestGetAllSongs(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Code, http.StatusOK)
+		assert.Equal(t, response.Code, http.StatusOK)
 		assertSongListsEqual(t, response.Body, store.songs)
 	})
 
@@ -68,7 +68,7 @@ func TestGetAllSongs(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Code, http.StatusMethodNotAllowed)
+		assert.Equal(t, response.Code, http.StatusMethodNotAllowed)
 	})
 }
 
@@ -80,12 +80,12 @@ func TestGetSongs(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/song/0", nil)
 		response := httptest.NewRecorder()
 		server.ServeHTTP(response, request)
-		assertStatus(t, response.Code, http.StatusMethodNotAllowed)
+		assert.Equal(t, response.Code, http.StatusMethodNotAllowed)
 
 		request, _ = http.NewRequest(http.MethodGet, "/song", nil)
 		response = httptest.NewRecorder()
 		server.ServeHTTP(response, request)
-		assertStatus(t, response.Code, http.StatusMethodNotAllowed)
+		assert.Equal(t, response.Code, http.StatusMethodNotAllowed)
 	})
 
 	t.Run("returns the song Would?", func(t *testing.T) {
@@ -93,13 +93,13 @@ func TestGetSongs(t *testing.T) {
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
-		assertStatus(t, response.Code, http.StatusOK)
+		assert.Equal(t, response.Code, http.StatusOK)
 
 		want, err := songvote.MarshalSong(store.songs[0])
-		assertNoError(t, err)
+		assert.NoError(t, err)
 
 		got := response.Body.String()
-		assertResponseBody(t, got, want)
+		assert.Equal(t, got, want)
 	})
 
 	t.Run("returns the song Zero", func(t *testing.T) {
@@ -107,13 +107,13 @@ func TestGetSongs(t *testing.T) {
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
-		assertStatus(t, response.Code, http.StatusOK)
+		assert.Equal(t, response.Code, http.StatusOK)
 
 		want, err := songvote.MarshalSong(store.songs[1])
-		assertNoError(t, err)
+		assert.NoError(t, err)
 
 		got := response.Body.String()
-		assertResponseBody(t, got, want)
+		assert.Equal(t, got, want)
 	})
 
 	t.Run("returns 404 if song ID not found", func(t *testing.T) {
@@ -122,7 +122,7 @@ func TestGetSongs(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Code, http.StatusNotFound)
+		assert.Equal(t, response.Code, http.StatusNotFound)
 	})
 }
 
@@ -141,7 +141,7 @@ func TestStoreSongs(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Code, http.StatusAccepted)
+		assert.Equal(t, response.Code, http.StatusAccepted)
 
 		if len(store.postCalls) != 1 {
 			t.Errorf("got %d calls to AddSong, want %d", len(store.postCalls), 1)
@@ -193,35 +193,7 @@ func newEmptySongStore() *StubSongStore {
 	}
 }
 
-// Assertions
-
-func assertResponseBody(t testing.TB, got, want string) {
-	t.Helper()
-	if got != want {
-		t.Errorf("wrong message body, got %q, want %q", got, want)
-	}
-}
-
-func assertStatus(t testing.TB, got, want int) {
-	t.Helper()
-	if got != want {
-		t.Errorf("wrong status code, got %d, want %d", got, want)
-	}
-}
-
-func assertNoError(t testing.TB, err error) {
-	t.Helper()
-	if err != nil {
-		t.Errorf("got error but didn't want one, %v", err)
-	}
-}
-
-func assertEqual(t testing.TB, got, want any) {
-	t.Helper()
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("got %v, wanted %v", got, want)
-	}
-}
+// Custom assertions
 
 func assertSongListsEqual(t testing.TB, body *bytes.Buffer, songs []songvote.Song) {
 	t.Helper()
@@ -230,5 +202,5 @@ func assertSongListsEqual(t testing.TB, body *bytes.Buffer, songs []songvote.Son
 	if err != nil {
 		t.Errorf("could not decode response to JSON %v", err)
 	}
-	assertEqual(t, want, songs)
+	assert.Equal(t, want, songs)
 }

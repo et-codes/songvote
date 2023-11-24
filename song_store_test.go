@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/et-codes/songvote"
+	"github.com/et-codes/songvote/internal/assert"
 )
 
 func TestSongStore(t *testing.T) {
@@ -16,7 +17,7 @@ func TestSongStore(t *testing.T) {
 	t.Run("can add and retreive a song", func(t *testing.T) {
 		store.AddSong(newSong)
 		got := store.GetSong(0)
-		assertEqual(t, got, newSong)
+		assert.Equal(t, got, newSong)
 	})
 
 	t.Run("can't add duplicate song", func(t *testing.T) {
@@ -24,6 +25,6 @@ func TestSongStore(t *testing.T) {
 		store.AddSong(newSong)
 
 		got := store.GetSong(1)
-		assertEqual(t, got, songvote.Song{})
+		assert.Equal(t, got, songvote.Song{})
 	})
 }
