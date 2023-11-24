@@ -5,44 +5,38 @@ import (
 )
 
 type InMemorySongStore struct {
-	songs  []Song
-	lastId int
+	songs  []Song // slice of songs in the store
+	nextId int    // next serialized song ID to use
 }
 
 func NewInMemorySongStore() *InMemorySongStore {
 	return &InMemorySongStore{
 		songs:  []Song{},
-		lastId: 0,
+		nextId: 1,
 	}
 }
 
-func (i *InMemorySongStore) GetSong(id int) Song {
-	song, err := i.findSongByID(id)
-	if err != nil {
-		return Song{}
-	}
-	return song
-}
-
-func (i *InMemorySongStore) GetSongs() []Song {
-	return i.songs
-}
-
-func (i *InMemorySongStore) AddSong(song Song) {
-	if !i.songExists(song) {
-		song.ID = i.lastId
-		i.lastId++
-		i.songs = append(i.songs, song)
-	}
-}
-
-func (i *InMemorySongStore) findSongByID(id int) (Song, error) {
+func (i *InMemorySongStore) GetSong(id int) (Song, error) {
 	for _, song := range i.songs {
 		if song.ID == id {
 			return song, nil
 		}
 	}
 	return Song{}, fmt.Errorf("song ID %d not found", id)
+}
+
+func (i *InMemorySongStore) GetSongs() []Song {
+	return i.songs
+}
+
+func (i *InMemorySongStore) AddSong(song Song) (int, error) {
+	if i.songExists(song) {
+		return 0, fmt.Errorf("song %q by %q already in store", song.Name, song.Artist)
+	}
+	song.ID = i.nextId
+	i.nextId++
+	i.songs = append(i.songs, song)
+	return song.ID, nil
 }
 
 func (i *InMemorySongStore) songExists(song Song) bool {

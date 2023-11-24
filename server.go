@@ -11,9 +11,9 @@ import (
 )
 
 type SongStore interface {
-	GetSong(id int) Song
+	GetSong(id int) (Song, error)
 	GetSongs() []Song
-	AddSong(song Song)
+	AddSong(song Song) (int, error)
 }
 
 type Server struct {
@@ -68,9 +68,8 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	song := s.store.GetSong(id)
-
-	if song.Name == "" {
+	song, err := s.store.GetSong(id)
+	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
@@ -99,6 +98,13 @@ func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.store.AddSong(songToAdd)
+	id, err := s.store.AddSong(songToAdd)
+	if err != nil {
+		log.Printf("could not add song, %v\n", err)
+		w.WriteHeader(http.StatusConflict)
+		return
+	}
+
 	w.WriteHeader(http.StatusAccepted)
+	fmt.Fprint(w, id)
 }

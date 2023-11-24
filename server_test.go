@@ -15,20 +15,24 @@ import (
 
 type StubSongStore struct {
 	songs     []songvote.Song
+	nextId    int
 	postCalls []songvote.Song
 }
 
-func (s *StubSongStore) GetSong(id int) songvote.Song {
+func (s *StubSongStore) GetSong(id int) (songvote.Song, error) {
 	for _, s := range s.songs {
 		if s.ID == id {
-			return s
+			return s, nil
 		}
 	}
-	return songvote.Song{}
+	return songvote.Song{}, fmt.Errorf("song ID %d not found", id)
 }
 
-func (s *StubSongStore) AddSong(song songvote.Song) {
+func (s *StubSongStore) AddSong(song songvote.Song) (int, error) {
+	song.ID = s.nextId
+	s.nextId++
 	s.postCalls = append(s.postCalls, song)
+	return song.ID, nil
 }
 
 func (s *StubSongStore) GetSongs() []songvote.Song {
