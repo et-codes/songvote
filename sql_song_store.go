@@ -143,6 +143,8 @@ func (s *SQLSongStore) createSongsTable() error {
 	return nil
 }
 
+// songExists queries the database for any song with the same name and artist
+// as the given song and returns true if there is a match.
 func (s *SQLSongStore) songExists(song Song) bool {
 	var (
 		name   string
