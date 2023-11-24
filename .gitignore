@@ -20,3 +20,6 @@ bin
 
 # Go workspace file
 go.work
+
+# Test files
+db/*_test.db

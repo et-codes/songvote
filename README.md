@@ -24,6 +24,5 @@
 - `DELETE /users/{id}` deletes a user
 
 ### TODO
-- Add logging where needed
-- Create database store
 - Make song's ID its own type alias for int64
+- Add the missing Song methods
