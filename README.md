@@ -24,4 +24,5 @@
 - `DELETE /users/{id}` deletes a user
 
 ### TODO
-- Add logging
+- Add logging where needed
+- Create database store
