@@ -13,9 +13,10 @@ func TestSongStore(t *testing.T) {
 		Name:   "Creep",
 		Artist: "Radiohead",
 	}
+	storeUnderTest := songvote.NewInMemorySongStore
 
 	t.Run("adding song returns valid ID", func(t *testing.T) {
-		store := songvote.NewInMemorySongStore()
+		store := storeUnderTest()
 		id, err := store.AddSong(newSong)
 		assert.NoError(t, err)
 		if id <= 0 {
@@ -24,7 +25,7 @@ func TestSongStore(t *testing.T) {
 	})
 
 	t.Run("can add and retreive a song", func(t *testing.T) {
-		store := songvote.NewInMemorySongStore()
+		store := storeUnderTest()
 		id, err := store.AddSong(newSong)
 		assert.NoError(t, err)
 		got, err := store.GetSong(id)
@@ -33,7 +34,7 @@ func TestSongStore(t *testing.T) {
 	})
 
 	t.Run("can't add duplicate song", func(t *testing.T) {
-		store := songvote.NewInMemorySongStore()
+		store := storeUnderTest()
 		_, err := store.AddSong(newSong)
 		assert.NoError(t, err)
 		_, err = store.AddSong(newSong)
