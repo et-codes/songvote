@@ -35,6 +35,10 @@ func (s *StubSongStore) AddSong(song songvote.Song) (int64, error) {
 	return song.ID, nil
 }
 
+func (s *StubSongStore) DeleteSong(id int64) error {
+	return fmt.Errorf("not implemented")
+}
+
 func (s *StubSongStore) GetSongs() []songvote.Song {
 	return s.songs
 }

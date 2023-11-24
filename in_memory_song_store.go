@@ -39,6 +39,10 @@ func (i *InMemorySongStore) AddSong(song Song) (int64, error) {
 	return song.ID, nil
 }
 
+func (i *InMemorySongStore) DeleteSong(id int64) error {
+	return fmt.Errorf("not implemented")
+}
+
 func (i *InMemorySongStore) songExists(song Song) bool {
 	for _, s := range i.songs {
 		if song.Equal(s) {

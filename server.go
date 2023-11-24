@@ -14,6 +14,7 @@ type SongStore interface {
 	GetSong(id int64) (Song, error)
 	GetSongs() []Song
 	AddSong(song Song) (int64, error)
+	DeleteSong(id int64) error
 }
 
 type Server struct {

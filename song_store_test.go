@@ -9,20 +9,20 @@ import (
 
 const dbPath = "./db/songs_test.db"
 
+var store = songvote.NewSQLSongStore(dbPath)
+
 func TestSongStore(t *testing.T) {
 	newSong := songvote.Song{
 		ID:      1,
-		Name:    "Creep",
-		Artist:  "Radiohead",
+		Name:    "Fake Song #27",
+		Artist:  "Fake Artist",
 		LinkURL: "http://test.com",
 		Votes:   12,
 		Vetoed:  true,
 	}
-	store := songvote.NewSQLSongStore(dbPath)
 
 	t.Run("adding song returns valid ID", func(t *testing.T) {
-		id, err := store.AddSong(newSong)
-		defer store.DeleteSong(id)
+		id, err := addSong(t, newSong)
 		assert.NoError(t, err)
 		if id <= 0 {
 			t.Errorf("got bad id %d", id)
@@ -30,8 +30,7 @@ func TestSongStore(t *testing.T) {
 	})
 
 	t.Run("can add and retreive a song", func(t *testing.T) {
-		id, err := store.AddSong(newSong)
-		defer store.DeleteSong(id)
+		id, err := addSong(t, newSong)
 		assert.NoError(t, err)
 		got, err := store.GetSong(id)
 		assert.NoError(t, err)
@@ -39,10 +38,9 @@ func TestSongStore(t *testing.T) {
 	})
 
 	t.Run("can't add duplicate song", func(t *testing.T) {
-		id, err := store.AddSong(newSong)
-		defer store.DeleteSong(id)
+		_, err := addSong(t, newSong)
 		assert.NoError(t, err)
-		_, err = store.AddSong(newSong)
+		_, err = addSong(t, newSong)
 		assert.Error(t, err)
 	})
 
@@ -51,8 +49,18 @@ func TestSongStore(t *testing.T) {
 	})
 
 	t.Run("deletes a song", func(t *testing.T) {
-		id, _ := store.AddSong(newSong)
+		id, _ := addSong(t, newSong)
 		err := store.DeleteSong(id)
 		assert.NoError(t, err)
 	})
+}
+
+// addSong is a helper function that calls the store's AddSong method and
+// deletes the song after each test is concluded.
+func addSong(t testing.TB, song songvote.Song) (int64, error) {
+	id, err := store.AddSong(song)
+	t.Cleanup(func() {
+		_ = store.DeleteSong(id)
+	})
+	return id, err
 }
