@@ -24,6 +24,4 @@
 - `DELETE /users/{id}` deletes a user
 
 ### TODO
-- Need to return ID upon creation
-- Need to sent 409 Conflict when song/user already exists
 - Add logging

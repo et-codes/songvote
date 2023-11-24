@@ -31,7 +31,7 @@ func (i *InMemorySongStore) GetSongs() []Song {
 
 func (i *InMemorySongStore) AddSong(song Song) (int, error) {
 	if i.songExists(song) {
-		return 0, fmt.Errorf("song %q by %q already in store", song.Name, song.Artist)
+		return 0, fmt.Errorf("%q by %q already in store", song.Name, song.Artist)
 	}
 	song.ID = i.nextId
 	i.nextId++

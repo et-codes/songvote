@@ -32,6 +32,14 @@ func TestGetAndAddSongs(t *testing.T) {
 		assert.Equal(t, got, want)
 	})
 
+	t.Run("returns 409 with duplicate song", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		request := newPostSongRequest(songToAdd)
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusConflict)
+	})
+
 	t.Run("get song with ID", func(t *testing.T) {
 		response := httptest.NewRecorder()
 		request := newGetSongRequest(1)

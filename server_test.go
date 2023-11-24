@@ -89,7 +89,7 @@ func TestGetSongs(t *testing.T) {
 	})
 
 	t.Run("returns the song Would?", func(t *testing.T) {
-		request := newGetSongRequest(0)
+		request := newGetSongRequest(1)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
@@ -103,7 +103,7 @@ func TestGetSongs(t *testing.T) {
 	})
 
 	t.Run("returns the song Zero", func(t *testing.T) {
-		request := newGetSongRequest(1)
+		request := newGetSongRequest(2)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
@@ -179,8 +179,8 @@ func newPostSongRequest(song songvote.Song) *http.Request {
 func newPopulatedSongStore() *StubSongStore {
 	return &StubSongStore{
 		songs: []songvote.Song{
-			{ID: 0, Name: "Would?", Artist: "Alice in Chains"},
-			{ID: 1, Name: "Zero", Artist: "The Smashing Pumpkins"},
+			{ID: 1, Name: "Would?", Artist: "Alice in Chains"},
+			{ID: 2, Name: "Zero", Artist: "The Smashing Pumpkins"},
 		},
 		postCalls: []songvote.Song{},
 	}
