@@ -6,17 +6,17 @@ import (
 
 type InMemorySongStore struct {
 	songs  []Song // slice of songs in the store
-	nextId int    // next serialized song ID to use
+	nextID int64  // next serialized song ID to use
 }
 
 func NewInMemorySongStore() *InMemorySongStore {
 	return &InMemorySongStore{
 		songs:  []Song{},
-		nextId: 1,
+		nextID: 1,
 	}
 }
 
-func (i *InMemorySongStore) GetSong(id int) (Song, error) {
+func (i *InMemorySongStore) GetSong(id int64) (Song, error) {
 	for _, song := range i.songs {
 		if song.ID == id {
 			return song, nil
@@ -29,12 +29,12 @@ func (i *InMemorySongStore) GetSongs() []Song {
 	return i.songs
 }
 
-func (i *InMemorySongStore) AddSong(song Song) (int, error) {
+func (i *InMemorySongStore) AddSong(song Song) (int64, error) {
 	if i.songExists(song) {
 		return 0, fmt.Errorf("%q by %q already in store", song.Name, song.Artist)
 	}
-	song.ID = i.nextId
-	i.nextId++
+	song.ID = i.nextID
+	i.nextID++
 	i.songs = append(i.songs, song)
 	return song.ID, nil
 }

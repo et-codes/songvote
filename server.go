@@ -11,9 +11,9 @@ import (
 )
 
 type SongStore interface {
-	GetSong(id int) (Song, error)
+	GetSong(id int64) (Song, error)
 	GetSongs() []Song
-	AddSong(song Song) (int, error)
+	AddSong(song Song) (int64, error)
 }
 
 type Server struct {
@@ -61,7 +61,7 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 	}
 
 	idString := strings.TrimPrefix(r.URL.Path, "/song/")
-	id, err := strconv.Atoi(idString)
+	id, err := strconv.ParseInt(idString, 10, 64)
 	if err != nil {
 		log.Printf("problem parsing song ID from %s, %v", idString, err)
 		w.WriteHeader(http.StatusInternalServerError)

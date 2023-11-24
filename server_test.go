@@ -15,11 +15,11 @@ import (
 
 type StubSongStore struct {
 	songs     []songvote.Song
-	nextId    int
+	nextID    int64
 	postCalls []songvote.Song
 }
 
-func (s *StubSongStore) GetSong(id int) (songvote.Song, error) {
+func (s *StubSongStore) GetSong(id int64) (songvote.Song, error) {
 	for _, s := range s.songs {
 		if s.ID == id {
 			return s, nil
@@ -28,9 +28,9 @@ func (s *StubSongStore) GetSong(id int) (songvote.Song, error) {
 	return songvote.Song{}, fmt.Errorf("song ID %d not found", id)
 }
 
-func (s *StubSongStore) AddSong(song songvote.Song) (int, error) {
-	song.ID = s.nextId
-	s.nextId++
+func (s *StubSongStore) AddSong(song songvote.Song) (int64, error) {
+	song.ID = s.nextID
+	s.nextID++
 	s.postCalls = append(s.postCalls, song)
 	return song.ID, nil
 }
@@ -182,6 +182,7 @@ func newPopulatedSongStore() *StubSongStore {
 			{ID: 1, Name: "Would?", Artist: "Alice in Chains"},
 			{ID: 2, Name: "Zero", Artist: "The Smashing Pumpkins"},
 		},
+		nextID:    3,
 		postCalls: []songvote.Song{},
 	}
 }
@@ -189,6 +190,7 @@ func newPopulatedSongStore() *StubSongStore {
 func newEmptySongStore() *StubSongStore {
 	return &StubSongStore{
 		songs:     []songvote.Song{},
+		nextID:    1,
 		postCalls: []songvote.Song{},
 	}
 }
