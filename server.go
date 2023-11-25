@@ -52,7 +52,11 @@ func (s *Server) handleSongs(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		s.addSong(w, r)
 	default:
+		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusMethodNotAllowed)
+		code := http.StatusMethodNotAllowed
+		message := fmt.Sprintf("Method %s not allowed", r.Method)
+		fmt.Fprint(w, NewError(code, message).ToJSON())
 	}
 }
 

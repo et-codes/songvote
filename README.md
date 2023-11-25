@@ -32,4 +32,3 @@
 - Add Song POST veto
 - Allow for undoing a vote or a veto
 - Send JSON error messages from server.go
-- Add log output
