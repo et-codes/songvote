@@ -28,12 +28,14 @@ func NewServer(store SongStore) *Server {
 	s.store = store
 
 	router := http.NewServeMux()
-	router.Handle("/songs", http.HandlerFunc(s.handleSongs))        // GET|POST
-	router.Handle("/songs/", http.HandlerFunc(s.handleSongsWithID)) // GET|PATCH|DELETE
 	router.Handle("/songs/vote/", http.HandlerFunc(s.handleVote))   // POST
 	router.Handle("/songs/veto/", http.HandlerFunc(s.handleVeto))   // POST
+	router.Handle("/songs/", http.HandlerFunc(s.handleSongsWithID)) // GET|PATCH|DELETE
+	router.Handle("/songs", http.HandlerFunc(s.handleSongs))        // GET|POST
 
-	s.Handler = router
+	loggingRouter := NewLoggerMiddleware(router)
+
+	s.Handler = loggingRouter
 
 	return s
 }
@@ -66,7 +68,8 @@ func (s *Server) handleSongsWithID(w http.ResponseWriter, r *http.Request) {
 		s.getSong(w, r)
 	case http.MethodPatch:
 		// TODO implement this method
-		log.Fatalln("PATCH song not implemented")
+		log.Println("PATCH song not implemented")
+		w.WriteHeader(http.StatusNotImplemented)
 	case http.MethodDelete:
 		s.deleteSong(w, r)
 	default:
@@ -82,7 +85,8 @@ func (s *Server) handleVote(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		// TODO implement this method
-		log.Fatalln("POST vote not implemented")
+		log.Println("POST vote not implemented")
+		w.WriteHeader(http.StatusNotImplemented)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
@@ -96,7 +100,8 @@ func (s *Server) handleVeto(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		// TODO implement this method
-		log.Fatalln("POST veto not implemented")
+		log.Println("POST veto not implemented")
+		w.WriteHeader(http.StatusNotImplemented)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}

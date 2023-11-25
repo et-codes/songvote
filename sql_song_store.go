@@ -27,10 +27,12 @@ func NewSQLSongStore(dbPath string) *SQLSongStore {
 	if err != nil {
 		log.Fatalf("error opening db: %v", err)
 	}
+	log.Printf("Opened db %q.\n", dbPath)
 
 	if err := db.PingContext(ctx); err != nil {
 		log.Fatalf("error pinging db: %v", err)
 	}
+	log.Printf("Connected to db %q.\n", dbPath)
 
 	store := &SQLSongStore{
 		db:  db,

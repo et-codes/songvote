@@ -15,5 +15,6 @@ const (
 func main() {
 	store := songvote.NewSQLSongStore(dbPath)
 	server := songvote.NewServer(store)
+	log.Printf("Listening on port %s ...\n", port)
 	log.Fatal(http.ListenAndServe(port, server))
 }
