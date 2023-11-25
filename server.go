@@ -22,6 +22,7 @@ type Server struct {
 	http.Handler
 }
 
+// NewServer returns a reference to an initialized Server.
 func NewServer(store SongStore) *Server {
 	s := new(Server)
 
@@ -52,11 +53,9 @@ func (s *Server) handleSongs(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		s.addSong(w, r)
 	default:
-		w.Header().Add("Content-Type", "application/json")
-		w.WriteHeader(http.StatusMethodNotAllowed)
 		code := http.StatusMethodNotAllowed
 		message := fmt.Sprintf("Method %s not allowed", r.Method)
-		fmt.Fprint(w, NewError(code, message).ToJSON())
+		writeError(w, code, message)
 	}
 }
 
@@ -77,7 +76,9 @@ func (s *Server) handleSongsWithID(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		s.deleteSong(w, r)
 	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		code := http.StatusMethodNotAllowed
+		message := fmt.Sprintf("Method %s not allowed", r.Method)
+		writeError(w, code, message)
 	}
 }
 
@@ -92,7 +93,9 @@ func (s *Server) handleVote(w http.ResponseWriter, r *http.Request) {
 		log.Println("POST vote not implemented")
 		w.WriteHeader(http.StatusNotImplemented)
 	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		code := http.StatusMethodNotAllowed
+		message := fmt.Sprintf("Method %s not allowed", r.Method)
+		writeError(w, code, message)
 	}
 }
 
@@ -107,7 +110,9 @@ func (s *Server) handleVeto(w http.ResponseWriter, r *http.Request) {
 		log.Println("POST veto not implemented")
 		w.WriteHeader(http.StatusNotImplemented)
 	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		code := http.StatusMethodNotAllowed
+		message := fmt.Sprintf("Method %s not allowed", r.Method)
+		writeError(w, code, message)
 	}
 }
 
@@ -117,7 +122,10 @@ func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
 	out := bytes.NewBuffer([]byte{})
 	err := json.NewEncoder(out).Encode(songs)
 	if err != nil {
-		log.Fatalf("Problem encoding songs to JSON, %v", err)
+		code := http.StatusInternalServerError
+		message := fmt.Sprintf("Problem encoding songs to JSON: %v", err)
+		writeError(w, code, message)
+		return
 	}
 
 	w.Header().Add("Content-Type", "application/json")
@@ -127,8 +135,9 @@ func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
 func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 	id, err := parseSongID(r.URL.Path, "/songs/")
 	if err != nil {
-		log.Printf("Problem parsing song ID from %s: %v", r.URL.Path, err)
-		w.WriteHeader(http.StatusInternalServerError)
+		code := http.StatusInternalServerError
+		message := fmt.Sprintf("Problem parsing song ID: %v", err)
+		writeError(w, code, message)
 		return
 	}
 
@@ -140,8 +149,9 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 
 	json, err := MarshalSong(song)
 	if err != nil {
-		log.Printf("Problem marshalling song to JSON, %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		code := http.StatusInternalServerError
+		message := fmt.Sprintf("Problem marshaling song to JSON: %v", err)
+		writeError(w, code, message)
 		return
 	}
 
@@ -152,15 +162,17 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 	songToAdd := Song{}
 	if err := UnmarshalSong(r.Body, &songToAdd); err != nil {
-		log.Printf("Could not read message body: %v\n", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		code := http.StatusInternalServerError
+		message := fmt.Sprintf("Problem unmarshaling song: %v", err)
+		writeError(w, code, message)
 		return
 	}
 
 	id, err := s.store.AddSong(songToAdd)
 	if err != nil {
-		log.Printf("Could not add song: %v\n", err)
-		w.WriteHeader(http.StatusConflict)
+		code := http.StatusConflict
+		message := fmt.Sprintf("Could not add song: %v\n", err)
+		writeError(w, code, message)
 		return
 	}
 
@@ -171,14 +183,16 @@ func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 func (s *Server) deleteSong(w http.ResponseWriter, r *http.Request) {
 	id, err := parseSongID(r.URL.Path, "/songs/")
 	if err != nil {
-		log.Printf("Problem parsing song ID from %s: %v", r.URL.Path, err)
-		w.WriteHeader(http.StatusInternalServerError)
+		code := http.StatusInternalServerError
+		message := fmt.Sprintf("Problem parsing song ID: %v", err)
+		writeError(w, code, message)
 		return
 	}
 
 	if err := s.store.DeleteSong(id); err != nil {
-		log.Printf("could not delete song: %v\n", err)
-		w.WriteHeader(http.StatusConflict)
+		code := http.StatusInternalServerError
+		message := fmt.Sprintf("Could not delete song: %v\n", err)
+		writeError(w, code, message)
 		return
 	}
 
@@ -192,4 +206,10 @@ func parseSongID(path, prefix string) (int64, error) {
 		return 0, err
 	}
 	return id, nil
+}
+
+func writeError(w http.ResponseWriter, code int, message string) {
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(code)
+	fmt.Fprint(w, NewError(code, message).ToJSON())
 }
