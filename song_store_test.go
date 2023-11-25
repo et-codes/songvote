@@ -7,9 +7,13 @@ import (
 	"github.com/et-codes/songvote/internal/assert"
 )
 
-const dbPath = "./db/songs_test.db"
+const (
+	memoryDB   = ":memory:"           // in-memory database
+	testFileDB = "./db/songs_test.db" // persistent test database
+)
 
-var store = songvote.NewSQLSongStore(dbPath)
+// Configure store to use either the in-memory db or disk-based db.
+var store = songvote.NewSQLSongStore(memoryDB)
 
 func TestSongStore(t *testing.T) {
 	newSong := songvote.Song{
@@ -45,7 +49,13 @@ func TestSongStore(t *testing.T) {
 	})
 
 	t.Run("gets all songs in store", func(t *testing.T) {
-		t.Skip("this test pending development")
+		_, _ = addSong(t, newSong)
+		newSong.Name = "Fake Song #4"
+		_, err := addSong(t, newSong)
+		assert.NoError(t, err)
+
+		got := store.GetSongs()
+		assert.Equal(t, len(got), 2)
 	})
 
 	t.Run("deletes a song", func(t *testing.T) {

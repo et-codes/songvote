@@ -47,18 +47,10 @@ func NewSQLSongStore(dbPath string) *SQLSongStore {
 // GetSong returns a Song object with the given ID, or an error if it cannot
 // be found.
 func (s *SQLSongStore) GetSong(id int64) (Song, error) {
-	var (
-		songID  int64
-		name    string
-		artist  string
-		linkURL string
-		votes   int
-		vetoed  bool
-		song    Song
-	)
+	var song Song
 
 	err := s.db.QueryRowContext(s.ctx, "SELECT * FROM songs WHERE id = $1", id).
-		Scan(&songID, &name, &artist, &linkURL, &votes, &vetoed)
+		Scan(&song.ID, &song.Name, &song.Artist, &song.LinkURL, &song.Votes, &song.Vetoed)
 
 	switch {
 	case err == sql.ErrNoRows:
@@ -66,12 +58,6 @@ func (s *SQLSongStore) GetSong(id int64) (Song, error) {
 	case err != nil:
 		return song, fmt.Errorf("error getting song ID %d: %v", id, err)
 	default:
-		song.ID = songID
-		song.Name = name
-		song.Artist = artist
-		song.LinkURL = linkURL
-		song.Votes = votes
-		song.Vetoed = bool(vetoed)
 		return song, nil
 	}
 }
@@ -79,7 +65,23 @@ func (s *SQLSongStore) GetSong(id int64) (Song, error) {
 // GetSongs returns a slice of Song objects representing all of the songs in
 // the store.
 func (s *SQLSongStore) GetSongs() []Song {
-	return []Song{}
+	rows, err := s.db.QueryContext(s.ctx, "SELECT * FROM songs")
+	if err != nil {
+		log.Fatalf("error querying songs from store: %v", err)
+	}
+	defer rows.Close()
+
+	songs := []Song{}
+
+	for rows.Next() {
+		var song Song
+		if err := rows.Scan(&song.ID, &song.Name, &song.Artist, &song.LinkURL, &song.Votes, &song.Vetoed); err != nil {
+			log.Fatalf("error scanning query results: %v", err)
+		}
+		songs = append(songs, song)
+	}
+
+	return songs
 }
 
 // AddSong adds the given Song object to the store, and returns the ID and
@@ -102,8 +104,6 @@ func (s *SQLSongStore) AddSong(song Song) (int64, error) {
 	if err != nil {
 		return 0, fmt.Errorf("error inserting song into db: %v", err)
 	}
-
-	log.Printf("added song %s to the database", song.Name)
 
 	id, err := result.LastInsertId()
 	if err != nil {
@@ -164,7 +164,6 @@ func (s *SQLSongStore) songExists(song Song) bool {
 		log.Fatalf("error checking for song %q: %v\n", song.Name, err)
 		return false
 	default:
-		log.Printf("found %q by %q in store", name, artist)
 		return true
 	}
 }
