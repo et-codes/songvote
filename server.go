@@ -108,11 +108,6 @@ func (s *Server) handleVeto(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
 	songs := s.store.GetSongs()
 
 	out := bytes.NewBuffer([]byte{})
@@ -126,10 +121,9 @@ func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
-	idString := strings.TrimPrefix(r.URL.Path, "/songs/")
-	id, err := strconv.ParseInt(idString, 10, 64)
+	id, err := parseSongID(r.URL.Path, "/songs/")
 	if err != nil {
-		log.Printf("problem parsing song ID from %s, %v", idString, err)
+		log.Printf("problem parsing song ID from %s: %v", r.URL.Path, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -171,10 +165,9 @@ func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) deleteSong(w http.ResponseWriter, r *http.Request) {
-	idString := strings.TrimPrefix(r.URL.Path, "/songs/")
-	id, err := strconv.ParseInt(idString, 10, 64)
+	id, err := parseSongID(r.URL.Path, "/songs/")
 	if err != nil {
-		log.Printf("problem parsing song ID from %s, %v", idString, err)
+		log.Printf("problem parsing song ID from %s: %v", r.URL.Path, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -186,4 +179,13 @@ func (s *Server) deleteSong(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func parseSongID(path, prefix string) (int64, error) {
+	idString := strings.TrimPrefix(path, prefix)
+	id, err := strconv.ParseInt(idString, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
 }
