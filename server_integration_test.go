@@ -9,7 +9,11 @@ import (
 	"github.com/et-codes/songvote/internal/assert"
 )
 
-func TestGetAndAddSongs(t *testing.T) {
+//
+// Integration tests verify function of real SongStore with the API.
+//
+
+func TestGetAddDeleteSongs(t *testing.T) {
 	store := songvote.NewSQLSongStore(":memory:")
 	server := songvote.NewServer(store)
 	songToAdd := songvote.Song{
@@ -22,7 +26,7 @@ func TestGetAndAddSongs(t *testing.T) {
 
 	t.Run("add song and get ID", func(t *testing.T) {
 		response := httptest.NewRecorder()
-		request := newPostSongRequest(songToAdd)
+		request := newAddSongRequest(songToAdd)
 		server.ServeHTTP(response, request)
 
 		got := response.Body.String()
@@ -34,7 +38,7 @@ func TestGetAndAddSongs(t *testing.T) {
 
 	t.Run("returns 409 with duplicate song", func(t *testing.T) {
 		response := httptest.NewRecorder()
-		request := newPostSongRequest(songToAdd)
+		request := newAddSongRequest(songToAdd)
 		server.ServeHTTP(response, request)
 
 		assert.Equal(t, response.Code, http.StatusConflict)
@@ -52,5 +56,17 @@ func TestGetAndAddSongs(t *testing.T) {
 
 		assert.Equal(t, response.Code, http.StatusOK)
 		assert.Equal(t, got, want)
+	})
+
+	t.Run("delete a song", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		request := newDeleteSongRequest(1)
+		server.ServeHTTP(response, request)
+		assert.Equal(t, response.Code, http.StatusNoContent)
+
+		response = httptest.NewRecorder()
+		request = newGetSongRequest(1)
+		server.ServeHTTP(response, request)
+		assert.Equal(t, response.Code, http.StatusNotFound)
 	})
 }

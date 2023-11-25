@@ -28,13 +28,78 @@ func NewServer(store SongStore) *Server {
 	s.store = store
 
 	router := http.NewServeMux()
-	router.Handle("/songs", http.HandlerFunc(s.getAllSongs)) // GET all songs
-	router.Handle("/song/", http.HandlerFunc(s.getSong))     // GET song by ID
-	router.Handle("/song", http.HandlerFunc(s.addSong))      // POST song
+	router.Handle("/songs", http.HandlerFunc(s.handleSongs))        // GET|POST
+	router.Handle("/songs/", http.HandlerFunc(s.handleSongsWithID)) // GET|PATCH|DELETE
+	router.Handle("/songs/vote/", http.HandlerFunc(s.handleVote))   // POST
+	router.Handle("/songs/veto/", http.HandlerFunc(s.handleVeto))   // POST
 
 	s.Handler = router
 
 	return s
+}
+
+// handleSongs routes requests to "/songs" depending on request type.
+//
+// Allowable methods:
+//   - GET:  get all songs
+//   - POST: add song
+func (s *Server) handleSongs(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		s.getAllSongs(w, r)
+	case http.MethodPost:
+		s.addSong(w, r)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+// handleSongsWithID routes requests to "/songs/{id}" depending on request type.
+//
+// Allowable methods:
+//   - GET:    get the song
+//   - PATCH:  update the song
+//   - DELETE: delete the song
+func (s *Server) handleSongsWithID(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		s.getSong(w, r)
+	case http.MethodPatch:
+		// TODO implement this method
+		log.Fatalln("PATCH song not implemented")
+	case http.MethodDelete:
+		s.deleteSong(w, r)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+// handleVote routes requests to "/songs/vote/{id}" depending on request type.
+//
+// Allowable methods:
+//   - POST: vote for a song
+func (s *Server) handleVote(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		// TODO implement this method
+		log.Fatalln("POST vote not implemented")
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+// handleVote routes requests to "/songs/veto/{id}" depending on request type.
+//
+// Allowable methods:
+//   - POST: veto a song
+func (s *Server) handleVeto(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		// TODO implement this method
+		log.Fatalln("POST veto not implemented")
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
 }
 
 func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
@@ -56,12 +121,7 @@ func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
-	idString := strings.TrimPrefix(r.URL.Path, "/song/")
+	idString := strings.TrimPrefix(r.URL.Path, "/songs/")
 	id, err := strconv.ParseInt(idString, 10, 64)
 	if err != nil {
 		log.Printf("problem parsing song ID from %s, %v", idString, err)
@@ -87,11 +147,6 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
 	songToAdd := Song{}
 	if err := UnmarshalSong(r.Body, &songToAdd); err != nil {
 		log.Printf("could not read message body %v\n", err)
@@ -108,4 +163,22 @@ func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusAccepted)
 	fmt.Fprint(w, id)
+}
+
+func (s *Server) deleteSong(w http.ResponseWriter, r *http.Request) {
+	idString := strings.TrimPrefix(r.URL.Path, "/songs/")
+	id, err := strconv.ParseInt(idString, 10, 64)
+	if err != nil {
+		log.Printf("problem parsing song ID from %s, %v", idString, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if err := s.store.DeleteSong(id); err != nil {
+		log.Printf("could not delete song: %v\n", err)
+		w.WriteHeader(http.StatusConflict)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

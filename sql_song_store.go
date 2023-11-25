@@ -82,7 +82,7 @@ func (s *SQLSongStore) GetSongs() []Song {
 // a song with Name and Artist combination that is already in the store.
 func (s *SQLSongStore) AddSong(song Song) (int64, error) {
 	if s.songExists(song) {
-		return 0, fmt.Errorf("song %q by %q already exists", song.Name, song.Artist)
+		return 0, fmt.Errorf("%q by %q already exists", song.Name, song.Artist)
 	}
 
 	result, err := s.db.ExecContext(s.ctx,

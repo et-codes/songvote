@@ -65,32 +65,11 @@ func TestGetAllSongs(t *testing.T) {
 		assert.Equal(t, response.Code, http.StatusOK)
 		assertSongListsEqual(t, response.Body, store.songs)
 	})
-
-	t.Run("returns 405 when wrong method used", func(t *testing.T) {
-		request, _ = http.NewRequest(http.MethodPost, "/songs", nil)
-		response = httptest.NewRecorder()
-
-		server.ServeHTTP(response, request)
-
-		assert.Equal(t, response.Code, http.StatusMethodNotAllowed)
-	})
 }
 
 func TestGetSongs(t *testing.T) {
 	store := newPopulatedSongStore()
 	server := songvote.NewServer(store)
-
-	t.Run("returns 405 when wrong method used", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodPost, "/song/0", nil)
-		response := httptest.NewRecorder()
-		server.ServeHTTP(response, request)
-		assert.Equal(t, response.Code, http.StatusMethodNotAllowed)
-
-		request, _ = http.NewRequest(http.MethodGet, "/song", nil)
-		response = httptest.NewRecorder()
-		server.ServeHTTP(response, request)
-		assert.Equal(t, response.Code, http.StatusMethodNotAllowed)
-	})
 
 	t.Run("returns the song Would?", func(t *testing.T) {
 		request := newGetSongRequest(1)
@@ -140,7 +119,7 @@ func TestStoreSongs(t *testing.T) {
 			Artist: "Radiohead",
 		}
 
-		request := newPostSongRequest(newSong)
+		request := newAddSongRequest(newSong)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
@@ -157,10 +136,29 @@ func TestStoreSongs(t *testing.T) {
 	})
 }
 
+func TestAllowedMethods(t *testing.T) {
+	store := newEmptySongStore()
+	server := songvote.NewServer(store)
+
+	t.Run("/songs/{id} returns 405 when wrong method used", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPost, "/songs/0", nil)
+		response := httptest.NewRecorder()
+		server.ServeHTTP(response, request)
+		assert.Equal(t, response.Code, http.StatusMethodNotAllowed)
+	})
+
+	t.Run("/songs returns 405 when wrong method used", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPatch, "/songs", nil)
+		response := httptest.NewRecorder()
+		server.ServeHTTP(response, request)
+		assert.Equal(t, response.Code, http.StatusMethodNotAllowed)
+	})
+}
+
 // Helper methods
 
-func newGetSongRequest(id int) *http.Request {
-	url := fmt.Sprintf("/song/%d", id)
+func newGetSongRequest(id int64) *http.Request {
+	url := fmt.Sprintf("/songs/%d", id)
 	request, _ := http.NewRequest(http.MethodGet, url, nil)
 	return request
 }
@@ -170,13 +168,19 @@ func newGetSongsRequest() *http.Request {
 	return request
 }
 
-func newPostSongRequest(song songvote.Song) *http.Request {
+func newAddSongRequest(song songvote.Song) *http.Request {
 	json, err := songvote.MarshalSong(song)
 	if err != nil {
 		log.Fatalf("problem marshalling Song JSON, %v", err)
 	}
-	bodyReader := bytes.NewReader([]byte(json))
-	request, _ := http.NewRequest(http.MethodPost, "/song", bodyReader)
+	bodyReader := bytes.NewBuffer([]byte(json))
+	request, _ := http.NewRequest(http.MethodPost, "/songs", bodyReader)
+	return request
+}
+
+func newDeleteSongRequest(id int64) *http.Request {
+	url := fmt.Sprintf("/songs/%d", id)
+	request, _ := http.NewRequest(http.MethodDelete, url, nil)
 	return request
 }
 

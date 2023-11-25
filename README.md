@@ -12,17 +12,22 @@
 ## API
 ### Songs
 - `GET /songs` returns a list of all songs
-- `POST /song` adds a song to the list
-- `GET /song/{id}` info for particular song
-- `POST /song/{id}` add vote or veto for a song
-- `PATCH /song/{id}` updates song information
-- `DELETE /song/{id}` remove a song from the list
+- `POST /songs` adds a song to the list
+- `GET /songs/{id}` info for particular song
+- `PATCH /songs/{id}` updates song information
+- `DELETE /songs/{id}` remove a song from the list
+- `POST /songs/vote/{id}` add vote for a song
+- `POST /songs/veto/{id}` add veto for a song
 
 ### Users
 - `POST /users` adds a user
 - `GET /users/{id}` returns user information
+- `PATCH /users/{id}` updates user information
 - `DELETE /users/{id}` deletes a user
 
 ### TODO
 - Make song's ID its own type alias for int64
 - Add the missing Song methods
+- Allow for undoing a vote or a veto
+- Send JSON error messages from server.go
+- Add log output to sql_song_store.go and server.go
