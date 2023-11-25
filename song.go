@@ -17,6 +17,9 @@ type Song struct {
 	Vetoed  bool   `json:"vetoed"`   // this song has been vetoed
 }
 
+// Songs contains a slice of Song objects.
+type Songs []Song
+
 // (Song).Equal returns whether names and artists of two Song objects are the same.
 func (s Song) Equal(other Song) bool {
 	return (s.Name == other.Name) && (s.Artist == other.Artist)

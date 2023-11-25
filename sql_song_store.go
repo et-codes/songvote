@@ -64,7 +64,7 @@ func (s *SQLSongStore) GetSong(id int64) (Song, error) {
 
 // GetSongs returns a slice of Song objects representing all of the songs in
 // the store.
-func (s *SQLSongStore) GetSongs() []Song {
+func (s *SQLSongStore) GetSongs() Songs {
 	rows, err := s.db.QueryContext(s.ctx, "SELECT * FROM songs")
 	if err != nil {
 		log.Fatalf("error querying songs from store: %v", err)
@@ -178,8 +178,8 @@ func rowToSong(row *sql.Row) (Song, error) {
 }
 
 // rowsToSongs marshals a *sql.Rows result into a slice of Song structs.
-func rowsToSongs(rows *sql.Rows) ([]Song, error) {
-	songs := []Song{}
+func rowsToSongs(rows *sql.Rows) (Songs, error) {
+	songs := Songs{}
 	for rows.Next() {
 		var song Song
 		if err := rows.Scan(

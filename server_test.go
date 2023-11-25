@@ -14,9 +14,9 @@ import (
 )
 
 type StubSongStore struct {
-	songs     []songvote.Song
+	songs     songvote.Songs
 	nextID    int64
-	postCalls []songvote.Song
+	postCalls songvote.Songs
 }
 
 func (s *StubSongStore) GetSong(id int64) (songvote.Song, error) {
@@ -39,7 +39,7 @@ func (s *StubSongStore) DeleteSong(id int64) error {
 	return fmt.Errorf("not implemented")
 }
 
-func (s *StubSongStore) GetSongs() []songvote.Song {
+func (s *StubSongStore) GetSongs() songvote.Songs {
 	return s.songs
 }
 
@@ -186,20 +186,20 @@ func newDeleteSongRequest(id int64) *http.Request {
 
 func newPopulatedSongStore() *StubSongStore {
 	return &StubSongStore{
-		songs: []songvote.Song{
+		songs: songvote.Songs{
 			{ID: 1, Name: "Would?", Artist: "Alice in Chains"},
 			{ID: 2, Name: "Zero", Artist: "The Smashing Pumpkins"},
 		},
 		nextID:    3,
-		postCalls: []songvote.Song{},
+		postCalls: songvote.Songs{},
 	}
 }
 
 func newEmptySongStore() *StubSongStore {
 	return &StubSongStore{
-		songs:     []songvote.Song{},
+		songs:     songvote.Songs{},
 		nextID:    1,
-		postCalls: []songvote.Song{},
+		postCalls: songvote.Songs{},
 	}
 }
 

@@ -12,7 +12,7 @@ import (
 
 type SongStore interface {
 	GetSong(id int64) (Song, error)
-	GetSongs() []Song
+	GetSongs() Songs
 	AddSong(song Song) (int64, error)
 	DeleteSong(id int64) error
 }
@@ -113,7 +113,7 @@ func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
 	out := bytes.NewBuffer([]byte{})
 	err := json.NewEncoder(out).Encode(songs)
 	if err != nil {
-		log.Fatalf("problem encoding songs to JSON, %v", err)
+		log.Fatalf("Problem encoding songs to JSON, %v", err)
 	}
 
 	w.Header().Add("Content-Type", "application/json")
@@ -123,7 +123,7 @@ func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
 func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 	id, err := parseSongID(r.URL.Path, "/songs/")
 	if err != nil {
-		log.Printf("problem parsing song ID from %s: %v", r.URL.Path, err)
+		log.Printf("Problem parsing song ID from %s: %v", r.URL.Path, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -136,7 +136,7 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 
 	json, err := MarshalSong(song)
 	if err != nil {
-		log.Printf("problem marshalling song to JSON, %v", err)
+		log.Printf("Problem marshalling song to JSON, %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -148,14 +148,14 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 	songToAdd := Song{}
 	if err := UnmarshalSong(r.Body, &songToAdd); err != nil {
-		log.Printf("could not read message body %v\n", err)
+		log.Printf("Could not read message body: %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	id, err := s.store.AddSong(songToAdd)
 	if err != nil {
-		log.Printf("could not add song, %v\n", err)
+		log.Printf("Could not add song: %v\n", err)
 		w.WriteHeader(http.StatusConflict)
 		return
 	}
@@ -167,7 +167,7 @@ func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 func (s *Server) deleteSong(w http.ResponseWriter, r *http.Request) {
 	id, err := parseSongID(r.URL.Path, "/songs/")
 	if err != nil {
-		log.Printf("problem parsing song ID from %s: %v", r.URL.Path, err)
+		log.Printf("Problem parsing song ID from %s: %v", r.URL.Path, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
