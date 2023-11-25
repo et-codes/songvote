@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/et-codes/songvote/internal/httplogger"
 )
 
 type SongStore interface {
@@ -34,7 +36,7 @@ func NewServer(store SongStore) *Server {
 	router.Handle("/songs/", http.HandlerFunc(s.handleSongsWithID)) // GET|PATCH|DELETE
 	router.Handle("/songs", http.HandlerFunc(s.handleSongs))        // GET|POST
 
-	loggingRouter := NewLoggerMiddleware(router)
+	loggingRouter := httplogger.New(router)
 
 	s.Handler = loggingRouter
 
