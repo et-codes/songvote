@@ -47,10 +47,8 @@ func NewSQLSongStore(dbPath string) *SQLSongStore {
 // GetSong returns a Song object with the given ID, or an error if it cannot
 // be found.
 func (s *SQLSongStore) GetSong(id int64) (Song, error) {
-	var song Song
-
-	err := s.db.QueryRowContext(s.ctx, "SELECT * FROM songs WHERE id = $1", id).
-		Scan(&song.ID, &song.Name, &song.Artist, &song.LinkURL, &song.Votes, &song.Vetoed)
+	row := s.db.QueryRowContext(s.ctx, "SELECT * FROM songs WHERE id = $1", id)
+	song, err := rowToSong(row)
 
 	switch {
 	case err == sql.ErrNoRows:
@@ -71,14 +69,9 @@ func (s *SQLSongStore) GetSongs() []Song {
 	}
 	defer rows.Close()
 
-	songs := []Song{}
-
-	for rows.Next() {
-		var song Song
-		if err := rows.Scan(&song.ID, &song.Name, &song.Artist, &song.LinkURL, &song.Votes, &song.Vetoed); err != nil {
-			log.Fatalf("error scanning query results: %v", err)
-		}
-		songs = append(songs, song)
+	songs, err := rowsToSongs(rows)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	return songs
@@ -166,4 +159,39 @@ func (s *SQLSongStore) songExists(song Song) bool {
 	default:
 		return true
 	}
+}
+
+// rowToSong marshals a *sql.Row result into a Song struct.
+func rowToSong(row *sql.Row) (Song, error) {
+	var song Song
+	err := row.Scan(
+		&song.ID,
+		&song.Name,
+		&song.Artist,
+		&song.LinkURL,
+		&song.Votes,
+		&song.Vetoed,
+	)
+	return song, err
+}
+
+// rowsToSongs marshals a *sql.Rows result into a slice of Song structs.
+func rowsToSongs(rows *sql.Rows) ([]Song, error) {
+	songs := []Song{}
+	for rows.Next() {
+		var song Song
+		if err := rows.Scan(
+			&song.ID,
+			&song.Name,
+			&song.Artist,
+			&song.LinkURL,
+			&song.Votes,
+			&song.Vetoed,
+		); err != nil {
+			return songs, fmt.Errorf("problem scanning rows: %v", err)
+		}
+		songs = append(songs, song)
+	}
+
+	return songs, nil
 }
