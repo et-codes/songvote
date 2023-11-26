@@ -229,13 +229,67 @@ func TestUpdateSongOnServer(t *testing.T) {
 func TestAddVoteOnServer(t *testing.T) {
 	store := NewStubSongStore()
 	server := songvote.NewServer(store)
-	_ = server
+
+	t.Run("update vote count", func(t *testing.T) {
+		request := newVoteRequest(1)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusNoContent)
+		assert.Equal(t, store.addVoteCalls[0], int64(1))
+	})
+
+	t.Run("returns 405 when wrong method used", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodGet, "/songs/vote/1", nil)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusMethodNotAllowed)
+	})
+
+	t.Run("returns error if song not found", func(t *testing.T) {
+		request := newVoteRequest(10)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusInternalServerError)
+	})
 }
 
 func TestVetoSongOnServer(t *testing.T) {
 	store := NewStubSongStore()
 	server := songvote.NewServer(store)
-	_ = server
+
+	t.Run("veto a song", func(t *testing.T) {
+		request := newVetoRequest(1)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusNoContent)
+		assert.Equal(t, len(store.vetoCalls), 1)
+	})
+
+	t.Run("returns error if song not found", func(t *testing.T) {
+		request := newVetoRequest(10)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusInternalServerError)
+	})
+
+	t.Run("returns 405 when wrong method used", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodGet, "/songs/veto/1", nil)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusMethodNotAllowed)
+	})
 }
 
 // Helper methods
@@ -275,5 +329,17 @@ func newUpdateSongRequest(id int64, song songvote.Song) *http.Request {
 	url := fmt.Sprintf("/songs/%d", id)
 	bodyReader := bytes.NewBuffer([]byte(json))
 	request, _ := http.NewRequest(http.MethodPatch, url, bodyReader)
+	return request
+}
+
+func newVoteRequest(id int64) *http.Request {
+	url := fmt.Sprintf("/songs/vote/%d", id)
+	request, _ := http.NewRequest(http.MethodPost, url, nil)
+	return request
+}
+
+func newVetoRequest(id int64) *http.Request {
+	url := fmt.Sprintf("/songs/veto/%d", id)
+	request, _ := http.NewRequest(http.MethodPost, url, nil)
 	return request
 }
