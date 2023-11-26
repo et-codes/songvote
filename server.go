@@ -73,9 +73,7 @@ func (s *Server) handleSongsWithID(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		s.getSong(w, r)
 	case http.MethodPatch:
-		// TODO implement this method
-		log.Println("PATCH song not implemented")
-		w.WriteHeader(http.StatusNotImplemented)
+		s.updateSong(w, r)
 	case http.MethodDelete:
 		s.deleteSong(w, r)
 	default:
@@ -194,6 +192,34 @@ func (s *Server) deleteSong(w http.ResponseWriter, r *http.Request) {
 	if err := s.store.DeleteSong(id); err != nil {
 		code := http.StatusInternalServerError
 		message := fmt.Sprintf("Could not delete song: %v\n", err)
+		writeError(w, code, message)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *Server) updateSong(w http.ResponseWriter, r *http.Request) {
+	id, err := parseSongID(r.URL.Path, "/songs/")
+	if err != nil {
+		code := http.StatusInternalServerError
+		message := fmt.Sprintf("Problem parsing song ID: %v", err)
+		writeError(w, code, message)
+		return
+	}
+
+	songToUpdate, err := s.store.GetSong(id)
+	if err != nil {
+		code := http.StatusNotFound
+		message := fmt.Sprintf("Unable to retreive song %d: %v", id, err)
+		writeError(w, code, message)
+		return
+	}
+
+	err = s.store.UpdateSong(id, songToUpdate)
+	if err != nil {
+		code := http.StatusInternalServerError
+		message := fmt.Sprintf("Error updating song %d: %v", id, err)
 		writeError(w, code, message)
 		return
 	}

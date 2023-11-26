@@ -197,7 +197,30 @@ func TestDeleteSongFromServer(t *testing.T) {
 func TestUpdateSongOnServer(t *testing.T) {
 	store := NewStubSongStore()
 	server := songvote.NewServer(store)
-	_ = server
+	song := songvote.Song{
+		Name:   "Creep",
+		Artist: "Radiohead",
+	}
+
+	t.Run("update song", func(t *testing.T) {
+		request := newUpdateSongRequest(1, song)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusNoContent)
+		assert.Equal(t, len(store.updateSongCalls), 1)
+		assert.Equal(t, store.updateSongCalls[0], int64(1))
+	})
+
+	t.Run("returns error if song not found", func(t *testing.T) {
+		request := newUpdateSongRequest(10, song)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusNotFound)
+	})
 }
 
 func TestAddVoteOnServer(t *testing.T) {
@@ -238,5 +261,16 @@ func newAddSongRequest(song songvote.Song) *http.Request {
 func newDeleteSongRequest(id int64) *http.Request {
 	url := fmt.Sprintf("/songs/%d", id)
 	request, _ := http.NewRequest(http.MethodDelete, url, nil)
+	return request
+}
+
+func newUpdateSongRequest(id int64, song songvote.Song) *http.Request {
+	json, err := songvote.MarshalJSON(song)
+	if err != nil {
+		log.Fatalf("problem marshalling Song JSON, %v", err)
+	}
+	url := fmt.Sprintf("/songs/%d", id)
+	bodyReader := bytes.NewBuffer([]byte(json))
+	request, _ := http.NewRequest(http.MethodPatch, url, bodyReader)
 	return request
 }
