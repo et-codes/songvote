@@ -152,7 +152,7 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json, err := MarshalSong(song)
+	json, err := Marshal(song)
 	if err != nil {
 		code := http.StatusInternalServerError
 		message := fmt.Sprintf("Problem marshaling song to JSON: %v", err)
@@ -166,7 +166,7 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 	songToAdd := Song{}
-	if err := UnmarshalSong(r.Body, &songToAdd); err != nil {
+	if err := Unmarshal(r.Body, &songToAdd); err != nil {
 		code := http.StatusInternalServerError
 		message := fmt.Sprintf("Problem unmarshaling song: %v", err)
 		writeError(w, code, message)

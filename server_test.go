@@ -90,7 +90,7 @@ func TestGetSongss(t *testing.T) {
 		server.ServeHTTP(response, request)
 		assert.Equal(t, response.Code, http.StatusOK)
 
-		want, err := songvote.MarshalSong(store.songs[0])
+		want, err := songvote.Marshal(store.songs[0])
 		assert.NoError(t, err)
 
 		got := response.Body.String()
@@ -104,7 +104,7 @@ func TestGetSongss(t *testing.T) {
 		server.ServeHTTP(response, request)
 		assert.Equal(t, response.Code, http.StatusOK)
 
-		want, err := songvote.MarshalSong(store.songs[1])
+		want, err := songvote.Marshal(store.songs[1])
 		assert.NoError(t, err)
 
 		got := response.Body.String()
@@ -181,7 +181,7 @@ func newGetSongsRequest() *http.Request {
 }
 
 func newAddSongRequest(song songvote.Song) *http.Request {
-	json, err := songvote.MarshalSong(song)
+	json, err := songvote.Marshal(song)
 	if err != nil {
 		log.Fatalf("problem marshalling Song JSON, %v", err)
 	}

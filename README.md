@@ -31,3 +31,4 @@
 - Implement users
 - Track who adds a song
 - Track who voted for and vetoed a song
+- Password encryption
