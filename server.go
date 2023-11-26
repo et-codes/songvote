@@ -175,7 +175,7 @@ func (s *Server) deleteSong(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := s.store.DeleteSong(id); err != nil {
-		code := http.StatusInternalServerError
+		code := http.StatusNotFound
 		message := fmt.Sprintf("Could not delete song: %v\n", err)
 		writeError(w, code, message)
 		return

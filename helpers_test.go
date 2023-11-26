@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 
@@ -21,6 +22,12 @@ func setupSuite(t *testing.T) func(t *testing.T) {
 		// Restore logging to os.Stdout after tests.
 		log.SetOutput(os.Stdout)
 	}
+}
+
+// populateWithSong adds a song to a server for testing purposes.
+func populateWithSong(server *songvote.Server, song songvote.Song) {
+	request := newAddSongRequest(songToAdd)
+	server.ServeHTTP(httptest.NewRecorder(), request)
 }
 
 func newGetSongRequest(id int64) *http.Request {

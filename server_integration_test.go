@@ -29,6 +29,7 @@ func TestAddSongs(t *testing.T) {
 	t.Run("add song and get ID", func(t *testing.T) {
 		response := httptest.NewRecorder()
 		request := newAddSongRequest(songToAdd)
+
 		server.ServeHTTP(response, request)
 
 		got := response.Body.String()
@@ -41,21 +42,10 @@ func TestAddSongs(t *testing.T) {
 	t.Run("returns 409 with duplicate song", func(t *testing.T) {
 		response := httptest.NewRecorder()
 		request := newAddSongRequest(songToAdd)
+
 		server.ServeHTTP(response, request)
 
 		assert.Equal(t, response.Code, http.StatusConflict)
-	})
-
-	t.Run("delete a song", func(t *testing.T) {
-		response := httptest.NewRecorder()
-		request := newDeleteSongRequest(1)
-		server.ServeHTTP(response, request)
-		assert.Equal(t, response.Code, http.StatusNoContent)
-
-		response = httptest.NewRecorder()
-		request = newGetSongRequest(1)
-		server.ServeHTTP(response, request)
-		assert.Equal(t, response.Code, http.StatusNotFound)
 	})
 }
 
@@ -66,22 +56,51 @@ func TestGetSong(t *testing.T) {
 	store := songvote.NewSQLStore(":memory:")
 	server := songvote.NewServer(store)
 
-	request := newAddSongRequest(songToAdd)
-	server.ServeHTTP(httptest.NewRecorder(), request)
+	populateWithSong(server, songToAdd)
 
 	t.Run("get song with ID", func(t *testing.T) {
 		response := httptest.NewRecorder()
 		request := newGetSongRequest(1)
+
 		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusOK)
 
 		got := songvote.Song{}
 		err := songvote.UnmarshalJSON[songvote.Song](response.Body, &got)
 		assert.NoError(t, err)
+
 		want := songToAdd
 		want.ID = 1
 
-		assert.Equal(t, response.Code, http.StatusOK)
 		assert.Equal(t, got, want)
+	})
+
+	t.Run("returns error if song not found", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		request := newGetSongRequest(999)
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusNotFound)
+	})
+
+	t.Run("get all songs", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		request := newGetSongsRequest()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusOK)
+
+		songs := songvote.Songs{}
+		err := songvote.UnmarshalJSON[songvote.Songs](response.Body, &songs)
+		assert.NoError(t, err)
+
+		assert.Equal(t, len(songs), 1)
+		if !songs[0].Equal(songToAdd) {
+			t.Errorf("want %v, got %v", songToAdd, songs[0])
+		}
 	})
 }
 
@@ -89,7 +108,31 @@ func TestDeleteSong(t *testing.T) {
 	teardownSuite := setupSuite(t)
 	defer teardownSuite(t)
 
-	// store := songvote.NewSQLStore(":memory:")
-	// server := songvote.NewServer(store)
+	store := songvote.NewSQLStore(":memory:")
+	server := songvote.NewServer(store)
 
+	populateWithSong(server, songToAdd)
+
+	t.Run("delete a song and cannot retreive it", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		request := newDeleteSongRequest(1)
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusNoContent)
+
+		response = httptest.NewRecorder()
+		request = newGetSongRequest(1)
+		server.ServeHTTP(response, request)
+		assert.Equal(t, response.Code, http.StatusNotFound)
+	})
+
+	t.Run("returns error with unknown ID", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		request := newDeleteSongRequest(999)
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusNotFound)
+	})
 }

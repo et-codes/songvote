@@ -112,12 +112,17 @@ func (s *SQLStore) AddSong(song Song) (int64, error) {
 
 // DeleteSong will delete the given song ID from the table.
 func (s *SQLStore) DeleteSong(id int64) error {
-	_, err := s.db.ExecContext(s.ctx,
+	result, err := s.db.ExecContext(s.ctx,
 		"DELETE FROM songs WHERE id = $1",
 		id,
 	)
 	if err != nil {
 		return fmt.Errorf("error deleting song %d: %v", id, err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("song %d not found: %v", id, err)
 	}
 
 	return nil
