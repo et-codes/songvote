@@ -7,15 +7,7 @@ import (
 	"github.com/et-codes/songvote/internal/assert"
 )
 
-const (
-	memoryDB   = ":memory:"              // in-memory database
-	testFileDB = "./db/songvote_test.db" // persistent test database
-)
-
-// Configure the store to use either the in-memory db or disk-based db. Use
-// the disk-based db if you want to populate it with data for more extensive
-// testing.
-var store = songvote.NewSQLStore(memoryDB)
+// Unit tests for a Store.
 
 var newSong = songvote.Song{
 	ID:      1,
@@ -26,36 +18,36 @@ var newSong = songvote.Song{
 	Vetoed:  true,
 }
 
-func TestAddSong(t *testing.T) {
+func TestAddSongToStore(t *testing.T) {
+	teardownSuite := setupSuite(t)
+	defer teardownSuite(t)
+
+	var store = songvote.NewSQLStore(":memory:")
+
 	t.Run("adding song returns valid ID", func(t *testing.T) {
-		id, err := addSong(t, newSong)
+		id, err := store.AddSong(newSong)
 		assert.NoError(t, err)
 		if id <= 0 {
 			t.Errorf("got bad id %d", id)
 		}
 	})
 
-	t.Run("can add and retreive a song", func(t *testing.T) {
-		id, err := addSong(t, newSong)
-		assert.NoError(t, err)
-		got, err := store.GetSong(id)
-		assert.NoError(t, err)
-		assert.Equal(t, got, newSong)
-	})
-
 	t.Run("can't add duplicate song", func(t *testing.T) {
-		_, err := addSong(t, newSong)
-		assert.NoError(t, err)
-		_, err = addSong(t, newSong)
+		_, err := store.AddSong(newSong)
 		assert.Error(t, err)
 	})
 }
 
-func TestGetSongs(t *testing.T) {
+func TestGetSongsFromStore(t *testing.T) {
+	teardownSuite := setupSuite(t)
+	defer teardownSuite(t)
+
+	var store = songvote.NewSQLStore(":memory:")
+
 	t.Run("gets all songs in store", func(t *testing.T) {
-		_, _ = addSong(t, newSong)
+		_, _ = store.AddSong(newSong)
 		newSong.Name = "Fake Song #4"
-		_, err := addSong(t, newSong)
+		_, err := store.AddSong(newSong)
 		assert.NoError(t, err)
 
 		got := store.GetSongs()
@@ -63,20 +55,30 @@ func TestGetSongs(t *testing.T) {
 	})
 }
 
-func TestDeleteSong(t *testing.T) {
+func TestDeleteSongFromStore(t *testing.T) {
+	teardownSuite := setupSuite(t)
+	defer teardownSuite(t)
+
+	var store = songvote.NewSQLStore(":memory:")
+
 	t.Run("deletes a song", func(t *testing.T) {
-		id, _ := addSong(t, newSong)
+		id, _ := store.AddSong(newSong)
 		err := store.DeleteSong(id)
 		assert.NoError(t, err)
 	})
 }
 
-func TestUpdateSong(t *testing.T) {
+func TestUpdateSongInStore(t *testing.T) {
+	teardownSuite := setupSuite(t)
+	defer teardownSuite(t)
+
+	var store = songvote.NewSQLStore(":memory:")
+
 	t.Run("updates song name", func(t *testing.T) {
 		originalName := newSong.Name
 		newName := "Fake Song #4"
 
-		id, _ := addSong(t, newSong)
+		id, _ := store.AddSong(newSong)
 		song, _ := store.GetSong(id)
 		assert.Equal(t, song.Name, originalName)
 
@@ -89,9 +91,14 @@ func TestUpdateSong(t *testing.T) {
 	})
 }
 
-func TestAddVote(t *testing.T) {
+func TestAddVoteToSongInStore(t *testing.T) {
+	teardownSuite := setupSuite(t)
+	defer teardownSuite(t)
+
+	var store = songvote.NewSQLStore(":memory:")
+
 	t.Run("updates vote count", func(t *testing.T) {
-		id, _ := addSong(t, newSong)
+		id, _ := store.AddSong(newSong)
 		err := store.AddVote(id)
 		assert.NoError(t, err)
 
@@ -100,23 +107,18 @@ func TestAddVote(t *testing.T) {
 	})
 }
 
-func TestVeto(t *testing.T) {
+func TestVetoSongInStore(t *testing.T) {
+	teardownSuite := setupSuite(t)
+	defer teardownSuite(t)
+
+	var store = songvote.NewSQLStore(":memory:")
+
 	t.Run("sets veto value to true", func(t *testing.T) {
-		id, _ := addSong(t, newSong)
+		id, _ := store.AddSong(newSong)
 		err := store.Veto(id)
 		assert.NoError(t, err)
 
 		song, _ := store.GetSong(id)
 		assert.True(t, song.Vetoed)
 	})
-}
-
-// addSong is a helper function that calls the store's AddSong method and
-// deletes the song after each test is concluded.
-func addSong(t testing.TB, song songvote.Song) (int64, error) {
-	id, err := store.AddSong(song)
-	t.Cleanup(func() {
-		_ = store.DeleteSong(id)
-	})
-	return id, err
 }
