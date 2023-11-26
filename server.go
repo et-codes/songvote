@@ -19,7 +19,7 @@ type SongStore interface {
 	DeleteSong(id int64) error
 	UpdateSong(id int64, song Song) error
 	AddVote(id int64) error
-	AddVeto(id int64) error
+	Veto(id int64) error
 }
 
 type Server struct {

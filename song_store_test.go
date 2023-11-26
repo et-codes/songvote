@@ -85,6 +85,28 @@ func TestUpdateSong(t *testing.T) {
 	})
 }
 
+func TestAddVote(t *testing.T) {
+	t.Run("updates vote count", func(t *testing.T) {
+		id, _ := addSong(t, newSong)
+		err := store.AddVote(id)
+		assert.NoError(t, err)
+
+		song, _ := store.GetSong(id)
+		assert.Equal(t, song.Votes, 13)
+	})
+}
+
+func TestVeto(t *testing.T) {
+	t.Run("sets veto value to true", func(t *testing.T) {
+		id, _ := addSong(t, newSong)
+		err := store.Veto(id)
+		assert.NoError(t, err)
+
+		song, _ := store.GetSong(id)
+		assert.True(t, song.Vetoed)
+	})
+}
+
 // addSong is a helper function that calls the store's AddSong method and
 // deletes the song after each test is concluded.
 func addSong(t testing.TB, song songvote.Song) (int64, error) {

@@ -51,7 +51,7 @@ func (s *StubSongStore) AddVote(id int64) error {
 	return fmt.Errorf("AddVote not implemented.")
 }
 
-func (s *StubSongStore) AddVeto(id int64) error {
+func (s *StubSongStore) Veto(id int64) error {
 	return fmt.Errorf("AddVeto not implemented.")
 }
 

@@ -117,21 +117,15 @@ func (s *SQLSongStore) DeleteSong(id int64) error {
 	return nil
 }
 
-// UpdateSong allows changing the name, artist, and/or link URL of the song.
+// UpdateSong allows changing the Name, Artist, and/or LinkURL of the song.
 // Parameters are the ID of the song and a Song object which contains the
-// desired changes.
+// desired changes. Fields other than Name, Artist, and LinkURL are ignored.
 func (s *SQLSongStore) UpdateSong(id int64, song Song) error {
-	// Check if ID is valid.
-	_, err := s.GetSong(id)
-	if err != nil {
-		return err
-	}
-
 	newName := song.Name
 	newArtist := song.Artist
 	newLinkURL := song.LinkURL
 
-	_, err = s.db.ExecContext(s.ctx,
+	_, err := s.db.ExecContext(s.ctx,
 		"UPDATE songs SET name = $1, artist = $2, link_url = $3 WHERE id = $4",
 		newName, newArtist, newLinkURL, id,
 	)
@@ -142,12 +136,37 @@ func (s *SQLSongStore) UpdateSong(id int64, song Song) error {
 	return nil
 }
 
+// AddVote increments the Vote count on a Song with the given ID.
 func (s *SQLSongStore) AddVote(id int64) error {
-	return fmt.Errorf("AddVote not implemented.")
+	song, err := s.GetSong(id)
+	if err != nil {
+		return err
+	}
+
+	votes := song.Votes + 1
+
+	_, err = s.db.ExecContext(s.ctx,
+		"UPDATE songs SET votes = $1 WHERE id = $2",
+		votes, id,
+	)
+	if err != nil {
+		return fmt.Errorf("error updating song %d: %v", id, err)
+	}
+
+	return nil
 }
 
-func (s *SQLSongStore) AddVeto(id int64) error {
-	return fmt.Errorf("AddVeto not implemented.")
+// Veto sets the Vetoed field of the Song with the given ID to true.
+func (s *SQLSongStore) Veto(id int64) error {
+	_, err := s.db.ExecContext(s.ctx,
+		"UPDATE songs SET vetoed = $1 WHERE id = $2",
+		true, id,
+	)
+	if err != nil {
+		return fmt.Errorf("error updating song %d: %v", id, err)
+	}
+
+	return nil
 }
 
 // createSongsTable creates the database table for Songs if it does not
