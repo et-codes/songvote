@@ -49,7 +49,10 @@ func NewSQLSongStore(dbPath string) *SQLSongStore {
 // GetSong returns a Song object with the given ID, or an error if it cannot
 // be found.
 func (s *SQLSongStore) GetSong(id int64) (Song, error) {
-	row := s.db.QueryRowContext(s.ctx, "SELECT * FROM songs WHERE id = $1", id)
+	row := s.db.QueryRowContext(s.ctx,
+		"SELECT * FROM songs WHERE id = $1",
+		id,
+	)
 	song, err := rowToSong(row)
 
 	switch {
@@ -110,10 +113,14 @@ func (s *SQLSongStore) AddSong(song Song) (int64, error) {
 
 // DeleteSong will delete the given song ID from the table.
 func (s *SQLSongStore) DeleteSong(id int64) error {
-	_, err := s.db.ExecContext(s.ctx, "DELETE FROM songs WHERE id = $1", id)
+	_, err := s.db.ExecContext(s.ctx,
+		"DELETE FROM songs WHERE id = $1",
+		id,
+	)
 	if err != nil {
 		return fmt.Errorf("error deleting song %d: %v", id, err)
 	}
+
 	return nil
 }
 
