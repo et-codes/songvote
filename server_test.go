@@ -1,8 +1,11 @@
+// The purpose of these tests is to ensure that Server properly receives
+// the HTTP requests, calls the appropriate methods, and returns the
+// correct data types.
+
 package songvote_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,116 +16,133 @@ import (
 	"github.com/et-codes/songvote/internal/assert"
 )
 
+// StubSongStore implements the SongStore interface, and keeps track of
+// the calls against its methods.
 type StubSongStore struct {
-	songs     songvote.Songs
-	nextID    int64
-	postCalls songvote.Songs
+	nextID            int64          // next song ID to be used
+	getSongCalls      []int64        // slice of ID's called to GetSong
+	getSongsCallCount int            // count of calls to GetSongs
+	addSongCalls      songvote.Songs // slice of Songs sent to AddSong
+	deleteSongCalls   []int64        // slice of ID's called to DeleteSong
+	updateSongCalls   []int64        // slice of ID's called to UpdateSong
+	addVoteCalls      []int64        // slice of ID's called to AddVote
+	vetoCalls         []int64        // slice of ID's called to Veto
+}
+
+func NewStubSongStore() *StubSongStore {
+	return &StubSongStore{
+		nextID: 1,
+	}
 }
 
 func (s *StubSongStore) GetSong(id int64) (songvote.Song, error) {
-	for _, s := range s.songs {
-		if s.ID == id {
-			return s, nil
-		}
+	s.getSongCalls = append(s.getSongCalls, id)
+	if id >= 10 {
+		return songvote.Song{}, fmt.Errorf("song ID %d not found", id)
 	}
-	return songvote.Song{}, fmt.Errorf("song ID %d not found", id)
+	return songvote.Song{}, nil
 }
 
 func (s *StubSongStore) AddSong(song songvote.Song) (int64, error) {
 	song.ID = s.nextID
 	s.nextID++
-	s.postCalls = append(s.postCalls, song)
+	s.addSongCalls = append(s.addSongCalls, song)
 	return song.ID, nil
 }
 
 func (s *StubSongStore) DeleteSong(id int64) error {
-	return fmt.Errorf("not implemented")
+	s.deleteSongCalls = append(s.deleteSongCalls, id)
+	if id >= 10 {
+		return fmt.Errorf("song ID %d not found", id)
+	}
+	return nil
 }
 
 func (s *StubSongStore) GetSongs() songvote.Songs {
-	return s.songs
+	s.getSongsCallCount++
+	return songvote.Songs{}
 }
 
 func (s *StubSongStore) UpdateSong(id int64, song songvote.Song) error {
-	return fmt.Errorf("UpdateSong not implemented.")
+	s.updateSongCalls = append(s.updateSongCalls, id)
+	if id >= 10 {
+		return fmt.Errorf("song ID %d not found", id)
+	}
+	return nil
 }
 
 func (s *StubSongStore) AddVote(id int64) error {
-	return fmt.Errorf("AddVote not implemented.")
+	s.addVoteCalls = append(s.addVoteCalls, id)
+	if id >= 10 {
+		return fmt.Errorf("song ID %d not found", id)
+	}
+	return nil
 }
 
 func (s *StubSongStore) Veto(id int64) error {
-	return fmt.Errorf("AddVeto not implemented.")
+	s.vetoCalls = append(s.vetoCalls, id)
+	if id >= 10 {
+		return fmt.Errorf("song ID %d not found", id)
+	}
+	return nil
 }
 
-func TestGetAllSongs(t *testing.T) {
-	store := newPopulatedSongStore()
+func TestGetAllSongsFromServer(t *testing.T) {
+	store := NewStubSongStore()
 	server := songvote.NewServer(store)
 	request := newGetSongsRequest()
 	response := httptest.NewRecorder()
 
-	t.Run("can get all songs", func(t *testing.T) {
+	t.Run("get all songs", func(t *testing.T) {
 		server.ServeHTTP(response, request)
+		songs := songvote.Songs{}
+		_ = songvote.UnmarshalJSON(response.Body, &songs)
 
 		assert.Equal(t, response.Code, http.StatusOK)
-		assertSongListsEqual(t, response.Body, store.songs)
+		assert.Equal(t, songs, songvote.Songs{})
+		assert.Equal(t, store.getSongsCallCount, 1)
 	})
 
-	t.Run("returns empty array if empty store", func(t *testing.T) {
-		store = newEmptySongStore()
-		server = songvote.NewServer(store)
-
+	t.Run("returns 405 when wrong method used", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPatch, "/songs", nil)
+		response := httptest.NewRecorder()
 		server.ServeHTTP(response, request)
-
-		assert.Equal(t, response.Code, http.StatusOK)
-		assertSongListsEqual(t, response.Body, store.songs)
+		assert.Equal(t, response.Code, http.StatusMethodNotAllowed)
 	})
 }
 
-func TestGetSongss(t *testing.T) {
-	store := newPopulatedSongStore()
+func TestGetSongsFromServer(t *testing.T) {
+	store := NewStubSongStore()
 	server := songvote.NewServer(store)
 
-	t.Run("returns the song Would?", func(t *testing.T) {
+	t.Run("get single song", func(t *testing.T) {
 		request := newGetSongRequest(1)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
 		assert.Equal(t, response.Code, http.StatusOK)
-
-		want, err := songvote.MarshalJSON(store.songs[0])
-		assert.NoError(t, err)
-
-		got := response.Body.String()
-		assert.Equal(t, got, want)
-	})
-
-	t.Run("returns the song Zero", func(t *testing.T) {
-		request := newGetSongRequest(2)
-		response := httptest.NewRecorder()
-
-		server.ServeHTTP(response, request)
-		assert.Equal(t, response.Code, http.StatusOK)
-
-		want, err := songvote.MarshalJSON(store.songs[1])
-		assert.NoError(t, err)
-
-		got := response.Body.String()
-		assert.Equal(t, got, want)
+		assert.Equal(t, len(store.getSongCalls), 1)
 	})
 
 	t.Run("returns 404 if song ID not found", func(t *testing.T) {
-		request := newGetSongRequest(3)
+		request := newGetSongRequest(10)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
 
 		assert.Equal(t, response.Code, http.StatusNotFound)
 	})
+
+	t.Run("returns 405 when wrong method used", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPost, "/songs/0", nil)
+		response := httptest.NewRecorder()
+		server.ServeHTTP(response, request)
+		assert.Equal(t, response.Code, http.StatusMethodNotAllowed)
+	})
 }
 
-func TestStoreSongs(t *testing.T) {
-	store := newEmptySongStore()
+func TestAddSongsToServer(t *testing.T) {
+	store := NewStubSongStore()
 	server := songvote.NewServer(store)
 
 	t.Run("stores song when POST", func(t *testing.T) {
@@ -137,34 +157,59 @@ func TestStoreSongs(t *testing.T) {
 		server.ServeHTTP(response, request)
 
 		assert.Equal(t, response.Code, http.StatusAccepted)
+		assert.Equal(t, len(store.addSongCalls), 1)
+		var id int64
+		_ = songvote.UnmarshalJSON(response.Body, &id)
+		assert.Equal(t, id, int64(1))
 
-		if len(store.postCalls) != 1 {
-			t.Errorf("got %d calls to AddSong, want %d", len(store.postCalls), 1)
-		}
-
-		if !newSong.Equal(store.postCalls[0]) {
-			t.Errorf("did not store correct song, got %v, want %v", store.postCalls[0], newSong)
+		if !newSong.Equal(store.addSongCalls[0]) {
+			t.Errorf("did not store correct song, got %v, want %v",
+				store.addSongCalls[0], newSong)
 		}
 	})
 }
 
-func TestAllowedMethods(t *testing.T) {
-	store := newEmptySongStore()
+func TestDeleteSongFromServer(t *testing.T) {
+	store := NewStubSongStore()
 	server := songvote.NewServer(store)
 
-	t.Run("/songs/{id} returns 405 when wrong method used", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodPost, "/songs/0", nil)
+	t.Run("delete song response", func(t *testing.T) {
+		request := newDeleteSongRequest(1)
 		response := httptest.NewRecorder()
+
 		server.ServeHTTP(response, request)
-		assert.Equal(t, response.Code, http.StatusMethodNotAllowed)
+
+		assert.Equal(t, response.Code, http.StatusNoContent)
+		assert.Equal(t, store.deleteSongCalls[0], int64(1))
 	})
 
-	t.Run("/songs returns 405 when wrong method used", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodPatch, "/songs", nil)
+	t.Run("returns error if song not found", func(t *testing.T) {
+		request := newDeleteSongRequest(10)
 		response := httptest.NewRecorder()
+
 		server.ServeHTTP(response, request)
-		assert.Equal(t, response.Code, http.StatusMethodNotAllowed)
+
+		assert.Equal(t, response.Code, http.StatusInternalServerError)
+		assert.Equal(t, store.deleteSongCalls[1], int64(10))
 	})
+}
+
+func TestUpdateSongOnServer(t *testing.T) {
+	store := NewStubSongStore()
+	server := songvote.NewServer(store)
+	_ = server
+}
+
+func TestAddVoteOnServer(t *testing.T) {
+	store := NewStubSongStore()
+	server := songvote.NewServer(store)
+	_ = server
+}
+
+func TestVetoSongOnServer(t *testing.T) {
+	store := NewStubSongStore()
+	server := songvote.NewServer(store)
+	_ = server
 }
 
 // Helper methods
@@ -194,35 +239,4 @@ func newDeleteSongRequest(id int64) *http.Request {
 	url := fmt.Sprintf("/songs/%d", id)
 	request, _ := http.NewRequest(http.MethodDelete, url, nil)
 	return request
-}
-
-func newPopulatedSongStore() *StubSongStore {
-	return &StubSongStore{
-		songs: songvote.Songs{
-			{ID: 1, Name: "Would?", Artist: "Alice in Chains"},
-			{ID: 2, Name: "Zero", Artist: "The Smashing Pumpkins"},
-		},
-		nextID:    3,
-		postCalls: songvote.Songs{},
-	}
-}
-
-func newEmptySongStore() *StubSongStore {
-	return &StubSongStore{
-		songs:     songvote.Songs{},
-		nextID:    1,
-		postCalls: songvote.Songs{},
-	}
-}
-
-// Custom assertions
-
-func assertSongListsEqual(t testing.TB, body *bytes.Buffer, songs []songvote.Song) {
-	t.Helper()
-	want := []songvote.Song{}
-	err := json.NewDecoder(body).Decode(&want)
-	if err != nil {
-		t.Errorf("could not decode response to JSON %v", err)
-	}
-	assert.Equal(t, want, songs)
 }
