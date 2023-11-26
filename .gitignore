@@ -23,3 +23,5 @@ go.work
 
 # Test files
 db/*_test.db
+cover.out
+cover.html
