@@ -11,7 +11,7 @@
 - When a round ends, the song list resets. The song list from previous rounds is stored. Vetoes are resupplied to the users.
 
 ## API
-### Songs
+### Songs (DONE)
 - `GET /songs` returns a list of all songs
 - `POST /songs` adds a song to the list
 - `GET /songs/{id}` info for particular song
