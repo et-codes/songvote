@@ -1,6 +1,9 @@
 package songvote_test
 
 import (
+	"io"
+	"log"
+	"os"
 	"testing"
 
 	"github.com/et-codes/songvote"
@@ -19,8 +22,8 @@ var newSong = songvote.Song{
 }
 
 func TestAddSongToStore(t *testing.T) {
-	teardownSuite := setupSuite(t)
-	defer teardownSuite(t)
+	log.SetOutput(io.Discard)
+	defer log.SetOutput(os.Stdout)
 
 	var store = songvote.NewSQLStore(":memory:")
 
@@ -39,8 +42,8 @@ func TestAddSongToStore(t *testing.T) {
 }
 
 func TestGetSongsFromStore(t *testing.T) {
-	teardownSuite := setupSuite(t)
-	defer teardownSuite(t)
+	log.SetOutput(io.Discard)
+	defer log.SetOutput(os.Stdout)
 
 	var store = songvote.NewSQLStore(":memory:")
 
@@ -56,8 +59,8 @@ func TestGetSongsFromStore(t *testing.T) {
 }
 
 func TestDeleteSongFromStore(t *testing.T) {
-	teardownSuite := setupSuite(t)
-	defer teardownSuite(t)
+	log.SetOutput(io.Discard)
+	defer log.SetOutput(os.Stdout)
 
 	var store = songvote.NewSQLStore(":memory:")
 
@@ -69,8 +72,8 @@ func TestDeleteSongFromStore(t *testing.T) {
 }
 
 func TestUpdateSongInStore(t *testing.T) {
-	teardownSuite := setupSuite(t)
-	defer teardownSuite(t)
+	log.SetOutput(io.Discard)
+	defer log.SetOutput(os.Stdout)
 
 	var store = songvote.NewSQLStore(":memory:")
 
@@ -92,8 +95,8 @@ func TestUpdateSongInStore(t *testing.T) {
 }
 
 func TestAddVoteToSongInStore(t *testing.T) {
-	teardownSuite := setupSuite(t)
-	defer teardownSuite(t)
+	log.SetOutput(io.Discard)
+	defer log.SetOutput(os.Stdout)
 
 	var store = songvote.NewSQLStore(":memory:")
 
@@ -108,8 +111,8 @@ func TestAddVoteToSongInStore(t *testing.T) {
 }
 
 func TestVetoSongInStore(t *testing.T) {
-	teardownSuite := setupSuite(t)
-	defer teardownSuite(t)
+	log.SetOutput(io.Discard)
+	defer log.SetOutput(os.Stdout)
 
 	var store = songvote.NewSQLStore(":memory:")
 

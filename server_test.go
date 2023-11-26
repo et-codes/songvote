@@ -5,8 +5,11 @@
 package songvote_test
 
 import (
+	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/et-codes/songvote"
@@ -14,8 +17,8 @@ import (
 )
 
 func TestGetAllSongsFromServer(t *testing.T) {
-	teardownSuite := setupSuite(t)
-	defer teardownSuite(t)
+	log.SetOutput(io.Discard)
+	defer log.SetOutput(os.Stdout)
 
 	store := songvote.NewStubStore()
 	server := songvote.NewServer(store)
@@ -41,8 +44,8 @@ func TestGetAllSongsFromServer(t *testing.T) {
 }
 
 func TestGetSongsFromServer(t *testing.T) {
-	teardownSuite := setupSuite(t)
-	defer teardownSuite(t)
+	log.SetOutput(io.Discard)
+	defer log.SetOutput(os.Stdout)
 
 	store := songvote.NewStubStore()
 	server := songvote.NewServer(store)
@@ -74,8 +77,8 @@ func TestGetSongsFromServer(t *testing.T) {
 }
 
 func TestAddSongsToServer(t *testing.T) {
-	teardownSuite := setupSuite(t)
-	defer teardownSuite(t)
+	log.SetOutput(io.Discard)
+	defer log.SetOutput(os.Stdout)
 
 	store := songvote.NewStubStore()
 	server := songvote.NewServer(store)
@@ -105,8 +108,8 @@ func TestAddSongsToServer(t *testing.T) {
 }
 
 func TestDeleteSongFromServer(t *testing.T) {
-	teardownSuite := setupSuite(t)
-	defer teardownSuite(t)
+	log.SetOutput(io.Discard)
+	defer log.SetOutput(os.Stdout)
 
 	store := songvote.NewStubStore()
 	server := songvote.NewServer(store)
@@ -133,8 +136,8 @@ func TestDeleteSongFromServer(t *testing.T) {
 }
 
 func TestUpdateSongOnServer(t *testing.T) {
-	teardownSuite := setupSuite(t)
-	defer teardownSuite(t)
+	log.SetOutput(io.Discard)
+	defer log.SetOutput(os.Stdout)
 
 	store := songvote.NewStubStore()
 	server := songvote.NewServer(store)
@@ -168,8 +171,8 @@ func TestUpdateSongOnServer(t *testing.T) {
 }
 
 func TestAddVoteOnServer(t *testing.T) {
-	teardownSuite := setupSuite(t)
-	defer teardownSuite(t)
+	log.SetOutput(io.Discard)
+	defer log.SetOutput(os.Stdout)
 
 	store := songvote.NewStubStore()
 	server := songvote.NewServer(store)
@@ -204,8 +207,8 @@ func TestAddVoteOnServer(t *testing.T) {
 }
 
 func TestVetoSongOnServer(t *testing.T) {
-	teardownSuite := setupSuite(t)
-	defer teardownSuite(t)
+	log.SetOutput(io.Discard)
+	defer log.SetOutput(os.Stdout)
 
 	store := songvote.NewStubStore()
 	server := songvote.NewServer(store)

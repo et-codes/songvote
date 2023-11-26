@@ -11,24 +11,13 @@ import (
 
 // These integration tests verify function of real Store through the API.
 
-var songToAdd = songvote.Song{
-	Name:    "Mirror In The Bathroom",
-	Artist:  "Oingo Boingo",
-	LinkURL: "http://test.com",
-	Votes:   10,
-	Vetoed:  false,
-}
-
 func TestAddSongs(t *testing.T) {
-	teardownSuite := setupSuite(t)
+	teardownSuite, server := setupSuite(t)
 	defer teardownSuite(t)
-
-	store := songvote.NewSQLStore(":memory:")
-	server := songvote.NewServer(store)
 
 	t.Run("add song and get ID", func(t *testing.T) {
 		response := httptest.NewRecorder()
-		request := newAddSongRequest(songToAdd)
+		request := newAddSongRequest(testSong)
 
 		server.ServeHTTP(response, request)
 
@@ -41,7 +30,7 @@ func TestAddSongs(t *testing.T) {
 
 	t.Run("returns 409 with duplicate song", func(t *testing.T) {
 		response := httptest.NewRecorder()
-		request := newAddSongRequest(songToAdd)
+		request := newAddSongRequest(testSong)
 
 		server.ServeHTTP(response, request)
 
@@ -50,13 +39,18 @@ func TestAddSongs(t *testing.T) {
 }
 
 func TestGetSong(t *testing.T) {
-	teardownSuite := setupSuite(t)
+	teardownSuite, server := setupSuite(t)
 	defer teardownSuite(t)
 
-	store := songvote.NewSQLStore(":memory:")
-	server := songvote.NewServer(store)
+	var testSong = songvote.Song{
+		Name:    "Mirror In The Bathroom",
+		Artist:  "Oingo Boingo",
+		LinkURL: "http://test.com",
+		Votes:   10,
+		Vetoed:  false,
+	}
 
-	populateWithSong(server, songToAdd)
+	populateWithSong(server, testSong)
 
 	t.Run("get song with ID", func(t *testing.T) {
 		response := httptest.NewRecorder()
@@ -70,7 +64,7 @@ func TestGetSong(t *testing.T) {
 		err := songvote.UnmarshalJSON[songvote.Song](response.Body, &got)
 		assert.NoError(t, err)
 
-		want := songToAdd
+		want := testSong
 		want.ID = 1
 
 		assert.Equal(t, got, want)
@@ -98,20 +92,17 @@ func TestGetSong(t *testing.T) {
 		assert.NoError(t, err)
 
 		assert.Equal(t, len(songs), 1)
-		if !songs[0].Equal(songToAdd) {
-			t.Errorf("want %v, got %v", songToAdd, songs[0])
+		if !songs[0].Equal(testSong) {
+			t.Errorf("want %v, got %v", testSong, songs[0])
 		}
 	})
 }
 
 func TestDeleteSong(t *testing.T) {
-	teardownSuite := setupSuite(t)
+	teardownSuite, server := setupSuite(t)
 	defer teardownSuite(t)
 
-	store := songvote.NewSQLStore(":memory:")
-	server := songvote.NewServer(store)
-
-	populateWithSong(server, songToAdd)
+	populateWithSong(server, testSong)
 
 	t.Run("delete a song and cannot retreive it", func(t *testing.T) {
 		response := httptest.NewRecorder()
