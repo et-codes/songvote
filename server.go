@@ -216,6 +216,18 @@ func (s *Server) updateSong(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	updatedSong := Song{}
+	if err := UnmarshalJSON(r.Body, &updatedSong); err != nil {
+		code := http.StatusInternalServerError
+		message := fmt.Sprintf("Problem parsing request body: %v", err)
+		writeError(w, code, message)
+		return
+	}
+
+	songToUpdate.Name = updatedSong.Name
+	songToUpdate.Artist = updatedSong.Artist
+	songToUpdate.LinkURL = updatedSong.LinkURL
+
 	err = s.store.UpdateSong(id, songToUpdate)
 	if err != nil {
 		code := http.StatusInternalServerError

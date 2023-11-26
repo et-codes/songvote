@@ -19,19 +19,20 @@ import (
 // StubSongStore implements the SongStore interface, and keeps track of
 // the calls against its methods.
 type StubSongStore struct {
-	nextID            int64          // next song ID to be used
-	getSongCalls      []int64        // slice of ID's called to GetSong
-	getSongsCallCount int            // count of calls to GetSongs
-	addSongCalls      songvote.Songs // slice of Songs sent to AddSong
-	deleteSongCalls   []int64        // slice of ID's called to DeleteSong
-	updateSongCalls   []int64        // slice of ID's called to UpdateSong
-	addVoteCalls      []int64        // slice of ID's called to AddVote
-	vetoCalls         []int64        // slice of ID's called to Veto
+	nextID            int64                   // next song ID to be used
+	getSongCalls      []int64                 // calls to to GetSong
+	getSongsCallCount int                     // count of calls to GetSongs
+	addSongCalls      songvote.Songs          // calls to AddSong
+	deleteSongCalls   []int64                 // calls to DeleteSong
+	updateSongCalls   map[int64]songvote.Song // calls to UpdateSong
+	addVoteCalls      []int64                 // calls to AddVote
+	vetoCalls         []int64                 // calls to Veto
 }
 
 func NewStubSongStore() *StubSongStore {
 	return &StubSongStore{
-		nextID: 1,
+		nextID:          1,
+		updateSongCalls: make(map[int64]songvote.Song),
 	}
 }
 
@@ -64,7 +65,7 @@ func (s *StubSongStore) GetSongs() songvote.Songs {
 }
 
 func (s *StubSongStore) UpdateSong(id int64, song songvote.Song) error {
-	s.updateSongCalls = append(s.updateSongCalls, id)
+	s.updateSongCalls[id] = song
 	if id >= 10 {
 		return fmt.Errorf("song ID %d not found", id)
 	}
@@ -210,7 +211,9 @@ func TestUpdateSongOnServer(t *testing.T) {
 
 		assert.Equal(t, response.Code, http.StatusNoContent)
 		assert.Equal(t, len(store.updateSongCalls), 1)
-		assert.Equal(t, store.updateSongCalls[0], int64(1))
+		if !song.Equal(store.updateSongCalls[1]) {
+			t.Errorf("got %v, want %v", store.updateSongCalls[1], song)
+		}
 	})
 
 	t.Run("returns error if song not found", func(t *testing.T) {

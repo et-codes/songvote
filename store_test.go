@@ -73,14 +73,18 @@ func TestDeleteSong(t *testing.T) {
 
 func TestUpdateSong(t *testing.T) {
 	t.Run("updates song name", func(t *testing.T) {
+		originalName := newSong.Name
 		newName := "Fake Song #4"
 
 		id, _ := addSong(t, newSong)
+		song, _ := store.GetSong(id)
+		assert.Equal(t, song.Name, originalName)
+
 		newSong.Name = newName
 		err := store.UpdateSong(id, newSong)
 		assert.NoError(t, err)
 
-		song, _ := store.GetSong(id)
+		song, _ = store.GetSong(id)
 		assert.Equal(t, song.Name, newName)
 	})
 }
