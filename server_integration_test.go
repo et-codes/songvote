@@ -42,14 +42,6 @@ func TestGetSong(t *testing.T) {
 	teardownSuite, _, server := setupSuite(t)
 	defer teardownSuite(t)
 
-	var testSong = songvote.Song{
-		Name:    "Mirror In The Bathroom",
-		Artist:  "Oingo Boingo",
-		LinkURL: "http://test.com",
-		Votes:   10,
-		Vetoed:  false,
-	}
-
 	populateWithSong(server, testSong)
 
 	t.Run("get song with ID", func(t *testing.T) {

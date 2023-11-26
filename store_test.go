@@ -3,27 +3,15 @@ package songvote_test
 import (
 	"testing"
 
-	"github.com/et-codes/songvote"
 	"github.com/et-codes/songvote/internal/assert"
 )
-
-// Unit tests for a Store.
-
-var newSong = songvote.Song{
-	ID:      1,
-	Name:    "Fake Song #27",
-	Artist:  "Fake Artist",
-	LinkURL: "http://test.com",
-	Votes:   12,
-	Vetoed:  true,
-}
 
 func TestAddSongToStore(t *testing.T) {
 	teardownSuite, store, _ := setupSuite(t)
 	defer teardownSuite(t)
 
 	t.Run("adding song returns valid ID", func(t *testing.T) {
-		id, err := store.AddSong(newSong)
+		id, err := store.AddSong(testSong)
 		assert.NoError(t, err)
 		if id <= 0 {
 			t.Errorf("got bad id %d", id)
@@ -31,17 +19,19 @@ func TestAddSongToStore(t *testing.T) {
 	})
 
 	t.Run("can't add duplicate song", func(t *testing.T) {
-		_, err := store.AddSong(newSong)
+		_, err := store.AddSong(testSong)
 		assert.Error(t, err)
 	})
 }
 
 func TestGetSongsFromStore(t *testing.T) {
-	teardownSuite, store, _ := setupSuite(t)
+	teardownSuite, store, server := setupSuite(t)
 	defer teardownSuite(t)
 
+	populateWithSong(server, testSong)
+
 	t.Run("gets all songs in store", func(t *testing.T) {
-		_, _ = store.AddSong(newSong)
+		newSong := testSong
 		newSong.Name = "Fake Song #4"
 		_, err := store.AddSong(newSong)
 		assert.NoError(t, err)
@@ -52,61 +42,61 @@ func TestGetSongsFromStore(t *testing.T) {
 }
 
 func TestDeleteSongFromStore(t *testing.T) {
-	teardownSuite, store, _ := setupSuite(t)
+	teardownSuite, store, server := setupSuite(t)
 	defer teardownSuite(t)
 
+	populateWithSong(server, testSong)
+
 	t.Run("deletes a song", func(t *testing.T) {
-		id, _ := store.AddSong(newSong)
-		err := store.DeleteSong(id)
+		err := store.DeleteSong(1)
 		assert.NoError(t, err)
 	})
 }
 
 func TestUpdateSongInStore(t *testing.T) {
-	teardownSuite, store, _ := setupSuite(t)
+	teardownSuite, store, server := setupSuite(t)
 	defer teardownSuite(t)
 
+	populateWithSong(server, testSong)
+
 	t.Run("updates song name", func(t *testing.T) {
-		originalName := newSong.Name
-		newName := "Fake Song #4"
+		newSong := testSong
+		newSong.Name = "Fake Song #4"
 
-		id, _ := store.AddSong(newSong)
-		song, _ := store.GetSong(id)
-		assert.Equal(t, song.Name, originalName)
-
-		newSong.Name = newName
-		err := store.UpdateSong(id, newSong)
+		err := store.UpdateSong(1, newSong)
 		assert.NoError(t, err)
 
-		song, _ = store.GetSong(id)
-		assert.Equal(t, song.Name, newName)
+		song, _ := store.GetSong(1)
+		assert.Equal(t, song.Name, newSong.Name)
 	})
 }
 
 func TestAddVoteToSongInStore(t *testing.T) {
-	teardownSuite, store, _ := setupSuite(t)
+	teardownSuite, store, server := setupSuite(t)
 	defer teardownSuite(t)
 
+	populateWithSong(server, testSong)
+
 	t.Run("updates vote count", func(t *testing.T) {
-		id, _ := store.AddSong(newSong)
-		err := store.AddVote(id)
+		err := store.AddVote(1)
 		assert.NoError(t, err)
 
-		song, _ := store.GetSong(id)
-		assert.Equal(t, song.Votes, 13)
+		song, _ := store.GetSong(1)
+		assert.Equal(t, song.Votes, 11)
 	})
 }
 
 func TestVetoSongInStore(t *testing.T) {
-	teardownSuite, store, _ := setupSuite(t)
+	teardownSuite, store, server := setupSuite(t)
 	defer teardownSuite(t)
 
+	populateWithSong(server, testSong)
+
 	t.Run("sets veto value to true", func(t *testing.T) {
-		id, _ := store.AddSong(newSong)
-		err := store.Veto(id)
+		err := store.Veto(1)
 		assert.NoError(t, err)
 
-		song, _ := store.GetSong(id)
+		song, _ := store.GetSong(1)
 		assert.True(t, song.Vetoed)
 	})
 }
