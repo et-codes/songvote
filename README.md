@@ -8,6 +8,7 @@
 - Vote for the songs in the list
 - Veto a song on the list (users have limited number of vetos per round)
 - Use vote results to generate a list of "approved" songs for the round
+- When a round ends, the song list resets. The song list from previous rounds is stored. Vetoes are resupplied to the users.
 
 ## API
 ### Songs
@@ -26,7 +27,7 @@
 - `DELETE /users/{id}` deletes a user
 
 ### TODO
-- Add Song PATCH
-- Add Song POST vote
-- Add Song POST veto
-- Allow for undoing a vote or a veto
+- Allow for undoing a vote or a veto? (TBD)
+- Implement users
+- Track who adds a song
+- Track who voted for and vetoed a song
