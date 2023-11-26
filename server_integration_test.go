@@ -53,7 +53,7 @@ func TestGetAddDeleteSongs(t *testing.T) {
 		server.ServeHTTP(response, request)
 
 		got := songvote.Song{}
-		_ = songvote.UnmarshalJSON(response.Body, &got)
+		_ = songvote.UnmarshalJSON[songvote.Song](response.Body, &got)
 		want := songToAdd
 		want.ID = 1
 

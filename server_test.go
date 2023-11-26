@@ -25,7 +25,7 @@ func TestGetAllSongsFromServer(t *testing.T) {
 		response := httptest.NewRecorder()
 		server.ServeHTTP(response, request)
 		songs := songvote.Songs{}
-		_ = songvote.UnmarshalJSON(response.Body, &songs)
+		_ = songvote.UnmarshalJSON[songvote.Songs](response.Body, &songs)
 
 		assert.Equal(t, response.Code, http.StatusOK)
 		assert.Equal(t, songs, songvote.Songs{})
@@ -94,7 +94,7 @@ func TestAddSongsToServer(t *testing.T) {
 		assert.Equal(t, response.Code, http.StatusAccepted)
 		assert.Equal(t, len(store.AddSongCalls), 1)
 		var id int64
-		_ = songvote.UnmarshalJSON(response.Body, &id)
+		_ = songvote.UnmarshalJSON[int64](response.Body, &id)
 		assert.Equal(t, id, int64(1))
 
 		if !newSong.Equal(store.AddSongCalls[0]) {

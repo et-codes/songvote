@@ -150,7 +150,7 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 	songToAdd := Song{}
-	if err := UnmarshalJSON(r.Body, &songToAdd); err != nil {
+	if err := UnmarshalJSON[Song](r.Body, &songToAdd); err != nil {
 		writeUnmarshalError(w, err)
 		return
 	}
@@ -198,7 +198,7 @@ func (s *Server) updateSong(w http.ResponseWriter, r *http.Request) {
 	}
 
 	updatedSong := Song{}
-	if err := UnmarshalJSON(r.Body, &updatedSong); err != nil {
+	if err := UnmarshalJSON[Song](r.Body, &updatedSong); err != nil {
 		writeUnmarshalError(w, err)
 		return
 	}
