@@ -5,11 +5,8 @@
 package songvote_test
 
 import (
-	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/et-codes/songvote"
@@ -17,11 +14,8 @@ import (
 )
 
 func TestGetAllSongsFromServer(t *testing.T) {
-	log.SetOutput(io.Discard)
-	defer log.SetOutput(os.Stdout)
-
-	store := songvote.NewStubStore()
-	server := songvote.NewServer(store)
+	teardownSuite, store, server := setupStubSuite(t)
+	defer teardownSuite(t)
 
 	t.Run("get all songs", func(t *testing.T) {
 		request := newGetSongsRequest()
@@ -44,11 +38,8 @@ func TestGetAllSongsFromServer(t *testing.T) {
 }
 
 func TestGetSongsFromServer(t *testing.T) {
-	log.SetOutput(io.Discard)
-	defer log.SetOutput(os.Stdout)
-
-	store := songvote.NewStubStore()
-	server := songvote.NewServer(store)
+	teardownSuite, store, server := setupStubSuite(t)
+	defer teardownSuite(t)
 
 	t.Run("get single song", func(t *testing.T) {
 		request := newGetSongRequest(1)
@@ -77,11 +68,8 @@ func TestGetSongsFromServer(t *testing.T) {
 }
 
 func TestAddSongsToServer(t *testing.T) {
-	log.SetOutput(io.Discard)
-	defer log.SetOutput(os.Stdout)
-
-	store := songvote.NewStubStore()
-	server := songvote.NewServer(store)
+	teardownSuite, store, server := setupStubSuite(t)
+	defer teardownSuite(t)
 
 	t.Run("stores song when POST", func(t *testing.T) {
 		newSong := songvote.Song{
@@ -108,11 +96,8 @@ func TestAddSongsToServer(t *testing.T) {
 }
 
 func TestDeleteSongFromServer(t *testing.T) {
-	log.SetOutput(io.Discard)
-	defer log.SetOutput(os.Stdout)
-
-	store := songvote.NewStubStore()
-	server := songvote.NewServer(store)
+	teardownSuite, store, server := setupStubSuite(t)
+	defer teardownSuite(t)
 
 	t.Run("delete song response", func(t *testing.T) {
 		request := newDeleteSongRequest(1)
@@ -136,11 +121,8 @@ func TestDeleteSongFromServer(t *testing.T) {
 }
 
 func TestUpdateSongOnServer(t *testing.T) {
-	log.SetOutput(io.Discard)
-	defer log.SetOutput(os.Stdout)
-
-	store := songvote.NewStubStore()
-	server := songvote.NewServer(store)
+	teardownSuite, store, server := setupStubSuite(t)
+	defer teardownSuite(t)
 
 	song := songvote.Song{
 		Name:   "Creep",
@@ -171,11 +153,8 @@ func TestUpdateSongOnServer(t *testing.T) {
 }
 
 func TestAddVoteOnServer(t *testing.T) {
-	log.SetOutput(io.Discard)
-	defer log.SetOutput(os.Stdout)
-
-	store := songvote.NewStubStore()
-	server := songvote.NewServer(store)
+	teardownSuite, store, server := setupStubSuite(t)
+	defer teardownSuite(t)
 
 	t.Run("update vote count", func(t *testing.T) {
 		request := newVoteRequest(1)
@@ -207,11 +186,8 @@ func TestAddVoteOnServer(t *testing.T) {
 }
 
 func TestVetoSongOnServer(t *testing.T) {
-	log.SetOutput(io.Discard)
-	defer log.SetOutput(os.Stdout)
-
-	store := songvote.NewStubStore()
-	server := songvote.NewServer(store)
+	teardownSuite, store, server := setupStubSuite(t)
+	defer teardownSuite(t)
 
 	t.Run("veto a song", func(t *testing.T) {
 		request := newVetoRequest(1)

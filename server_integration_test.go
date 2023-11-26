@@ -12,7 +12,7 @@ import (
 // These integration tests verify function of real Store through the API.
 
 func TestAddSongs(t *testing.T) {
-	teardownSuite, server := setupSuite(t)
+	teardownSuite, _, server := setupSuite(t)
 	defer teardownSuite(t)
 
 	t.Run("add song and get ID", func(t *testing.T) {
@@ -39,7 +39,7 @@ func TestAddSongs(t *testing.T) {
 }
 
 func TestGetSong(t *testing.T) {
-	teardownSuite, server := setupSuite(t)
+	teardownSuite, _, server := setupSuite(t)
 	defer teardownSuite(t)
 
 	var testSong = songvote.Song{
@@ -99,7 +99,7 @@ func TestGetSong(t *testing.T) {
 }
 
 func TestDeleteSong(t *testing.T) {
-	teardownSuite, server := setupSuite(t)
+	teardownSuite, _, server := setupSuite(t)
 	defer teardownSuite(t)
 
 	populateWithSong(server, testSong)

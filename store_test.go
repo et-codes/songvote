@@ -1,9 +1,6 @@
 package songvote_test
 
 import (
-	"io"
-	"log"
-	"os"
 	"testing"
 
 	"github.com/et-codes/songvote"
@@ -22,10 +19,8 @@ var newSong = songvote.Song{
 }
 
 func TestAddSongToStore(t *testing.T) {
-	log.SetOutput(io.Discard)
-	defer log.SetOutput(os.Stdout)
-
-	var store = songvote.NewSQLStore(":memory:")
+	teardownSuite, store, _ := setupSuite(t)
+	defer teardownSuite(t)
 
 	t.Run("adding song returns valid ID", func(t *testing.T) {
 		id, err := store.AddSong(newSong)
@@ -42,10 +37,8 @@ func TestAddSongToStore(t *testing.T) {
 }
 
 func TestGetSongsFromStore(t *testing.T) {
-	log.SetOutput(io.Discard)
-	defer log.SetOutput(os.Stdout)
-
-	var store = songvote.NewSQLStore(":memory:")
+	teardownSuite, store, _ := setupSuite(t)
+	defer teardownSuite(t)
 
 	t.Run("gets all songs in store", func(t *testing.T) {
 		_, _ = store.AddSong(newSong)
@@ -59,10 +52,8 @@ func TestGetSongsFromStore(t *testing.T) {
 }
 
 func TestDeleteSongFromStore(t *testing.T) {
-	log.SetOutput(io.Discard)
-	defer log.SetOutput(os.Stdout)
-
-	var store = songvote.NewSQLStore(":memory:")
+	teardownSuite, store, _ := setupSuite(t)
+	defer teardownSuite(t)
 
 	t.Run("deletes a song", func(t *testing.T) {
 		id, _ := store.AddSong(newSong)
@@ -72,10 +63,8 @@ func TestDeleteSongFromStore(t *testing.T) {
 }
 
 func TestUpdateSongInStore(t *testing.T) {
-	log.SetOutput(io.Discard)
-	defer log.SetOutput(os.Stdout)
-
-	var store = songvote.NewSQLStore(":memory:")
+	teardownSuite, store, _ := setupSuite(t)
+	defer teardownSuite(t)
 
 	t.Run("updates song name", func(t *testing.T) {
 		originalName := newSong.Name
@@ -95,10 +84,8 @@ func TestUpdateSongInStore(t *testing.T) {
 }
 
 func TestAddVoteToSongInStore(t *testing.T) {
-	log.SetOutput(io.Discard)
-	defer log.SetOutput(os.Stdout)
-
-	var store = songvote.NewSQLStore(":memory:")
+	teardownSuite, store, _ := setupSuite(t)
+	defer teardownSuite(t)
 
 	t.Run("updates vote count", func(t *testing.T) {
 		id, _ := store.AddSong(newSong)
@@ -111,10 +98,8 @@ func TestAddVoteToSongInStore(t *testing.T) {
 }
 
 func TestVetoSongInStore(t *testing.T) {
-	log.SetOutput(io.Discard)
-	defer log.SetOutput(os.Stdout)
-
-	var store = songvote.NewSQLStore(":memory:")
+	teardownSuite, store, _ := setupSuite(t)
+	defer teardownSuite(t)
 
 	t.Run("sets veto value to true", func(t *testing.T) {
 		id, _ := store.AddSong(newSong)

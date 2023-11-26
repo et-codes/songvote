@@ -21,15 +21,34 @@ var testSong = songvote.Song{
 	Vetoed:  false,
 }
 
-// setupStuite sets up test conditions and returns function to defer until
-// after the test runs.
+// setupSuite sets up test conditions and returns function to defer until
+// after the test runs. Uses SQLStore for the store.
 func setupSuite(t *testing.T) (
 	teardownSuite func(t *testing.T),
+	store *songvote.SQLStore,
 	server *songvote.Server,
 ) {
 	// Suppress logging to os.Stdout during tests.
 	log.SetOutput(io.Discard)
-	store := songvote.NewSQLStore(":memory:")
+	store = songvote.NewSQLStore(":memory:")
+	server = songvote.NewServer(store)
+	teardownSuite = func(t *testing.T) {
+		// Restore logging to os.Stdout after tests.
+		log.SetOutput(os.Stdout)
+	}
+	return
+}
+
+// setupStubSuite sets up test conditions and returns function to defer until
+// after the test runs. Uses StubStore for the store.
+func setupStubSuite(t *testing.T) (
+	teardownSuite func(t *testing.T),
+	store *songvote.StubStore,
+	server *songvote.Server,
+) {
+	// Suppress logging to os.Stdout during tests.
+	log.SetOutput(io.Discard)
+	store = songvote.NewStubStore()
 	server = songvote.NewServer(store)
 	teardownSuite = func(t *testing.T) {
 		// Restore logging to os.Stdout after tests.
