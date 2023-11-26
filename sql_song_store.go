@@ -117,8 +117,29 @@ func (s *SQLSongStore) DeleteSong(id int64) error {
 	return nil
 }
 
+// UpdateSong allows changing the name, artist, and/or link URL of the song.
+// Parameters are the ID of the song and a Song object which contains the
+// desired changes.
 func (s *SQLSongStore) UpdateSong(id int64, song Song) error {
-	return fmt.Errorf("UpdateSong not implemented.")
+	// Check if ID is valid.
+	_, err := s.GetSong(id)
+	if err != nil {
+		return err
+	}
+
+	newName := song.Name
+	newArtist := song.Artist
+	newLinkURL := song.LinkURL
+
+	_, err = s.db.ExecContext(s.ctx,
+		"UPDATE songs SET name = $1, artist = $2, link_url = $3 WHERE id = $4",
+		newName, newArtist, newLinkURL, id,
+	)
+	if err != nil {
+		return fmt.Errorf("error updating song %d: %v", id, err)
+	}
+
+	return nil
 }
 
 func (s *SQLSongStore) AddVote(id int64) error {

@@ -17,16 +17,16 @@ const (
 // testing.
 var store = songvote.NewSQLSongStore(memoryDB)
 
-func TestSongStore(t *testing.T) {
-	newSong := songvote.Song{
-		ID:      1,
-		Name:    "Fake Song #27",
-		Artist:  "Fake Artist",
-		LinkURL: "http://test.com",
-		Votes:   12,
-		Vetoed:  true,
-	}
+var newSong = songvote.Song{
+	ID:      1,
+	Name:    "Fake Song #27",
+	Artist:  "Fake Artist",
+	LinkURL: "http://test.com",
+	Votes:   12,
+	Vetoed:  true,
+}
 
+func TestAddSong(t *testing.T) {
 	t.Run("adding song returns valid ID", func(t *testing.T) {
 		id, err := addSong(t, newSong)
 		assert.NoError(t, err)
@@ -49,7 +49,9 @@ func TestSongStore(t *testing.T) {
 		_, err = addSong(t, newSong)
 		assert.Error(t, err)
 	})
+}
 
+func TestGetSongs(t *testing.T) {
 	t.Run("gets all songs in store", func(t *testing.T) {
 		_, _ = addSong(t, newSong)
 		newSong.Name = "Fake Song #4"
@@ -59,11 +61,27 @@ func TestSongStore(t *testing.T) {
 		got := store.GetSongs()
 		assert.Equal(t, len(got), 2)
 	})
+}
 
+func TestDeleteSong(t *testing.T) {
 	t.Run("deletes a song", func(t *testing.T) {
 		id, _ := addSong(t, newSong)
 		err := store.DeleteSong(id)
 		assert.NoError(t, err)
+	})
+}
+
+func TestUpdateSong(t *testing.T) {
+	t.Run("updates song name", func(t *testing.T) {
+		newName := "Fake Song #4"
+
+		id, _ := addSong(t, newSong)
+		newSong.Name = newName
+		err := store.UpdateSong(id, newSong)
+		assert.NoError(t, err)
+
+		song, _ := store.GetSong(id)
+		assert.Equal(t, song.Name, newName)
 	})
 }
 

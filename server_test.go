@@ -79,7 +79,7 @@ func TestGetAllSongs(t *testing.T) {
 	})
 }
 
-func TestGetSongs(t *testing.T) {
+func TestGetSongss(t *testing.T) {
 	store := newPopulatedSongStore()
 	server := songvote.NewServer(store)
 
