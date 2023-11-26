@@ -9,7 +9,7 @@ import (
 	"github.com/et-codes/songvote/internal/assert"
 )
 
-// These integration tests verify function of real Store through the API.
+// These integration tests verify function of a SongStore through the API.
 
 func TestAddSongs(t *testing.T) {
 	teardownSuite, _, server := setupSuite(t)
