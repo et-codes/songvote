@@ -117,6 +117,18 @@ func (s *SQLSongStore) DeleteSong(id int64) error {
 	return nil
 }
 
+func (s *SQLSongStore) UpdateSong(id int64, song Song) error {
+	return fmt.Errorf("UpdateSong not implemented.")
+}
+
+func (s *SQLSongStore) AddVote(id int64) error {
+	return fmt.Errorf("AddVote not implemented.")
+}
+
+func (s *SQLSongStore) AddVeto(id int64) error {
+	return fmt.Errorf("AddVeto not implemented.")
+}
+
 // createSongsTable creates the database table for Songs if it does not
 // already exist.
 func (s *SQLSongStore) createSongsTable() error {

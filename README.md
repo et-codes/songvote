@@ -26,9 +26,7 @@
 - `DELETE /users/{id}` deletes a user
 
 ### TODO
-- Make song's ID its own type alias for int64
 - Add Song PATCH
 - Add Song POST vote
 - Add Song POST veto
 - Allow for undoing a vote or a veto
-- Send JSON error messages from server.go

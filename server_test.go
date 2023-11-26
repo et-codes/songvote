@@ -43,6 +43,18 @@ func (s *StubSongStore) GetSongs() songvote.Songs {
 	return s.songs
 }
 
+func (s *StubSongStore) UpdateSong(id int64, song songvote.Song) error {
+	return fmt.Errorf("UpdateSong not implemented.")
+}
+
+func (s *StubSongStore) AddVote(id int64) error {
+	return fmt.Errorf("AddVote not implemented.")
+}
+
+func (s *StubSongStore) AddVeto(id int64) error {
+	return fmt.Errorf("AddVeto not implemented.")
+}
+
 func TestGetAllSongs(t *testing.T) {
 	store := newPopulatedSongStore()
 	server := songvote.NewServer(store)
