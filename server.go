@@ -1,8 +1,6 @@
 package songvote
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -124,8 +122,7 @@ func (s *Server) handleVeto(w http.ResponseWriter, r *http.Request) {
 func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
 	songs := s.store.GetSongs()
 
-	out := bytes.NewBuffer([]byte{})
-	err := json.NewEncoder(out).Encode(songs)
+	out, err := MarshalJSON(songs)
 	if err != nil {
 		code := http.StatusInternalServerError
 		message := fmt.Sprintf("Problem encoding songs to JSON: %v", err)
@@ -152,7 +149,7 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json, err := Marshal(song)
+	json, err := MarshalJSON(song)
 	if err != nil {
 		code := http.StatusInternalServerError
 		message := fmt.Sprintf("Problem marshaling song to JSON: %v", err)
@@ -166,7 +163,7 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 	songToAdd := Song{}
-	if err := Unmarshal(r.Body, &songToAdd); err != nil {
+	if err := UnmarshalJSON(r.Body, &songToAdd); err != nil {
 		code := http.StatusInternalServerError
 		message := fmt.Sprintf("Problem unmarshaling song: %v", err)
 		writeError(w, code, message)
