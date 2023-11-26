@@ -14,6 +14,9 @@ import (
 //
 
 func TestGetAddDeleteSongs(t *testing.T) {
+	teardownSuite := setupSuite(t)
+	defer teardownSuite(t)
+
 	store := songvote.NewSQLStore(":memory:")
 	server := songvote.NewServer(store)
 	songToAdd := songvote.Song{

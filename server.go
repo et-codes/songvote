@@ -134,7 +134,7 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 
 	song, err := s.store.GetSong(id)
 	if err != nil {
-		writeGetError(w, err)
+		writeNotFoundError(w, err)
 		return
 	}
 
@@ -193,7 +193,7 @@ func (s *Server) updateSong(w http.ResponseWriter, r *http.Request) {
 
 	songToUpdate, err := s.store.GetSong(id)
 	if err != nil {
-		writeGetError(w, err)
+		writeNotFoundError(w, err)
 		return
 	}
 
@@ -261,7 +261,7 @@ func writeError(w http.ResponseWriter, code int, message string) {
 	fmt.Fprint(w, NewError(code, message).ToJSON())
 }
 
-func writeGetError(w http.ResponseWriter, err error) {
+func writeNotFoundError(w http.ResponseWriter, err error) {
 	code := http.StatusNotFound
 	message := fmt.Sprintf("Problem retreiving song: %v", err)
 	writeError(w, code, message)
