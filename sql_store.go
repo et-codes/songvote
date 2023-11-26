@@ -11,10 +11,9 @@ import (
 
 const (
 	dbDriver = "sqlite"
-	dbPath   = "./db/songvote.db"
 )
 
-// SQLStore is a song store backed by a SQL database.
+// SQLStore is a data store backed by a SQL database.
 type SQLStore struct {
 	db  *sql.DB
 	ctx context.Context

@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	memoryDB   = ":memory:"           // in-memory database
-	testFileDB = "./db/songs_test.db" // persistent test database
+	memoryDB   = ":memory:"              // in-memory database
+	testFileDB = "./db/songvote_test.db" // persistent test database
 )
 
 // Configure the store to use either the in-memory db or disk-based db. Use

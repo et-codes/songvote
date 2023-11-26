@@ -9,7 +9,7 @@ import (
 
 const (
 	port   = ":5050"
-	dbPath = "./db/songs.db"
+	dbPath = "./db/songvote.db"
 )
 
 func main() {
