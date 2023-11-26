@@ -15,7 +15,7 @@ const (
 // Configure the store to use either the in-memory db or disk-based db. Use
 // the disk-based db if you want to populate it with data for more extensive
 // testing.
-var store = songvote.NewSQLSongStore(memoryDB)
+var store = songvote.NewSQLStore(memoryDB)
 
 var newSong = songvote.Song{
 	ID:      1,

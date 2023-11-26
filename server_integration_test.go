@@ -14,7 +14,7 @@ import (
 //
 
 func TestGetAddDeleteSongs(t *testing.T) {
-	store := songvote.NewSQLSongStore(":memory:")
+	store := songvote.NewSQLStore(":memory:")
 	server := songvote.NewServer(store)
 	songToAdd := songvote.Song{
 		Name:    "Mirror In The Bathroom",
