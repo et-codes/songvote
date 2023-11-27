@@ -2,6 +2,7 @@ package songvote_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -14,6 +15,9 @@ import (
 )
 
 var (
+	userTestDataFile = "./testdata/users.json"
+	songTestDataFile = "./testdata/songs.json"
+
 	testSong = songvote.Song{
 		Name:    "Mirror In The Bathroom",
 		Artist:  "Oingo Boingo",
@@ -71,10 +75,40 @@ func populateWithUser(server *songvote.Server, user songvote.User) {
 	server.ServeHTTP(httptest.NewRecorder(), request)
 }
 
+// populateWithUsers adds users to the server from JSON file.
+func populateWithUsers(server *songvote.Server, path string) {
+	file, err := os.ReadFile(path)
+	if err != nil {
+		log.Fatalf("Could not open file %s: %v", path, err)
+	}
+	users := songvote.Users{}
+	if err = json.Unmarshal(file, &users); err != nil {
+		log.Fatalf("Could not unmarshal JSON from %s: %v", path, err)
+	}
+	for _, user := range users {
+		populateWithUser(server, user)
+	}
+}
+
 // populateWithSong adds a song to a server for testing purposes.
 func populateWithSong(server *songvote.Server, song songvote.Song) {
 	request := newAddSongRequest(song)
 	server.ServeHTTP(httptest.NewRecorder(), request)
+}
+
+// populateWithSongs adds songs to the server from JSON file.
+func populateWithSongs(server *songvote.Server, path string) {
+	file, err := os.ReadFile(path)
+	if err != nil {
+		log.Fatalf("Could not open file %s: %v", path, err)
+	}
+	songs := songvote.Songs{}
+	if err = json.Unmarshal(file, &songs); err != nil {
+		log.Fatalf("Could not unmarshal JSON from %s: %v", path, err)
+	}
+	for _, song := range songs {
+		populateWithSong(server, song)
+	}
 }
 
 func newAddUserRequest(user songvote.User) *http.Request {

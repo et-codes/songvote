@@ -42,7 +42,7 @@ func TestGetUser(t *testing.T) {
 	teardownSuite, _, server := setupSuite(t)
 	defer teardownSuite(t)
 
-	populateWithUser(server, testUser)
+	populateWithUsers(server, userTestDataFile)
 
 	t.Run("get all users", func(t *testing.T) {
 		response := httptest.NewRecorder()
@@ -56,7 +56,7 @@ func TestGetUser(t *testing.T) {
 		err := songvote.UnmarshalJSON[songvote.Users](response.Body, &users)
 		assert.NoError(t, err)
 
-		assert.Equal(t, len(users), 1)
+		assert.Equal(t, len(users), 4)
 		if !users[0].Equal(testUser) {
 			t.Errorf("want %v, got %v", testUser, users[0])
 		}
@@ -94,7 +94,7 @@ func TestGetSong(t *testing.T) {
 	teardownSuite, _, server := setupSuite(t)
 	defer teardownSuite(t)
 
-	populateWithSong(server, testSong)
+	populateWithSongs(server, songTestDataFile)
 
 	t.Run("get song with ID", func(t *testing.T) {
 		response := httptest.NewRecorder()
@@ -144,7 +144,7 @@ func TestGetSong(t *testing.T) {
 		err := songvote.UnmarshalJSON[songvote.Songs](response.Body, &songs)
 		assert.NoError(t, err)
 
-		assert.Equal(t, len(songs), 1)
+		assert.Equal(t, len(songs), 5)
 		if !songs[0].Equal(testSong) {
 			t.Errorf("want %v, got %v", testSong, songs[0])
 		}
