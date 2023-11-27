@@ -22,15 +22,15 @@ var testSong = songvote.Song{
 }
 
 // setupSuite sets up test conditions and returns function to defer until
-// after the test runs. Uses SQLStore for the store.
+// after the test runs. Uses SQLiteStore for the store.
 func setupSuite(t *testing.T) (
 	teardownSuite func(t *testing.T),
-	store *songvote.SQLStore,
+	store *songvote.SQLiteStore,
 	server *songvote.Server,
 ) {
 	// Suppress logging to os.Stdout during tests.
 	log.SetOutput(io.Discard)
-	store = songvote.NewSQLStore(":memory:")
+	store = songvote.NewSQLiteStore(":memory:")
 	server = songvote.NewServer(store)
 	teardownSuite = func(t *testing.T) {
 		// Restore logging to os.Stdout after tests.

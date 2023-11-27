@@ -13,14 +13,14 @@ const (
 	dbDriver = "sqlite"
 )
 
-// SQLStore is a data store backed by a SQL database.
-type SQLStore struct {
+// SQLiteStore is a data store backed by a SQL database.
+type SQLiteStore struct {
 	db  *sql.DB
 	ctx context.Context
 }
 
-// NewSQLStore returns a pointer to a newly initialized store.
-func NewSQLStore(dbPath string) *SQLStore {
+// NewSQLiteStore returns a pointer to a newly initialized store.
+func NewSQLiteStore(dbPath string) *SQLiteStore {
 	ctx := context.Background()
 	db, err := sql.Open(dbDriver, dbPath)
 	if err != nil {
@@ -33,7 +33,7 @@ func NewSQLStore(dbPath string) *SQLStore {
 	}
 	log.Printf("Connected to db %q.\n", dbPath)
 
-	store := &SQLStore{
+	store := &SQLiteStore{
 		db:  db,
 		ctx: ctx,
 	}
@@ -47,7 +47,7 @@ func NewSQLStore(dbPath string) *SQLStore {
 
 // GetSong returns a Song object with the given ID, or an error if it cannot
 // be found.
-func (s *SQLStore) GetSong(id int64) (Song, error) {
+func (s *SQLiteStore) GetSong(id int64) (Song, error) {
 	row := s.db.QueryRowContext(s.ctx,
 		"SELECT * FROM songs WHERE id = $1",
 		id,
@@ -66,7 +66,7 @@ func (s *SQLStore) GetSong(id int64) (Song, error) {
 
 // GetSongs returns a slice of Song objects representing all of the songs in
 // the store.
-func (s *SQLStore) GetSongs() Songs {
+func (s *SQLiteStore) GetSongs() Songs {
 	rows, err := s.db.QueryContext(s.ctx, "SELECT * FROM songs")
 	if err != nil {
 		log.Fatalf("error querying songs from store: %v", err)
@@ -84,7 +84,7 @@ func (s *SQLStore) GetSongs() Songs {
 // AddSong adds the given Song object to the store, and returns the ID and
 // an error if there was one.  Error will be returned when attempting to add
 // a song with Name and Artist combination that is already in the store.
-func (s *SQLStore) AddSong(song Song) (int64, error) {
+func (s *SQLiteStore) AddSong(song Song) (int64, error) {
 	if s.songExists(song) {
 		return 0, fmt.Errorf("%q by %q already exists", song.Name, song.Artist)
 	}
@@ -111,7 +111,7 @@ func (s *SQLStore) AddSong(song Song) (int64, error) {
 }
 
 // DeleteSong will delete the given song ID from the table.
-func (s *SQLStore) DeleteSong(id int64) error {
+func (s *SQLiteStore) DeleteSong(id int64) error {
 	result, err := s.db.ExecContext(s.ctx,
 		"DELETE FROM songs WHERE id = $1",
 		id,
@@ -131,7 +131,7 @@ func (s *SQLStore) DeleteSong(id int64) error {
 // UpdateSong allows changing the Name, Artist, and/or LinkURL of the song.
 // Parameters are the ID of the song and a Song object which contains the
 // desired changes. Fields other than Name, Artist, and LinkURL are ignored.
-func (s *SQLStore) UpdateSong(id int64, song Song) error {
+func (s *SQLiteStore) UpdateSong(id int64, song Song) error {
 	newName := song.Name
 	newArtist := song.Artist
 	newLinkURL := song.LinkURL
@@ -148,7 +148,7 @@ func (s *SQLStore) UpdateSong(id int64, song Song) error {
 }
 
 // AddVote increments the Vote count on a Song with the given ID.
-func (s *SQLStore) AddVote(id int64) error {
+func (s *SQLiteStore) AddVote(id int64) error {
 	song, err := s.GetSong(id)
 	if err != nil {
 		return err
@@ -168,7 +168,7 @@ func (s *SQLStore) AddVote(id int64) error {
 }
 
 // Veto sets the Vetoed field of the Song with the given ID to true.
-func (s *SQLStore) Veto(id int64) error {
+func (s *SQLiteStore) Veto(id int64) error {
 	_, err := s.db.ExecContext(s.ctx,
 		"UPDATE songs SET vetoed = $1 WHERE id = $2",
 		true, id,
@@ -181,26 +181,21 @@ func (s *SQLStore) Veto(id int64) error {
 }
 
 // createTables creates the database tables if they do not already exist.
-func (s *SQLStore) createTables() error {
-	if _, err := s.db.ExecContext(s.ctx,
-		`CREATE TABLE IF NOT EXISTS songs (
-			id INTEGER PRIMARY KEY,
-			name TEXT NOT NULL,
-			artist TEXT NOT NULL,
-			link_url TEXT,
-			votes INTEGER,
-			vetoed BOOLEAN
-		)`,
-	); err != nil {
-		return fmt.Errorf("error creating songs table: %v", err)
-	}
-
+func (s *SQLiteStore) createTables() error {
 	if _, err := s.db.ExecContext(s.ctx,
 		`CREATE TABLE IF NOT EXISTS users (
 			id INTEGER PRIMARY KEY,
 			name TEXT NOT NULL,
 			password TEXT NOT NULL,
 			vetoes INTEGER
+		);
+		CREATE TABLE IF NOT EXISTS songs (
+			id INTEGER PRIMARY KEY,
+			name TEXT NOT NULL,
+			artist TEXT NOT NULL,
+			link_url TEXT,
+			votes INTEGER,
+			vetoed BOOLEAN
 		)`,
 	); err != nil {
 		return fmt.Errorf("error creating users table: %v", err)
@@ -211,7 +206,7 @@ func (s *SQLStore) createTables() error {
 
 // songExists queries the database for any song with the same name and artist
 // as the given song and returns true if there is a match.
-func (s *SQLStore) songExists(song Song) bool {
+func (s *SQLiteStore) songExists(song Song) bool {
 	var (
 		name   string
 		artist string
