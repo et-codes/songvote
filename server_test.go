@@ -64,6 +64,39 @@ func TestGetAllUsersFromServer(t *testing.T) {
 	})
 }
 
+func TestGetUserFromServer(t *testing.T) {
+	teardownSuite, store, server := setupStubSuite(t)
+	defer teardownSuite(t)
+
+	t.Run("get single user", func(t *testing.T) {
+		request := newGetUserRequest(1)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusOK)
+		assert.Equal(t, len(store.GetUserCalls), 1)
+	})
+
+	t.Run("returns 404 if user ID not found", func(t *testing.T) {
+		request := newGetUserRequest(10)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusNotFound)
+	})
+
+	t.Run("returns 405 when wrong method used", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPost, "/users/1", nil)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusMethodNotAllowed)
+	})
+}
+
 func TestGetAllSongsFromServer(t *testing.T) {
 	teardownSuite, store, server := setupStubSuite(t)
 	defer teardownSuite(t)
@@ -88,7 +121,7 @@ func TestGetAllSongsFromServer(t *testing.T) {
 	})
 }
 
-func TestGetSongsFromServer(t *testing.T) {
+func TestGetSongFromServer(t *testing.T) {
 	teardownSuite, store, server := setupStubSuite(t)
 	defer teardownSuite(t)
 

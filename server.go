@@ -22,6 +22,7 @@ type Store interface {
 	// User methods
 	AddUser(user User) (int64, error)
 	GetUsers() Users
+	GetUser(id int64) (User, error)
 }
 
 type Server struct {
@@ -76,8 +77,8 @@ func (s *Server) handleUsers(w http.ResponseWriter, r *http.Request) {
 //   - DELETE: delete the user
 func (s *Server) handleUsersWithID(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	// case http.MethodGet:
-	//     // TODO
+	case http.MethodGet:
+		s.getUser(w, r)
 	// case http.MethodPost:
 	//     // TODO
 	default:
@@ -182,6 +183,29 @@ func (s *Server) getAllUsers(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, out)
 }
 
+func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
+	id, err := parseID(r.URL.Path, "/users/")
+	if err != nil {
+		writeIDParseError(w, err)
+		return
+	}
+
+	user, err := s.store.GetUser(id)
+	if err != nil {
+		writeNotFoundError(w, err)
+		return
+	}
+
+	json, err := MarshalJSON(user)
+	if err != nil {
+		writeMarshalError(w, err)
+		return
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	fmt.Fprint(w, json)
+}
+
 func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
 	songs := s.store.GetSongs()
 
@@ -196,7 +220,7 @@ func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
-	id, err := parseSongID(r.URL.Path, "/songs/")
+	id, err := parseID(r.URL.Path, "/songs/")
 	if err != nil {
 		writeIDParseError(w, err)
 		return
@@ -236,7 +260,7 @@ func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) deleteSong(w http.ResponseWriter, r *http.Request) {
-	id, err := parseSongID(r.URL.Path, "/songs/")
+	id, err := parseID(r.URL.Path, "/songs/")
 	if err != nil {
 		writeIDParseError(w, err)
 		return
@@ -253,7 +277,7 @@ func (s *Server) deleteSong(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) updateSong(w http.ResponseWriter, r *http.Request) {
-	id, err := parseSongID(r.URL.Path, "/songs/")
+	id, err := parseID(r.URL.Path, "/songs/")
 	if err != nil {
 		writeIDParseError(w, err)
 		return
@@ -285,7 +309,7 @@ func (s *Server) updateSong(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) addVote(w http.ResponseWriter, r *http.Request) {
-	id, err := parseSongID(r.URL.Path, "/songs/vote/")
+	id, err := parseID(r.URL.Path, "/songs/vote/")
 	if err != nil {
 		writeIDParseError(w, err)
 		return
@@ -300,7 +324,7 @@ func (s *Server) addVote(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) veto(w http.ResponseWriter, r *http.Request) {
-	id, err := parseSongID(r.URL.Path, "/songs/veto/")
+	id, err := parseID(r.URL.Path, "/songs/veto/")
 	if err != nil {
 		writeIDParseError(w, err)
 		return
@@ -314,7 +338,7 @@ func (s *Server) veto(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func parseSongID(path, prefix string) (int64, error) {
+func parseID(path, prefix string) (int64, error) {
 	idString := strings.TrimPrefix(path, prefix)
 	id, err := strconv.ParseInt(idString, 10, 64)
 	if err != nil {

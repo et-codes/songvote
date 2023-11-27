@@ -6,8 +6,8 @@ import "fmt"
 // the calls against its methods. It is meant to be used for testing.
 type StubStore struct {
 	NextSongID        int64          // next song ID to be used
-	GetSongCalls      []int64        // calls to to GetSong
 	GetSongsCallCount int            // count of calls to GetSongs
+	GetSongCalls      []int64        // calls to to GetSong
 	AddSongCalls      Songs          // calls to AddSong
 	DeleteSongCalls   []int64        // calls to DeleteSong
 	UpdateSongCalls   map[int64]Song // calls to UpdateSong
@@ -16,6 +16,7 @@ type StubStore struct {
 	NextUserID        int64          // next user ID to be used
 	AddUserCalls      Users          // calls to AddUser
 	GetUsersCallCount int            // count of calls to GetUsers
+	GetUserCalls      []int64        // calls to to GetUser
 }
 
 // NewStubStore returns a reference to an empty StubStore.
@@ -37,6 +38,14 @@ func (s *StubStore) AddUser(user User) (int64, error) {
 func (s *StubStore) GetUsers() Users {
 	s.GetUsersCallCount++
 	return Users{}
+}
+
+func (s *StubStore) GetUser(id int64) (User, error) {
+	s.GetUserCalls = append(s.GetUserCalls, id)
+	if id >= 10 {
+		return User{}, fmt.Errorf("user ID %d not found", id)
+	}
+	return User{}, nil
 }
 
 func (s *StubStore) GetSong(id int64) (Song, error) {

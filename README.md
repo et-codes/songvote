@@ -27,13 +27,15 @@
 - `DELETE /users/{id}` deletes a user
 
 ### TODO
-- Allow for undoing a vote or a veto? (TBD)
 - Implement users
   - Only allow making users inactive rather than deleting
   - Get, ~~add~~, update, and delete
   - Track who adds a song
   - Track who voted for and vetoed a song
   - Password encryption
+- Update server and integration tests to use populate with many funcs
+- Update integration tests for untested Song functions
+- Allow for undoing a vote or a veto? (TBD)
 
 For each store method added:
 - write unit tests in store_test.go

@@ -89,6 +89,25 @@ func (s *SQLiteStore) GetUsers() Users {
 	return users
 }
 
+// GetUser returns a User object with the given ID, or an error if it cannot
+// be found.
+func (s *SQLiteStore) GetUser(id int64) (User, error) {
+	row := s.db.QueryRowContext(s.ctx,
+		"SELECT * FROM users WHERE id = $1",
+		id,
+	)
+	user, err := rowToUser(row)
+
+	switch {
+	case err == sql.ErrNoRows:
+		return user, fmt.Errorf("user ID %d not found", id)
+	case err != nil:
+		return user, fmt.Errorf("error getting user ID %d: %v", id, err)
+	default:
+		return user, nil
+	}
+}
+
 // GetSong returns a Song object with the given ID, or an error if it cannot
 // be found.
 func (s *SQLiteStore) GetSong(id int64) (Song, error) {
@@ -306,15 +325,17 @@ func (s *SQLiteStore) userExists(user User) bool {
 // rowToSong marshals a *sql.Row result into a Song struct.
 func rowToSong(row *sql.Row) (Song, error) {
 	var song Song
-	err := row.Scan(
+	if err := row.Scan(
 		&song.ID,
 		&song.Name,
 		&song.Artist,
 		&song.LinkURL,
 		&song.Votes,
 		&song.Vetoed,
-	)
-	return song, err
+	); err != nil {
+		return song, fmt.Errorf("problem scanning row: %v", err)
+	}
+	return song, nil
 }
 
 // rowsToSongs marshals a *sql.Rows result into a slice of Song structs.
@@ -340,6 +361,21 @@ func rowsToSongs(rows *sql.Rows) (Songs, error) {
 	}
 
 	return songs, nil
+}
+
+// rowToUser marshals a *sql.Row result into a User struct.
+func rowToUser(row *sql.Row) (User, error) {
+	var user User
+	if err := row.Scan(
+		&user.ID,
+		&user.Active,
+		&user.Name,
+		&user.Password,
+		&user.Vetoes,
+	); err != nil {
+		return user, fmt.Errorf("problem scanning row: %v", err)
+	}
+	return user, nil
 }
 
 // rowsToUsers marshals a *sql.Rows result into a slice of User structs.

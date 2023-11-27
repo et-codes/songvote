@@ -23,14 +23,26 @@ func TestGetAllUsersFromStore(t *testing.T) {
 	teardownSuite, store, server := setupSuite(t)
 	defer teardownSuite(t)
 
-	testUser2 := testUser
-	testUser2.Name = "Jane Doe"
-	populateWithUser(server, testUser)
-	populateWithUser(server, testUser2)
+	populateWithUsers(server, userTestDataFile)
 
 	t.Run("gets a list of all users", func(t *testing.T) {
 		users := store.GetUsers()
-		assert.Equal(t, len(users), 2)
+		assert.Equal(t, len(users), 4)
+	})
+}
+
+func TestGetUserFromStore(t *testing.T) {
+	teardownSuite, store, server := setupSuite(t)
+	defer teardownSuite(t)
+
+	populateWithUser(server, testUser)
+
+	t.Run("gets user from store", func(t *testing.T) {
+		got, err := store.GetUser(1)
+		assert.NoError(t, err)
+		if !got.Equal(testUser) {
+			t.Errorf("got %v, want %v", got, testUser)
+		}
 	})
 }
 
@@ -56,16 +68,26 @@ func TestGetSongsFromStore(t *testing.T) {
 	teardownSuite, store, server := setupSuite(t)
 	defer teardownSuite(t)
 
-	populateWithSong(server, testSong)
+	populateWithSongs(server, songTestDataFile)
 
 	t.Run("gets all songs in store", func(t *testing.T) {
-		newSong := testSong
-		newSong.Name = "Fake Song #4"
-		_, err := store.AddSong(newSong)
-		assert.NoError(t, err)
-
 		got := store.GetSongs()
-		assert.Equal(t, len(got), 2)
+		assert.Equal(t, len(got), 5)
+	})
+}
+
+func TestGetSongFromStore(t *testing.T) {
+	teardownSuite, store, server := setupSuite(t)
+	defer teardownSuite(t)
+
+	populateWithSong(server, testSong)
+
+	t.Run("gets song from store", func(t *testing.T) {
+		got, err := store.GetSong(1)
+		assert.NoError(t, err)
+		if !got.Equal(testSong) {
+			t.Errorf("got %v, want %v", got, testSong)
+		}
 	})
 }
 
@@ -78,6 +100,8 @@ func TestDeleteSongFromStore(t *testing.T) {
 	t.Run("deletes a song", func(t *testing.T) {
 		err := store.DeleteSong(1)
 		assert.NoError(t, err)
+		_, err = store.GetSong(1)
+		assert.Error(t, err)
 	})
 }
 
@@ -89,7 +113,7 @@ func TestUpdateSongInStore(t *testing.T) {
 
 	t.Run("updates song name", func(t *testing.T) {
 		newSong := testSong
-		newSong.Name = "Fake Song #4"
+		newSong.Name = "Fake Song"
 
 		err := store.UpdateSong(1, newSong)
 		assert.NoError(t, err)
