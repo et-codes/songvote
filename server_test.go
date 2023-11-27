@@ -97,6 +97,37 @@ func TestGetUserFromServer(t *testing.T) {
 	})
 }
 
+func TestUpdateUserOnServer(t *testing.T) {
+	teardownSuite, store, server := setupStubSuite(t)
+	defer teardownSuite(t)
+
+	populateWithUser(server, testUser)
+
+	t.Run("update user", func(t *testing.T) {
+		newUser := testUser
+		newUser.Name = "Changed Name"
+		request := newUpdateUserRequest(1, newUser)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusNoContent)
+		assert.Equal(t, len(store.UpdateUserCalls), 1)
+		if !newUser.Equal(store.UpdateUserCalls[1]) {
+			t.Errorf("got %v, want %v", store.UpdateUserCalls[1], newUser)
+		}
+	})
+
+	t.Run("returns error if user not found", func(t *testing.T) {
+		request := newUpdateUserRequest(10, testUser)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusNotFound)
+	})
+}
+
 func TestGetAllSongsFromServer(t *testing.T) {
 	teardownSuite, store, server := setupStubSuite(t)
 	defer teardownSuite(t)

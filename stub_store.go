@@ -29,6 +29,7 @@ func NewStubStore() *StubStore {
 		NextSongID:      1,
 		UpdateSongCalls: make(map[int64]Song),
 		NextUserID:      1,
+		UpdateUserCalls: make(map[int64]User),
 	}
 }
 

@@ -216,7 +216,34 @@ func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
 
 // updateUser updates the User with new name and/or password.
 func (s *Server) updateUser(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotImplemented)
+	id, err := parseID(r.URL.Path, "/users/")
+	if err != nil {
+		writeError(w, ErrIDParse)
+		return
+	}
+
+	userToUpdate, err := s.store.GetUser(id)
+	if err != nil {
+		writeError(w, ErrNotFound)
+		return
+	}
+
+	updatedUser := User{}
+	if err := UnmarshalJSON(r.Body, &updatedUser); err != nil {
+		writeError(w, ServerError{http.StatusInternalServerError, err})
+		return
+	}
+
+	userToUpdate.Name = updatedUser.Name
+	userToUpdate.Password = updatedUser.Password
+
+	err = s.store.UpdateUser(id, userToUpdate)
+	if err != nil {
+		writeError(w, ServerError{http.StatusInternalServerError, err})
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {

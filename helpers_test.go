@@ -139,6 +139,17 @@ func newDeleteUserRequest(id int64) *http.Request {
 	return request
 }
 
+func newUpdateUserRequest(id int64, user songvote.User) *http.Request {
+	json, err := songvote.MarshalJSON(user)
+	if err != nil {
+		log.Fatalf("problem marshalling JSON, %v", err)
+	}
+	url := fmt.Sprintf("/users/%d", id)
+	bodyReader := bytes.NewBuffer([]byte(json))
+	request, _ := http.NewRequest(http.MethodPatch, url, bodyReader)
+	return request
+}
+
 func newGetSongRequest(id int64) *http.Request {
 	url := fmt.Sprintf("/songs/%d", id)
 	request, _ := http.NewRequest(http.MethodGet, url, nil)
