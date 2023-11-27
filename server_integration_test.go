@@ -38,6 +38,31 @@ func TestAddUsers(t *testing.T) {
 	})
 }
 
+func TestGetUser(t *testing.T) {
+	teardownSuite, _, server := setupSuite(t)
+	defer teardownSuite(t)
+
+	populateWithUser(server, testUser)
+
+	t.Run("get all users", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		request := newGetUsersRequest()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusOK)
+
+		users := songvote.Users{}
+		err := songvote.UnmarshalJSON[songvote.Users](response.Body, &users)
+		assert.NoError(t, err)
+
+		assert.Equal(t, len(users), 1)
+		if !users[0].Equal(testUser) {
+			t.Errorf("want %v, got %v", testUser, users[0])
+		}
+	})
+}
+
 func TestAddSongs(t *testing.T) {
 	teardownSuite, _, server := setupSuite(t)
 	defer teardownSuite(t)

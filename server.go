@@ -11,9 +11,9 @@ import (
 
 type Store interface {
 	// Song methods
-	GetSong(id int64) (Song, error)
-	GetSongs() Songs
 	AddSong(song Song) (int64, error)
+	GetSongs() Songs
+	GetSong(id int64) (Song, error)
 	DeleteSong(id int64) error
 	UpdateSong(id int64, song Song) error
 	AddVote(id int64) error
@@ -21,6 +21,7 @@ type Store interface {
 
 	// User methods
 	AddUser(user User) (int64, error)
+	GetUsers() Users
 }
 
 type Server struct {
@@ -57,8 +58,8 @@ func NewServer(store Store) *Server {
 //   - POST: add user
 func (s *Server) handleUsers(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	// case http.MethodGet:
-	// 	// TODO
+	case http.MethodGet:
+		s.getAllUsers(w, r)
 	case http.MethodPost:
 		s.addUser(w, r)
 	default:
@@ -166,6 +167,19 @@ func (s *Server) addUser(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprint(w, id)
+}
+
+func (s *Server) getAllUsers(w http.ResponseWriter, r *http.Request) {
+	users := s.store.GetUsers()
+
+	out, err := MarshalJSON(users)
+	if err != nil {
+		writeMarshalError(w, err)
+		return
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	fmt.Fprint(w, out)
 }
 
 func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {

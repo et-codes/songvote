@@ -40,6 +40,30 @@ func TestAddUserToServer(t *testing.T) {
 	})
 }
 
+func TestGetAllUsersFromServer(t *testing.T) {
+	teardownSuite, store, server := setupStubSuite(t)
+	defer teardownSuite(t)
+
+	t.Run("get all users", func(t *testing.T) {
+		request := newGetUsersRequest()
+		response := httptest.NewRecorder()
+		server.ServeHTTP(response, request)
+		users := songvote.Users{}
+		_ = songvote.UnmarshalJSON[songvote.Users](response.Body, &users)
+
+		assert.Equal(t, response.Code, http.StatusOK)
+		assert.Equal(t, users, songvote.Users{})
+		assert.Equal(t, store.GetUsersCallCount, 1)
+	})
+
+	t.Run("returns 405 when wrong method used", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPatch, "/users", nil)
+		response := httptest.NewRecorder()
+		server.ServeHTTP(response, request)
+		assert.Equal(t, response.Code, http.StatusMethodNotAllowed)
+	})
+}
+
 func TestGetAllSongsFromServer(t *testing.T) {
 	teardownSuite, store, server := setupStubSuite(t)
 	defer teardownSuite(t)

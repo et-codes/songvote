@@ -19,5 +19,12 @@
     "name": "Joe Sixpack",
     "password": "p@ssword",
     "vetoes": 1
+  },
+  {
+    "id": 4,
+    "active": true,
+    "name": "Mary Housecoat",
+    "password": "p@ssword",
+    "vetoes": 1
   }
 ]

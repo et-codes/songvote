@@ -15,6 +15,7 @@ type StubStore struct {
 	VetoCalls         []int64        // calls to Veto
 	NextUserID        int64          // next user ID to be used
 	AddUserCalls      Users          // calls to AddUser
+	GetUsersCallCount int            // count of calls to GetUsers
 }
 
 // NewStubStore returns a reference to an empty StubStore.
@@ -31,6 +32,11 @@ func (s *StubStore) AddUser(user User) (int64, error) {
 	s.NextUserID++
 	s.AddUserCalls = append(s.AddUserCalls, user)
 	return user.ID, nil
+}
+
+func (s *StubStore) GetUsers() Users {
+	s.GetUsersCallCount++
+	return Users{}
 }
 
 func (s *StubStore) GetSong(id int64) (Song, error) {
