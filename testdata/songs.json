@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "name": "Jesus Christ Pose",
+    "artist": "Soundgarden",
+    "link_url": "https://youtu.be/14r7y6rM6zA",
+    "votes": 0,
+    "vetoed": false
+  },
+  {
+    "id": 2,
+    "name": "Alive",
+    "artist": "Pearl Jam",
+    "link_url": "https://youtu.be/qM0zINtulhM",
+    "votes": 0,
+    "vetoed": false
+  },
+  {
+    "id": 3,
+    "name": "Creep",
+    "artist": "Radiohead",
+    "link_url": "https://youtu.be/XFkzRNyygfk",
+    "votes": 0,
+    "vetoed": false
+  },
+  {
+    "id": 4,
+    "name": "Wicked Garden",
+    "artist": "Stone Temple Pilots",
+    "link_url": "https://youtu.be/OK6lXn63bW4",
+    "votes": 0,
+    "vetoed": false
+  }
+]
