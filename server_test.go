@@ -29,7 +29,7 @@ func TestAddUserToServer(t *testing.T) {
 		}
 
 		var id int64
-		err := songvote.UnmarshalJSON[int64](response.Body, &id)
+		err := songvote.UnmarshalJSON(response.Body, &id)
 		assert.NoError(t, err)
 		assert.Equal(t, id, int64(1))
 
@@ -49,7 +49,7 @@ func TestGetAllUsersFromServer(t *testing.T) {
 		response := httptest.NewRecorder()
 		server.ServeHTTP(response, request)
 		users := songvote.Users{}
-		_ = songvote.UnmarshalJSON[songvote.Users](response.Body, &users)
+		_ = songvote.UnmarshalJSON(response.Body, &users)
 
 		assert.Equal(t, response.Code, http.StatusOK)
 		assert.Equal(t, users, songvote.Users{})
@@ -106,7 +106,7 @@ func TestGetAllSongsFromServer(t *testing.T) {
 		response := httptest.NewRecorder()
 		server.ServeHTTP(response, request)
 		songs := songvote.Songs{}
-		_ = songvote.UnmarshalJSON[songvote.Songs](response.Body, &songs)
+		_ = songvote.UnmarshalJSON(response.Body, &songs)
 
 		assert.Equal(t, response.Code, http.StatusOK)
 		assert.Equal(t, songs, songvote.Songs{})
@@ -172,7 +172,7 @@ func TestAddSongsToServer(t *testing.T) {
 		}
 
 		var id int64
-		_ = songvote.UnmarshalJSON[int64](response.Body, &id)
+		_ = songvote.UnmarshalJSON(response.Body, &id)
 		assert.Equal(t, id, int64(1))
 
 		if !newSong.Equal(store.AddSongCalls[0]) {

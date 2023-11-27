@@ -53,7 +53,7 @@ func TestGetUser(t *testing.T) {
 		assert.Equal(t, response.Code, http.StatusOK)
 
 		users := songvote.Users{}
-		err := songvote.UnmarshalJSON[songvote.Users](response.Body, &users)
+		err := songvote.UnmarshalJSON(response.Body, &users)
 		assert.NoError(t, err)
 
 		assert.Equal(t, len(users), 4)
@@ -105,7 +105,7 @@ func TestGetSong(t *testing.T) {
 		assert.Equal(t, response.Code, http.StatusOK)
 
 		got := songvote.Song{}
-		err := songvote.UnmarshalJSON[songvote.Song](response.Body, &got)
+		err := songvote.UnmarshalJSON(response.Body, &got)
 		assert.NoError(t, err)
 
 		want := testSong
@@ -141,7 +141,7 @@ func TestGetSong(t *testing.T) {
 		assert.Equal(t, response.Code, http.StatusOK)
 
 		songs := songvote.Songs{}
-		err := songvote.UnmarshalJSON[songvote.Songs](response.Body, &songs)
+		err := songvote.UnmarshalJSON(response.Body, &songs)
 		assert.NoError(t, err)
 
 		assert.Equal(t, len(songs), 5)

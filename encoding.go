@@ -17,7 +17,7 @@ func MarshalJSON(obj any) (string, error) {
 
 // UnmarshalJSON decodes the JSON string into the referenced struct and returns
 // an error if there is one.
-func UnmarshalJSON[T any](in io.Reader, obj *T) error {
+func UnmarshalJSON(in io.Reader, obj any) error {
 	data, err := io.ReadAll(in)
 	if err != nil {
 		return fmt.Errorf("problem reading input: %w", err)
