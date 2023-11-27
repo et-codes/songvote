@@ -19,6 +19,21 @@ func TestAddUserToStore(t *testing.T) {
 	})
 }
 
+func TestGetAllUsersFromStore(t *testing.T) {
+	teardownSuite, store, server := setupSuite(t)
+	defer teardownSuite(t)
+
+	testUser2 := testUser
+	testUser2.Name = "Jane Doe"
+	populateWithUser(server, testUser)
+	populateWithUser(server, testUser2)
+
+	t.Run("gets a list of all users", func(t *testing.T) {
+		users := store.GetUsers()
+		assert.Equal(t, len(users), 2)
+	})
+}
+
 func TestAddSongToStore(t *testing.T) {
 	teardownSuite, store, _ := setupSuite(t)
 	defer teardownSuite(t)

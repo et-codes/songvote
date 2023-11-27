@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "active": true,
+    "name": "John Doe",
+    "password": "p@ssword",
+    "vetoes": 1
+  },
+  {
+    "id": 2,
+    "active": true,
+    "name": "Jane Doe",
+    "password": "p@ssword",
+    "vetoes": 1
+  },
+  {
+    "id": 3,
+    "active": true,
+    "name": "Joe Sixpack",
+    "password": "p@ssword",
+    "vetoes": 1
+  }
+]

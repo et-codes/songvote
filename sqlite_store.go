@@ -45,7 +45,8 @@ func NewSQLiteStore(dbPath string) *SQLiteStore {
 	return store
 }
 
-// AddUser adds the given User to the store.
+// AddUser adds the given User to the store. Returns an error if the username
+// given already exists in the store.
 func (s *SQLiteStore) AddUser(user User) (int64, error) {
 	if s.userExists(user) {
 		return 0, fmt.Errorf("user %q already exists", user.Name)
@@ -69,6 +70,23 @@ func (s *SQLiteStore) AddUser(user User) (int64, error) {
 	}
 
 	return id, nil
+}
+
+// GetUsers returns a slice of User objects representing all of the users in
+// the store.
+func (s *SQLiteStore) GetUsers() Users {
+	rows, err := s.db.QueryContext(s.ctx, "SELECT * FROM users")
+	if err != nil {
+		log.Fatalf("error querying users from store: %v", err)
+	}
+	defer rows.Close()
+
+	users, err := rowsToUsers(rows)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return users
 }
 
 // GetSong returns a Song object with the given ID, or an error if it cannot
@@ -317,5 +335,33 @@ func rowsToSongs(rows *sql.Rows) (Songs, error) {
 		songs = append(songs, song)
 	}
 
+	if err := rows.Err(); err != nil {
+		return songs, fmt.Errorf("problem scanning rows: %v", err)
+	}
+
 	return songs, nil
+}
+
+// rowsToUsers marshals a *sql.Rows result into a slice of User structs.
+func rowsToUsers(rows *sql.Rows) (Users, error) {
+	users := Users{}
+	for rows.Next() {
+		var user User
+		if err := rows.Scan(
+			&user.ID,
+			&user.Active,
+			&user.Name,
+			&user.Password,
+			&user.Vetoes,
+		); err != nil {
+			return users, fmt.Errorf("problem scanning rows: %v", err)
+		}
+		users = append(users, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return users, fmt.Errorf("problem scanning rows: %v", err)
+	}
+
+	return users, nil
 }

@@ -52,14 +52,13 @@ func NewServer(store Store) *Server {
 }
 
 // handleUsers routes requests to "/users" depending on request type.
-//
 // Allowable methods:
 //   - GET:  get all users
 //   - POST: add user
 func (s *Server) handleUsers(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case http.MethodGet:
-		// TODO
+	// case http.MethodGet:
+	// 	// TODO
 	case http.MethodPost:
 		s.addUser(w, r)
 	default:
@@ -70,7 +69,6 @@ func (s *Server) handleUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleUsersWithID routes requests to "/users/{id}" depending on request type.
-//
 // Allowable methods:
 //   - GET:    get the user
 //   - PATCH:  update the user
@@ -89,7 +87,6 @@ func (s *Server) handleUsersWithID(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleSongs routes requests to "/songs" depending on request type.
-//
 // Allowable methods:
 //   - GET:  get all songs
 //   - POST: add song
@@ -107,7 +104,6 @@ func (s *Server) handleSongs(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleSongsWithID routes requests to "/songs/{id}" depending on request type.
-//
 // Allowable methods:
 //   - GET:    get the song
 //   - PATCH:  update the song
@@ -128,7 +124,6 @@ func (s *Server) handleSongsWithID(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleVote routes requests to "/songs/vote/{id}" depending on request type.
-//
 // Allowable methods:
 //   - POST: vote for a song
 func (s *Server) handleVote(w http.ResponseWriter, r *http.Request) {
@@ -143,7 +138,6 @@ func (s *Server) handleVote(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleVote routes requests to "/songs/veto/{id}" depending on request type.
-//
 // Allowable methods:
 //   - POST: veto a song
 func (s *Server) handleVeto(w http.ResponseWriter, r *http.Request) {
@@ -323,19 +317,19 @@ func writeError(w http.ResponseWriter, code int, message string) {
 
 func writeNotFoundError(w http.ResponseWriter, err error) {
 	code := http.StatusNotFound
-	message := fmt.Sprintf("Problem retreiving song: %v", err)
+	message := fmt.Sprintf("Problem retreiving: %v", err)
 	writeError(w, code, message)
 }
 
 func writeIDParseError(w http.ResponseWriter, err error) {
 	code := http.StatusInternalServerError
-	message := fmt.Sprintf("Problem parsing song ID: %v", err)
+	message := fmt.Sprintf("Problem parsing ID: %v", err)
 	writeError(w, code, message)
 }
 
 func writeUpdateError(w http.ResponseWriter, err error) {
 	code := http.StatusInternalServerError
-	message := fmt.Sprintf("Error updating song: %v", err)
+	message := fmt.Sprintf("Error updating: %v", err)
 	writeError(w, code, message)
 }
 
@@ -347,12 +341,12 @@ func writeUnmarshalError(w http.ResponseWriter, err error) {
 
 func writeMarshalError(w http.ResponseWriter, err error) {
 	code := http.StatusInternalServerError
-	message := fmt.Sprintf("Problem marshaling song to JSON: %v", err)
+	message := fmt.Sprintf("Problem marshaling to JSON: %v", err)
 	writeError(w, code, message)
 }
 
 func writeConflictError(w http.ResponseWriter, err error) {
 	code := http.StatusConflict
-	message := fmt.Sprintf("Resource already exists: %v\n", err)
+	message := fmt.Sprintf("Resource already exists: %v", err)
 	writeError(w, code, message)
 }

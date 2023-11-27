@@ -29,7 +29,6 @@
 ### TODO
 - Allow for undoing a vote or a veto? (TBD)
 - Implement users
-  - Add active field for users
   - Only allow making users inactive rather than deleting
   - Get, ~~add~~, update, and delete
   - Track who adds a song
@@ -37,10 +36,9 @@
   - Password encryption
 
 For each store method added:
-- unit tests need to be written
-- integration tests need to be written
-- it needs to be updated in the SQLiteStore and StubStore
-- the SongVoteStore interface needs to be updated
-- routing to the handler needs to be added to NewServer
-- helper method called by the handler
-- helper method added to the Server
+- write unit tests in store_test.go
+- update SQLiteStore to get it to pass
+- write unit tests in server_test.go
+- update SongVoteStore interface, StubStore, and server.go to get it to pass
+- write integration tests in server_integration_test.go
+- get them to pass

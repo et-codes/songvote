@@ -65,6 +65,7 @@ func setupStubSuite(t *testing.T) (
 	return
 }
 
+// newAddUserRequest returns an HTTP request to add the given user.
 func newAddUserRequest(user songvote.User) *http.Request {
 	json, err := songvote.MarshalJSON(user)
 	log.Printf("%s  %#v", json, user)
@@ -74,6 +75,12 @@ func newAddUserRequest(user songvote.User) *http.Request {
 	bodyReader := bytes.NewBuffer([]byte(json))
 	request, _ := http.NewRequest(http.MethodPost, "/users", bodyReader)
 	return request
+}
+
+// populateWithUser adds a user to a server for testing purposes.
+func populateWithUser(server *songvote.Server, user songvote.User) {
+	request := newAddUserRequest(user)
+	server.ServeHTTP(httptest.NewRecorder(), request)
 }
 
 // populateWithSong adds a song to a server for testing purposes.
