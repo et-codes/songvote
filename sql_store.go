@@ -182,7 +182,7 @@ func (s *SQLiteStore) Veto(id int64) error {
 
 // createTables creates the database tables if they do not already exist.
 func (s *SQLiteStore) createTables() error {
-	if _, err := s.db.ExecContext(s.ctx,
+	_, err := s.db.ExecContext(s.ctx,
 		`CREATE TABLE IF NOT EXISTS users (
 			id INTEGER PRIMARY KEY,
 			name TEXT NOT NULL,
@@ -196,8 +196,16 @@ func (s *SQLiteStore) createTables() error {
 			link_url TEXT,
 			votes INTEGER,
 			vetoed BOOLEAN
+		);
+		CREATE TABLE IF NOT EXISTS votes (
+			id INTEGER PRIMARY KEY,
+			song INTEGER,
+			voted_by INTEGER,
+			FOREIGN KEY(song) REFERENCES songs(id),
+			FOREIGN KEY(voted_by) REFERENCES users(id)
 		)`,
-	); err != nil {
+	)
+	if err != nil {
 		return fmt.Errorf("error creating users table: %v", err)
 	}
 
