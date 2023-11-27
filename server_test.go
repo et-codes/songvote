@@ -182,6 +182,31 @@ func TestAddSongsToServer(t *testing.T) {
 	})
 }
 
+func TestDeleteUserFromServer(t *testing.T) {
+	teardownSuite, store, server := setupStubSuite(t)
+	defer teardownSuite(t)
+
+	t.Run("delete user response", func(t *testing.T) {
+		request := newDeleteUserRequest(1)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusNoContent)
+		assert.Equal(t, store.DeleteUserCalls[0], int64(1))
+	})
+
+	t.Run("returns error if user not found", func(t *testing.T) {
+		request := newDeleteUserRequest(10)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusNotFound)
+		assert.Equal(t, store.DeleteUserCalls[1], int64(10))
+	})
+}
+
 func TestDeleteSongFromServer(t *testing.T) {
 	teardownSuite, store, server := setupStubSuite(t)
 	defer teardownSuite(t)

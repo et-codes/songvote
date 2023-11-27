@@ -133,6 +133,12 @@ func newGetUserRequest(id int64) *http.Request {
 	return request
 }
 
+func newDeleteUserRequest(id int64) *http.Request {
+	url := fmt.Sprintf("/users/%d", id)
+	request, _ := http.NewRequest(http.MethodDelete, url, nil)
+	return request
+}
+
 func newGetSongRequest(id int64) *http.Request {
 	url := fmt.Sprintf("/songs/%d", id)
 	request, _ := http.NewRequest(http.MethodGet, url, nil)

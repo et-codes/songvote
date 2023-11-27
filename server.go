@@ -83,6 +83,8 @@ func (s *Server) handleUsersWithID(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		s.getUser(w, r)
+	case http.MethodDelete:
+		s.deleteUser(w, r)
 	// case http.MethodPost:
 	//     // TODO
 	default:
@@ -210,6 +212,21 @@ func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, json)
 }
 
+func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
+	id, err := parseID(r.URL.Path, "/users/")
+	if err != nil {
+		writeIDParseError(w, err)
+		return
+	}
+
+	if err := s.store.DeleteUser(id); err != nil {
+		writeDeleteError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
 	songs := s.store.GetSongs()
 
@@ -271,9 +288,7 @@ func (s *Server) deleteSong(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := s.store.DeleteSong(id); err != nil {
-		code := http.StatusNotFound
-		message := fmt.Sprintf("Could not delete song: %v\n", err)
-		writeError(w, code, message)
+		writeDeleteError(w, err)
 		return
 	}
 
@@ -391,5 +406,11 @@ func writeMarshalError(w http.ResponseWriter, err error) {
 func writeConflictError(w http.ResponseWriter, err error) {
 	code := http.StatusConflict
 	message := fmt.Sprintf("Resource already exists: %v", err)
+	writeError(w, code, message)
+}
+
+func writeDeleteError(w http.ResponseWriter, err error) {
+	code := http.StatusNotFound
+	message := fmt.Sprintf("Could not delete: %v", err)
 	writeError(w, code, message)
 }

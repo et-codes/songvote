@@ -63,6 +63,36 @@ func TestGetUser(t *testing.T) {
 	})
 }
 
+func TestDeleteUser(t *testing.T) {
+	teardownSuite, _, server := setupSuite(t)
+	defer teardownSuite(t)
+
+	populateWithUser(server, testUser)
+
+	t.Run("delete a user and cannot retreive it", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		request := newDeleteUserRequest(1)
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusNoContent)
+
+		response = httptest.NewRecorder()
+		request = newGetUserRequest(1)
+		server.ServeHTTP(response, request)
+		assert.Equal(t, response.Code, http.StatusNotFound)
+	})
+
+	t.Run("returns error with unknown ID", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		request := newDeleteUserRequest(999)
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusNotFound)
+	})
+}
+
 func TestAddSongs(t *testing.T) {
 	teardownSuite, _, server := setupSuite(t)
 	defer teardownSuite(t)
