@@ -22,6 +22,7 @@ var (
 		Vetoed:  false,
 	}
 	testUser = songvote.User{
+		Active:   true,
 		Name:     "John Doe",
 		Password: "p@ssword",
 		Vetoes:   1,

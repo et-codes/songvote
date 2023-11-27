@@ -52,8 +52,9 @@ func (s *SQLiteStore) AddUser(user User) (int64, error) {
 	}
 
 	result, err := s.db.ExecContext(s.ctx,
-		`INSERT INTO users(name, password, vetoes) 
-			VALUES ($1, $2, $3)`,
+		`INSERT INTO users(active, name, password, vetoes) 
+			VALUES ($1, $2, $3, $4)`,
+		true,
 		user.Name,
 		user.Password,
 		user.Vetoes,
@@ -210,6 +211,7 @@ func (s *SQLiteStore) createTables() error {
 	_, err := s.db.ExecContext(s.ctx,
 		`CREATE TABLE IF NOT EXISTS users (
 			id INTEGER PRIMARY KEY,
+			active BOOLEAN,
 			name TEXT NOT NULL,
 			password TEXT NOT NULL,
 			vetoes INTEGER

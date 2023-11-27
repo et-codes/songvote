@@ -41,7 +41,8 @@ func NewServer(store Store) *Server {
 	router.Handle("/songs/", http.HandlerFunc(s.handleSongsWithID)) // GET|PATCH|DELETE
 	router.Handle("/songs", http.HandlerFunc(s.handleSongs))        // GET|POST
 
-	router.Handle("/users", http.HandlerFunc(s.handleUsers)) // POST
+	router.Handle("/users/", http.HandlerFunc(s.handleUsersWithID)) // GET|PATCH|DELETE
+	router.Handle("/users", http.HandlerFunc(s.handleUsers))        // POST
 
 	loggingRouter := httplogger.New(router)
 
@@ -61,6 +62,25 @@ func (s *Server) handleUsers(w http.ResponseWriter, r *http.Request) {
 		// TODO
 	case http.MethodPost:
 		s.addUser(w, r)
+	default:
+		code := http.StatusMethodNotAllowed
+		message := fmt.Sprintf("Method %s not allowed", r.Method)
+		writeError(w, code, message)
+	}
+}
+
+// handleUsersWithID routes requests to "/users/{id}" depending on request type.
+//
+// Allowable methods:
+//   - GET:    get the user
+//   - PATCH:  update the user
+//   - DELETE: delete the user
+func (s *Server) handleUsersWithID(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	// case http.MethodGet:
+	//     // TODO
+	// case http.MethodPost:
+	//     // TODO
 	default:
 		code := http.StatusMethodNotAllowed
 		message := fmt.Sprintf("Method %s not allowed", r.Method)

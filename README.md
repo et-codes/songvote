@@ -29,7 +29,9 @@
 ### TODO
 - Allow for undoing a vote or a veto? (TBD)
 - Implement users
-  - Get, add, update, and delete
+  - Add active field for users
+  - Only allow making users inactive rather than deleting
+  - Get, ~~add~~, update, and delete
   - Track who adds a song
   - Track who voted for and vetoed a song
   - Password encryption
