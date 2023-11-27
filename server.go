@@ -42,10 +42,10 @@ func NewServer(store Store) *Server {
 
 	router.Handle("/songs/vote/", http.HandlerFunc(s.handleVote))   // POST
 	router.Handle("/songs/veto/", http.HandlerFunc(s.handleVeto))   // POST
-	router.Handle("/songs/", http.HandlerFunc(s.handleSongsWithID)) // GET|PATCH|DELETE
+	router.Handle("/songs/", http.HandlerFunc(s.handleSongsWithID)) // GET|PUT|DELETE
 	router.Handle("/songs", http.HandlerFunc(s.handleSongs))        // GET|POST
 
-	router.Handle("/users/", http.HandlerFunc(s.handleUsersWithID)) // GET|PATCH|DELETE
+	router.Handle("/users/", http.HandlerFunc(s.handleUsersWithID)) // GET|PUT|DELETE
 	router.Handle("/users", http.HandlerFunc(s.handleUsers))        // POST
 
 	loggingRouter := httplogger.New(router)
@@ -73,13 +73,13 @@ func (s *Server) handleUsers(w http.ResponseWriter, r *http.Request) {
 // handleUsersWithID routes requests to "/users/{id}" depending on request type.
 // Allowable methods:
 //   - GET:    get the user
-//   - PATCH:  update the user
+//   - PUT:    update the user
 //   - DELETE: delete the user
 func (s *Server) handleUsersWithID(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		s.getUser(w, r)
-	case http.MethodPatch:
+	case http.MethodPut:
 		s.updateUser(w, r)
 	case http.MethodDelete:
 		s.deleteUser(w, r)
@@ -106,13 +106,13 @@ func (s *Server) handleSongs(w http.ResponseWriter, r *http.Request) {
 // handleSongsWithID routes requests to "/songs/{id}" depending on request type.
 // Allowable methods:
 //   - GET:    get the song
-//   - PATCH:  update the song
+//   - PUT:    update the song
 //   - DELETE: delete the song
 func (s *Server) handleSongsWithID(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		s.getSong(w, r)
-	case http.MethodPatch:
+	case http.MethodPut:
 		s.updateSong(w, r)
 	case http.MethodDelete:
 		s.deleteSong(w, r)

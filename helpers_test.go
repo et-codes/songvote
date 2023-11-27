@@ -146,7 +146,7 @@ func newUpdateUserRequest(id int64, user songvote.User) *http.Request {
 	}
 	url := fmt.Sprintf("/users/%d", id)
 	bodyReader := bytes.NewBuffer([]byte(json))
-	request, _ := http.NewRequest(http.MethodPatch, url, bodyReader)
+	request, _ := http.NewRequest(http.MethodPut, url, bodyReader)
 	return request
 }
 
@@ -184,7 +184,7 @@ func newUpdateSongRequest(id int64, song songvote.Song) *http.Request {
 	}
 	url := fmt.Sprintf("/songs/%d", id)
 	bodyReader := bytes.NewBuffer([]byte(json))
-	request, _ := http.NewRequest(http.MethodPatch, url, bodyReader)
+	request, _ := http.NewRequest(http.MethodPut, url, bodyReader)
 	return request
 }
 
