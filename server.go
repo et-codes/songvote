@@ -80,10 +80,10 @@ func (s *Server) handleUsersWithID(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		s.getUser(w, r)
+	case http.MethodPatch:
+		s.updateUser(w, r)
 	case http.MethodDelete:
 		s.deleteUser(w, r)
-	// case http.MethodPost:
-	//     // TODO
 	default:
 		writeError(w, ErrMethod)
 	}
@@ -212,6 +212,11 @@ func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// updateUser updates the User with new name and/or password.
+func (s *Server) updateUser(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
 }
 
 func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {

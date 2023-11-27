@@ -77,6 +77,24 @@ func TestDeleteUserFromStore(t *testing.T) {
 	})
 }
 
+func TestUpdateUserInStore(t *testing.T) {
+	teardownSuite, store, server := setupSuite(t)
+	defer teardownSuite(t)
+
+	populateWithUser(server, testUser)
+
+	t.Run("updates user name", func(t *testing.T) {
+		newUser := testUser
+		newUser.Name = "Fake User"
+
+		err := store.UpdateUser(1, newUser)
+		assert.NoError(t, err)
+
+		user, _ := store.GetUser(1)
+		assert.Equal(t, user.Name, newUser.Name)
+	})
+}
+
 func TestAddSongToStore(t *testing.T) {
 	teardownSuite, store, _ := setupSuite(t)
 	defer teardownSuite(t)
