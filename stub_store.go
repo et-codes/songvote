@@ -6,17 +6,21 @@ import "fmt"
 // the calls against its methods. It is meant to be used for testing.
 type StubStore struct {
 	NextSongID        int64          // next song ID to be used
+	AddSongCalls      Songs          // calls to AddSong
 	GetSongsCallCount int            // count of calls to GetSongs
 	GetSongCalls      []int64        // calls to to GetSong
-	AddSongCalls      Songs          // calls to AddSong
 	DeleteSongCalls   []int64        // calls to DeleteSong
 	UpdateSongCalls   map[int64]Song // calls to UpdateSong
 	AddVoteCalls      []int64        // calls to AddVote
 	VetoCalls         []int64        // calls to Veto
+
 	NextUserID        int64          // next user ID to be used
 	AddUserCalls      Users          // calls to AddUser
 	GetUsersCallCount int            // count of calls to GetUsers
 	GetUserCalls      []int64        // calls to to GetUser
+	DeleteUserCalls   []int64        // calls to DeleteUser
+	UpdateUserCalls   map[int64]User // calls to UpdateUser
+	ToggleActiveCalls []int64        // calls to ToggleActive
 }
 
 // NewStubStore returns a reference to an empty StubStore.
@@ -46,6 +50,30 @@ func (s *StubStore) GetUser(id int64) (User, error) {
 		return User{}, fmt.Errorf("user ID %d not found", id)
 	}
 	return User{}, nil
+}
+
+func (s *StubStore) DeleteUser(id int64) error {
+	s.DeleteUserCalls = append(s.DeleteUserCalls, id)
+	if id >= 10 {
+		return fmt.Errorf("user ID %d not found", id)
+	}
+	return nil
+}
+
+func (s *StubStore) UpdateUser(id int64, user User) error {
+	s.UpdateUserCalls[id] = user
+	if id >= 10 {
+		return fmt.Errorf("user ID %d not found", id)
+	}
+	return nil
+}
+
+func (s *StubStore) ToggleActive(id int64) error {
+	s.ToggleActiveCalls = append(s.ToggleActiveCalls, id)
+	if id >= 10 {
+		return fmt.Errorf("user ID %d not found", id)
+	}
+	return nil
 }
 
 func (s *StubStore) GetSong(id int64) (Song, error) {

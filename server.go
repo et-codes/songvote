@@ -24,6 +24,9 @@ type Store interface {
 	AddUser(user User) (int64, error)
 	GetUsers() Users
 	GetUser(id int64) (User, error)
+	DeleteUser(id int64) error
+	UpdateUser(id int64, user User) error
+	ToggleActive(id int64) error
 }
 
 type Server struct {

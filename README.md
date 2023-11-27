@@ -28,8 +28,7 @@
 
 ## TODO
 - Implement users
-  - Only allow making users inactive rather than deleting
-  - ~~Get~~, ~~add~~, update, and delete
+  - ~~Get~~, ~~add~~, update, delete, toggle active
   - Track who adds a song
   - Track who voted for and vetoed a song
   - Password encryption

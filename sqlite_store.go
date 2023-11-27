@@ -108,6 +108,32 @@ func (s *SQLiteStore) GetUser(id int64) (User, error) {
 	}
 }
 
+// DeleteUser will delete the given user ID from the table.
+func (s *SQLiteStore) DeleteUser(id int64) error {
+	result, err := s.db.ExecContext(s.ctx,
+		"DELETE FROM users WHERE id = $1",
+		id,
+	)
+	if err != nil {
+		return fmt.Errorf("error deleting user %d: %v", id, err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("user %d not found: %v", id, err)
+	}
+
+	return nil
+}
+
+func (s *SQLiteStore) UpdateUser(id int64, user User) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (s *SQLiteStore) ToggleActive(id int64) error {
+	return fmt.Errorf("not implemented")
+}
+
 // GetSong returns a Song object with the given ID, or an error if it cannot
 // be found.
 func (s *SQLiteStore) GetSong(id int64) (Song, error) {

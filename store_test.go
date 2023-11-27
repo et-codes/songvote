@@ -59,6 +59,24 @@ func TestGetUserFromStore(t *testing.T) {
 	})
 }
 
+func TestDeleteUserFromStore(t *testing.T) {
+	teardownSuite, store, server := setupSuite(t)
+	defer teardownSuite(t)
+
+	populateWithUser(server, testUser)
+
+	t.Run("deletes a user", func(t *testing.T) {
+		err := store.DeleteUser(1)
+		assert.NoError(t, err)
+
+		_, err = store.GetUser(1)
+		assert.Error(t, err)
+
+		err = store.DeleteUser(1)
+		assert.Error(t, err)
+	})
+}
+
 func TestAddSongToStore(t *testing.T) {
 	teardownSuite, store, _ := setupSuite(t)
 	defer teardownSuite(t)
@@ -121,7 +139,11 @@ func TestDeleteSongFromStore(t *testing.T) {
 	t.Run("deletes a song", func(t *testing.T) {
 		err := store.DeleteSong(1)
 		assert.NoError(t, err)
+
 		_, err = store.GetSong(1)
+		assert.Error(t, err)
+
+		err = store.DeleteSong(1)
 		assert.Error(t, err)
 	})
 }
