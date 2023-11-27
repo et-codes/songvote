@@ -28,13 +28,13 @@
 
 ## TODO
 - Implement users
-  - ~~Get~~, ~~add~~, update, ~~delete~~, toggle active
+  - ~~Get~~, ~~add~~, ~~update~~, ~~delete~~, toggle active
   - Track who adds a song
   - Track who voted for and vetoed a song
   - Password encryption
-- Update server and integration tests to use populate with many funcs
 - Update integration tests for untested Song functions
 - Allow for undoing a vote or a veto? (TBD)
+- Have internal functions return ServerError with codes
 
 ## Notes
 For each store method added:
