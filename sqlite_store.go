@@ -333,7 +333,7 @@ func rowToSong(row *sql.Row) (Song, error) {
 		&song.Votes,
 		&song.Vetoed,
 	); err != nil {
-		return song, fmt.Errorf("problem scanning row: %v", err)
+		return song, err
 	}
 	return song, nil
 }
@@ -351,7 +351,7 @@ func rowsToSongs(rows *sql.Rows) (Songs, error) {
 			&song.Votes,
 			&song.Vetoed,
 		); err != nil {
-			return songs, fmt.Errorf("problem scanning rows: %v", err)
+			return songs, err
 		}
 		songs = append(songs, song)
 	}
@@ -373,7 +373,7 @@ func rowToUser(row *sql.Row) (User, error) {
 		&user.Password,
 		&user.Vetoes,
 	); err != nil {
-		return user, fmt.Errorf("problem scanning row: %v", err)
+		return user, err
 	}
 	return user, nil
 }
@@ -390,7 +390,7 @@ func rowsToUsers(rows *sql.Rows) (Users, error) {
 			&user.Password,
 			&user.Vetoes,
 		); err != nil {
-			return users, fmt.Errorf("problem scanning rows: %v", err)
+			return users, err
 		}
 		users = append(users, user)
 	}

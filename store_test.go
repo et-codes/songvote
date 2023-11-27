@@ -20,14 +20,22 @@ func TestAddUserToStore(t *testing.T) {
 }
 
 func TestGetAllUsersFromStore(t *testing.T) {
-	teardownSuite, store, server := setupSuite(t)
-	defer teardownSuite(t)
-
-	populateWithUsers(server, userTestDataFile)
-
 	t.Run("gets a list of all users", func(t *testing.T) {
+		teardownSuite, store, server := setupSuite(t)
+		defer teardownSuite(t)
+
+		populateWithUsers(server, userTestDataFile)
+
 		users := store.GetUsers()
 		assert.Equal(t, len(users), 4)
+	})
+
+	t.Run("returns empty if no users in store", func(t *testing.T) {
+		teardownSuite, store, _ := setupSuite(t)
+		defer teardownSuite(t)
+
+		users := store.GetUsers()
+		assert.Equal(t, len(users), 0)
 	})
 }
 
@@ -43,6 +51,11 @@ func TestGetUserFromStore(t *testing.T) {
 		if !got.Equal(testUser) {
 			t.Errorf("got %v, want %v", got, testUser)
 		}
+	})
+
+	t.Run("returns error if user not found", func(t *testing.T) {
+		_, err := store.GetUser(999)
+		assert.Error(t, err)
 	})
 }
 
@@ -65,14 +78,22 @@ func TestAddSongToStore(t *testing.T) {
 }
 
 func TestGetSongsFromStore(t *testing.T) {
-	teardownSuite, store, server := setupSuite(t)
-	defer teardownSuite(t)
-
-	populateWithSongs(server, songTestDataFile)
-
 	t.Run("gets all songs in store", func(t *testing.T) {
+		teardownSuite, store, server := setupSuite(t)
+		defer teardownSuite(t)
+
+		populateWithSongs(server, songTestDataFile)
+
 		got := store.GetSongs()
 		assert.Equal(t, len(got), 5)
+	})
+
+	t.Run("returns empty if no songs in store", func(t *testing.T) {
+		teardownSuite, store, _ := setupSuite(t)
+		defer teardownSuite(t)
+
+		songs := store.GetSongs()
+		assert.Equal(t, len(songs), 0)
 	})
 }
 
