@@ -38,7 +38,7 @@ func NewSQLStore(dbPath string) *SQLStore {
 		ctx: ctx,
 	}
 
-	if err := store.createSongsTable(); err != nil {
+	if err := store.createTables(); err != nil {
 		log.Fatalf("error creating table: %v", err)
 	}
 
@@ -180,10 +180,9 @@ func (s *SQLStore) Veto(id int64) error {
 	return nil
 }
 
-// createSongsTable creates the database table for Songs if it does not
-// already exist.
-func (s *SQLStore) createSongsTable() error {
-	_, err := s.db.ExecContext(s.ctx,
+// createTables creates the database tables if they do not already exist.
+func (s *SQLStore) createTables() error {
+	if _, err := s.db.ExecContext(s.ctx,
 		`CREATE TABLE IF NOT EXISTS songs (
 			id INTEGER PRIMARY KEY,
 			name TEXT NOT NULL,
@@ -192,10 +191,19 @@ func (s *SQLStore) createSongsTable() error {
 			votes INTEGER,
 			vetoed BOOLEAN
 		)`,
-	)
+	); err != nil {
+		return fmt.Errorf("error creating songs table: %v", err)
+	}
 
-	if err != nil {
-		return err
+	if _, err := s.db.ExecContext(s.ctx,
+		`CREATE TABLE IF NOT EXISTS users (
+			id INTEGER PRIMARY KEY,
+			name TEXT NOT NULL,
+			password TEXT NOT NULL,
+			vetoes INTEGER
+		)`,
+	); err != nil {
+		return fmt.Errorf("error creating users table: %v", err)
 	}
 
 	return nil

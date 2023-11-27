@@ -9,7 +9,7 @@ import (
 	"github.com/et-codes/songvote/internal/httplogger"
 )
 
-type SongStore interface {
+type Store interface {
 	GetSong(id int64) (Song, error)
 	GetSongs() Songs
 	AddSong(song Song) (int64, error)
@@ -20,12 +20,12 @@ type SongStore interface {
 }
 
 type Server struct {
-	store SongStore
+	store Store
 	http.Handler
 }
 
 // NewServer returns a reference to an initialized Server.
-func NewServer(store SongStore) *Server {
+func NewServer(store Store) *Server {
 	s := new(Server)
 
 	s.store = store

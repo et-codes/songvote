@@ -20,7 +20,7 @@
 - `POST /songs/vote/{id}` add vote for a song
 - `POST /songs/veto/{id}` add veto for a song
 
-### Users
+### Users (WIP)
 - `POST /users` adds a user
 - `GET /users/{id}` returns user information
 - `PATCH /users/{id}` updates user information
@@ -29,6 +29,7 @@
 ### TODO
 - Allow for undoing a vote or a veto? (TBD)
 - Implement users
-- Track who adds a song
-- Track who voted for and vetoed a song
-- Password encryption
+  - Get, add, update, and delete
+  - Track who adds a song
+  - Track who voted for and vetoed a song
+  - Password encryption
