@@ -146,7 +146,22 @@ func (s *SQLiteStore) UpdateUser(id int64, user User) error {
 
 // ToggleActive changes the active state of the user with the gievn ID.
 func (s *SQLiteStore) ToggleActive(id int64) error {
-	return fmt.Errorf("not implemented")
+	user, err := s.GetUser(id)
+	if err != nil {
+		return fmt.Errorf("user %d not found: %v", id, err)
+	}
+
+	newActiveState := !user.Active
+
+	_, err = s.db.ExecContext(s.ctx,
+		"UPDATE users SET active = $1 WHERE id = $2",
+		newActiveState, id,
+	)
+	if err != nil {
+		return fmt.Errorf("error updating user %d: %v", id, err)
+	}
+
+	return nil
 }
 
 // GetSong returns a Song object with the given ID, or an error if it cannot

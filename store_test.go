@@ -95,6 +95,21 @@ func TestUpdateUserInStore(t *testing.T) {
 	})
 }
 
+func TestToggleActiveInStore(t *testing.T) {
+	teardownSuite, store, server := setupSuite(t)
+	defer teardownSuite(t)
+
+	populateWithUser(server, testUser)
+
+	t.Run("flips active status of user", func(t *testing.T) {
+		err := store.ToggleActive(1)
+		assert.NoError(t, err)
+
+		user, _ := store.GetUser(1)
+		assert.False(t, user.Active)
+	})
+}
+
 func TestAddSongToStore(t *testing.T) {
 	teardownSuite, store, _ := setupSuite(t)
 	defer teardownSuite(t)
