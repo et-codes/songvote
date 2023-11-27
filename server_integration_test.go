@@ -93,6 +93,36 @@ func TestDeleteUser(t *testing.T) {
 	})
 }
 
+func TestUpdateUser(t *testing.T) {
+	teardownSuite, _, server := setupSuite(t)
+	defer teardownSuite(t)
+
+	populateWithUser(server, testUser)
+
+	t.Run("user is updated", func(t *testing.T) {
+		newName := "Test Name"
+		renamedUser := testUser
+		renamedUser.Name = newName
+
+		response := httptest.NewRecorder()
+		request := newUpdateUserRequest(1, renamedUser)
+
+		server.ServeHTTP(response, request)
+		assert.Equal(t, response.Code, http.StatusNoContent)
+
+		response = httptest.NewRecorder()
+		request = newGetUserRequest(1)
+
+		server.ServeHTTP(response, request)
+		assert.Equal(t, response.Code, http.StatusOK)
+
+		updatedUser := songvote.User{}
+		err := songvote.UnmarshalJSON(response.Body, &updatedUser)
+		assert.NoError(t, err)
+		assert.Equal(t, updatedUser.Name, newName)
+	})
+}
+
 func TestAddSongs(t *testing.T) {
 	teardownSuite, _, server := setupSuite(t)
 	defer teardownSuite(t)
