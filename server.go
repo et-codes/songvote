@@ -1,6 +1,7 @@
 package songvote
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -348,9 +349,10 @@ func parseID(path, prefix string) (int64, error) {
 }
 
 func writeError(w http.ResponseWriter, code int, message string) {
+	json, _ := json.Marshal(NewError(code, message))
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(code)
-	fmt.Fprint(w, NewError(code, message).ToJSON())
+	fmt.Fprint(w, json)
 }
 
 func writeNotFoundError(w http.ResponseWriter, err error) {
