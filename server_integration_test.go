@@ -71,6 +71,15 @@ func TestGetSong(t *testing.T) {
 		assert.Equal(t, response.Code, http.StatusNotFound)
 	})
 
+	t.Run("returns error if invalid ID", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		request, _ := http.NewRequest(http.MethodGet, "/songs/thatonesong", nil)
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusInternalServerError)
+	})
+
 	t.Run("get all songs", func(t *testing.T) {
 		response := httptest.NewRecorder()
 		request := newGetSongsRequest()
