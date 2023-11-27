@@ -45,6 +45,31 @@ func NewSQLiteStore(dbPath string) *SQLiteStore {
 	return store
 }
 
+// AddUser adds the given User to the store.
+func (s *SQLiteStore) AddUser(user User) (int64, error) {
+	if s.userExists(user) {
+		return 0, fmt.Errorf("user %q already exists", user.Name)
+	}
+
+	result, err := s.db.ExecContext(s.ctx,
+		`INSERT INTO users(name, password, vetoes) 
+			VALUES ($1, $2, $3)`,
+		user.Name,
+		user.Password,
+		user.Vetoes,
+	)
+	if err != nil {
+		return 0, fmt.Errorf("error adding user to db: %v", err)
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("error retreiving new user ID: %v", err)
+	}
+
+	return id, nil
+}
+
 // GetSong returns a Song object with the given ID, or an error if it cannot
 // be found.
 func (s *SQLiteStore) GetSong(id int64) (Song, error) {
@@ -231,6 +256,27 @@ func (s *SQLiteStore) songExists(song Song) bool {
 		return false
 	case err != nil:
 		log.Fatalf("error checking for song %q: %v\n", song.Name, err)
+		return false
+	default:
+		return true
+	}
+}
+
+// userExists queries the database for any user with the same name as the
+// given user and returns true if there is a match.
+func (s *SQLiteStore) userExists(user User) bool {
+	var name string
+
+	err := s.db.QueryRowContext(s.ctx,
+		"SELECT name FROM users WHERE name = $1",
+		user.Name,
+	).Scan(&name)
+
+	switch {
+	case err == sql.ErrNoRows:
+		return false
+	case err != nil:
+		log.Fatalf("error checking for user %q: %v\n", user.Name, err)
 		return false
 	default:
 		return true

@@ -10,6 +10,7 @@ import (
 )
 
 type Store interface {
+	// Song methods
 	GetSong(id int64) (Song, error)
 	GetSongs() Songs
 	AddSong(song Song) (int64, error)
@@ -17,6 +18,9 @@ type Store interface {
 	UpdateSong(id int64, song Song) error
 	AddVote(id int64) error
 	Veto(id int64) error
+
+	// User methods
+	AddUser(user User) (int64, error)
 }
 
 type Server struct {
@@ -31,16 +35,37 @@ func NewServer(store Store) *Server {
 	s.store = store
 
 	router := http.NewServeMux()
+
 	router.Handle("/songs/vote/", http.HandlerFunc(s.handleVote))   // POST
 	router.Handle("/songs/veto/", http.HandlerFunc(s.handleVeto))   // POST
 	router.Handle("/songs/", http.HandlerFunc(s.handleSongsWithID)) // GET|PATCH|DELETE
 	router.Handle("/songs", http.HandlerFunc(s.handleSongs))        // GET|POST
+
+	router.Handle("/users", http.HandlerFunc(s.handleUsers)) // POST
 
 	loggingRouter := httplogger.New(router)
 
 	s.Handler = loggingRouter
 
 	return s
+}
+
+// handleUsers routes requests to "/users" depending on request type.
+//
+// Allowable methods:
+//   - GET:  get all users
+//   - POST: add user
+func (s *Server) handleUsers(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		// TODO
+	case http.MethodPost:
+		s.addUser(w, r)
+	default:
+		code := http.StatusMethodNotAllowed
+		message := fmt.Sprintf("Method %s not allowed", r.Method)
+		writeError(w, code, message)
+	}
 }
 
 // handleSongs routes requests to "/songs" depending on request type.
@@ -112,6 +137,23 @@ func (s *Server) handleVeto(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *Server) addUser(w http.ResponseWriter, r *http.Request) {
+	userToAdd := User{}
+	if err := UnmarshalJSON[User](r.Body, &userToAdd); err != nil {
+		writeUnmarshalError(w, err)
+		return
+	}
+
+	id, err := s.store.AddUser(userToAdd)
+	if err != nil {
+		writeConflictError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	fmt.Fprint(w, id)
+}
+
 func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
 	songs := s.store.GetSongs()
 
@@ -157,13 +199,11 @@ func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 
 	id, err := s.store.AddSong(songToAdd)
 	if err != nil {
-		code := http.StatusConflict
-		message := fmt.Sprintf("Could not add song: %v\n", err)
-		writeError(w, code, message)
+		writeConflictError(w, err)
 		return
 	}
 
-	w.WriteHeader(http.StatusAccepted)
+	w.WriteHeader(http.StatusCreated)
 	fmt.Fprint(w, id)
 }
 
@@ -288,5 +328,11 @@ func writeUnmarshalError(w http.ResponseWriter, err error) {
 func writeMarshalError(w http.ResponseWriter, err error) {
 	code := http.StatusInternalServerError
 	message := fmt.Sprintf("Problem marshaling song to JSON: %v", err)
+	writeError(w, code, message)
+}
+
+func writeConflictError(w http.ResponseWriter, err error) {
+	code := http.StatusConflict
+	message := fmt.Sprintf("Resource already exists: %v\n", err)
 	writeError(w, code, message)
 }

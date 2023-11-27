@@ -13,6 +13,33 @@ import (
 	"github.com/et-codes/songvote/internal/assert"
 )
 
+func TestAddUserToServer(t *testing.T) {
+	teardownSuite, store, server := setupStubSuite(t)
+	defer teardownSuite(t)
+
+	t.Run("stores user when POST", func(t *testing.T) {
+		request := newAddUserRequest(testUser)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusCreated)
+		if len(store.AddUserCalls) == 0 {
+			t.Fatal("call to AddUser not received")
+		}
+
+		var id int64
+		err := songvote.UnmarshalJSON[int64](response.Body, &id)
+		assert.NoError(t, err)
+		assert.Equal(t, id, int64(1))
+
+		if !testUser.Equal(store.AddUserCalls[0]) {
+			t.Errorf("did not store correct song, got %v, want %v",
+				store.AddSongCalls[0], testUser)
+		}
+	})
+}
+
 func TestGetAllSongsFromServer(t *testing.T) {
 	teardownSuite, store, server := setupStubSuite(t)
 	defer teardownSuite(t)
@@ -82,8 +109,11 @@ func TestAddSongsToServer(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assert.Equal(t, response.Code, http.StatusAccepted)
-		assert.Equal(t, len(store.AddSongCalls), 1)
+		assert.Equal(t, response.Code, http.StatusCreated)
+		if len(store.AddSongCalls) == 0 {
+			t.Fatal("call to AddSong not received")
+		}
+
 		var id int64
 		_ = songvote.UnmarshalJSON[int64](response.Body, &id)
 		assert.Equal(t, id, int64(1))

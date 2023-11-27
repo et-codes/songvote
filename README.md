@@ -33,3 +33,12 @@
   - Track who adds a song
   - Track who voted for and vetoed a song
   - Password encryption
+
+For each store method added:
+- unit tests need to be written
+- integration tests need to be written
+- it needs to be updated in the SQLiteStore and StubStore
+- the SongVoteStore interface needs to be updated
+- routing to the handler needs to be added to NewServer
+- helper method called by the handler
+- helper method added to the Server

@@ -10,3 +10,8 @@ type User struct {
 
 // Users contains a slice of User objects.
 type Users []User
+
+// (User).Equal returns true if names match.
+func (u User) Equal(other User) bool {
+	return u.Name == other.Name
+}

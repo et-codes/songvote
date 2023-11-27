@@ -5,7 +5,7 @@ import "fmt"
 // StubStore implements the SongStore interface, and keeps track of
 // the calls against its methods. It is meant to be used for testing.
 type StubStore struct {
-	NextID            int64          // next song ID to be used
+	NextSongID        int64          // next song ID to be used
 	GetSongCalls      []int64        // calls to to GetSong
 	GetSongsCallCount int            // count of calls to GetSongs
 	AddSongCalls      Songs          // calls to AddSong
@@ -13,14 +13,24 @@ type StubStore struct {
 	UpdateSongCalls   map[int64]Song // calls to UpdateSong
 	AddVoteCalls      []int64        // calls to AddVote
 	VetoCalls         []int64        // calls to Veto
+	NextUserID        int64          // next user ID to be used
+	AddUserCalls      Users          // calls to AddUser
 }
 
 // NewStubStore returns a reference to an empty StubStore.
 func NewStubStore() *StubStore {
 	return &StubStore{
-		NextID:          1,
+		NextSongID:      1,
 		UpdateSongCalls: make(map[int64]Song),
+		NextUserID:      1,
 	}
+}
+
+func (s *StubStore) AddUser(user User) (int64, error) {
+	user.ID = s.NextUserID
+	s.NextUserID++
+	s.AddUserCalls = append(s.AddUserCalls, user)
+	return user.ID, nil
 }
 
 func (s *StubStore) GetSong(id int64) (Song, error) {
@@ -32,8 +42,8 @@ func (s *StubStore) GetSong(id int64) (Song, error) {
 }
 
 func (s *StubStore) AddSong(song Song) (int64, error) {
-	song.ID = s.NextID
-	s.NextID++
+	song.ID = s.NextSongID
+	s.NextSongID++
 	s.AddSongCalls = append(s.AddSongCalls, song)
 	return song.ID, nil
 }

@@ -6,6 +6,19 @@ import (
 	"github.com/et-codes/songvote/internal/assert"
 )
 
+func TestAddUserToStore(t *testing.T) {
+	teardownSuite, store, _ := setupSuite(t)
+	defer teardownSuite(t)
+
+	t.Run("adding user returns valid ID", func(t *testing.T) {
+		id, err := store.AddUser(testUser)
+		assert.NoError(t, err)
+		if id < 1 {
+			t.Errorf("got bad id %d", id)
+		}
+	})
+}
+
 func TestAddSongToStore(t *testing.T) {
 	teardownSuite, store, _ := setupSuite(t)
 	defer teardownSuite(t)
@@ -13,7 +26,7 @@ func TestAddSongToStore(t *testing.T) {
 	t.Run("adding song returns valid ID", func(t *testing.T) {
 		id, err := store.AddSong(testSong)
 		assert.NoError(t, err)
-		if id <= 0 {
+		if id < 1 {
 			t.Errorf("got bad id %d", id)
 		}
 	})

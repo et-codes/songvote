@@ -11,6 +11,33 @@ import (
 
 // These integration tests verify function of a SongStore through the API.
 
+func TestAddUsers(t *testing.T) {
+	teardownSuite, _, server := setupSuite(t)
+	defer teardownSuite(t)
+
+	t.Run("add user and get ID", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		request := newAddUserRequest(testUser)
+
+		server.ServeHTTP(response, request)
+
+		got := response.Body.String()
+		want := "1"
+
+		assert.Equal(t, response.Code, http.StatusCreated)
+		assert.Equal(t, got, want)
+	})
+
+	t.Run("returns 409 with duplicate user", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		request := newAddUserRequest(testUser)
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusConflict)
+	})
+}
+
 func TestAddSongs(t *testing.T) {
 	teardownSuite, _, server := setupSuite(t)
 	defer teardownSuite(t)
@@ -24,7 +51,7 @@ func TestAddSongs(t *testing.T) {
 		got := response.Body.String()
 		want := "1"
 
-		assert.Equal(t, response.Code, http.StatusAccepted)
+		assert.Equal(t, response.Code, http.StatusCreated)
 		assert.Equal(t, got, want)
 	})
 

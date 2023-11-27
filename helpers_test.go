@@ -13,13 +13,20 @@ import (
 	"github.com/et-codes/songvote"
 )
 
-var testSong = songvote.Song{
-	Name:    "Mirror In The Bathroom",
-	Artist:  "Oingo Boingo",
-	LinkURL: "https://youtu.be/SHWrmIzgB5A?si=R96_BWKxol3i7kQe",
-	Votes:   10,
-	Vetoed:  false,
-}
+var (
+	testSong = songvote.Song{
+		Name:    "Mirror In The Bathroom",
+		Artist:  "Oingo Boingo",
+		LinkURL: "https://youtu.be/SHWrmIzgB5A?si=R96_BWKxol3i7kQe",
+		Votes:   10,
+		Vetoed:  false,
+	}
+	testUser = songvote.User{
+		Name:     "John Doe",
+		Password: "p@ssword",
+		Vetoes:   1,
+	}
+)
 
 // setupSuite sets up test conditions and returns function to defer until
 // after the test runs. Uses SQLiteStore for the store.
@@ -55,6 +62,17 @@ func setupStubSuite(t *testing.T) (
 		log.SetOutput(os.Stdout)
 	}
 	return
+}
+
+func newAddUserRequest(user songvote.User) *http.Request {
+	json, err := songvote.MarshalJSON(user)
+	log.Printf("%s  %#v", json, user)
+	if err != nil {
+		log.Fatalf("problem marshalling User JSON, %v", err)
+	}
+	bodyReader := bytes.NewBuffer([]byte(json))
+	request, _ := http.NewRequest(http.MethodPost, "/users", bodyReader)
+	return request
 }
 
 // populateWithSong adds a song to a server for testing purposes.
