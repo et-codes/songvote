@@ -26,10 +26,10 @@
 - `PATCH /users/{id}` updates user information
 - `DELETE /users/{id}` deletes a user
 
-### TODO
+## TODO
 - Implement users
   - Only allow making users inactive rather than deleting
-  - Get, ~~add~~, update, and delete
+  - ~~Get~~, ~~add~~, update, and delete
   - Track who adds a song
   - Track who voted for and vetoed a song
   - Password encryption
@@ -37,6 +37,7 @@
 - Update integration tests for untested Song functions
 - Allow for undoing a vote or a veto? (TBD)
 
+## Notes
 For each store method added:
 - write unit tests in store_test.go
 - update SQLiteStore to get it to pass
