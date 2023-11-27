@@ -159,7 +159,7 @@ func TestGetSong(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assert.Equal(t, response.Code, http.StatusInternalServerError)
+		assert.Equal(t, response.Code, http.StatusBadRequest)
 	})
 
 	t.Run("get all songs", func(t *testing.T) {

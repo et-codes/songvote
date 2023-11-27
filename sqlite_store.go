@@ -126,10 +126,25 @@ func (s *SQLiteStore) DeleteUser(id int64) error {
 	return nil
 }
 
+// UpdateUser allows changing the Name and/or Password of the user.
+// Parameters are the ID of the user and a User object which contains the
+// desired changes. Fields other than Name and Password are ignored.
 func (s *SQLiteStore) UpdateUser(id int64, user User) error {
-	return fmt.Errorf("not implemented")
+	newName := user.Name
+	newPassword := user.Password
+
+	_, err := s.db.ExecContext(s.ctx,
+		"UPDATE users SET name = $1, password = $2 WHERE id = $3",
+		newName, newPassword, id,
+	)
+	if err != nil {
+		return fmt.Errorf("error updating user %d: %v", id, err)
+	}
+
+	return nil
 }
 
+// ToggleActive changes the active state of the user with the gievn ID.
 func (s *SQLiteStore) ToggleActive(id int64) error {
 	return fmt.Errorf("not implemented")
 }

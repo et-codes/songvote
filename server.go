@@ -1,7 +1,6 @@
 package songvote
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -68,9 +67,7 @@ func (s *Server) handleUsers(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		s.addUser(w, r)
 	default:
-		code := http.StatusMethodNotAllowed
-		message := fmt.Sprintf("Method %s not allowed", r.Method)
-		writeError(w, code, message)
+		writeError(w, ErrMethod)
 	}
 }
 
@@ -88,9 +85,7 @@ func (s *Server) handleUsersWithID(w http.ResponseWriter, r *http.Request) {
 	// case http.MethodPost:
 	//     // TODO
 	default:
-		code := http.StatusMethodNotAllowed
-		message := fmt.Sprintf("Method %s not allowed", r.Method)
-		writeError(w, code, message)
+		writeError(w, ErrMethod)
 	}
 }
 
@@ -105,9 +100,7 @@ func (s *Server) handleSongs(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		s.addSong(w, r)
 	default:
-		code := http.StatusMethodNotAllowed
-		message := fmt.Sprintf("Method %s not allowed", r.Method)
-		writeError(w, code, message)
+		writeError(w, ErrMethod)
 	}
 }
 
@@ -125,9 +118,7 @@ func (s *Server) handleSongsWithID(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		s.deleteSong(w, r)
 	default:
-		code := http.StatusMethodNotAllowed
-		message := fmt.Sprintf("Method %s not allowed", r.Method)
-		writeError(w, code, message)
+		writeError(w, ErrMethod)
 	}
 }
 
@@ -139,9 +130,7 @@ func (s *Server) handleVote(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		s.addVote(w, r)
 	default:
-		code := http.StatusMethodNotAllowed
-		message := fmt.Sprintf("Method %s not allowed", r.Method)
-		writeError(w, code, message)
+		writeError(w, ErrMethod)
 	}
 }
 
@@ -153,22 +142,20 @@ func (s *Server) handleVeto(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		s.veto(w, r)
 	default:
-		code := http.StatusMethodNotAllowed
-		message := fmt.Sprintf("Method %s not allowed", r.Method)
-		writeError(w, code, message)
+		writeError(w, ErrMethod)
 	}
 }
 
 func (s *Server) addUser(w http.ResponseWriter, r *http.Request) {
 	userToAdd := User{}
 	if err := UnmarshalJSON(r.Body, &userToAdd); err != nil {
-		writeUnmarshalError(w, err)
+		writeError(w, ServerError{http.StatusInternalServerError, err})
 		return
 	}
 
 	id, err := s.store.AddUser(userToAdd)
 	if err != nil {
-		writeConflictError(w, err)
+		writeError(w, ErrConflict)
 		return
 	}
 
@@ -181,7 +168,7 @@ func (s *Server) getAllUsers(w http.ResponseWriter, r *http.Request) {
 
 	out, err := MarshalJSON(users)
 	if err != nil {
-		writeMarshalError(w, err)
+		writeError(w, ServerError{http.StatusInternalServerError, err})
 		return
 	}
 
@@ -192,19 +179,19 @@ func (s *Server) getAllUsers(w http.ResponseWriter, r *http.Request) {
 func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 	id, err := parseID(r.URL.Path, "/users/")
 	if err != nil {
-		writeIDParseError(w, err)
+		writeError(w, ErrIDParse)
 		return
 	}
 
 	user, err := s.store.GetUser(id)
 	if err != nil {
-		writeNotFoundError(w, err)
+		writeError(w, ErrNotFound)
 		return
 	}
 
 	json, err := MarshalJSON(user)
 	if err != nil {
-		writeMarshalError(w, err)
+		writeError(w, ServerError{http.StatusInternalServerError, err})
 		return
 	}
 
@@ -215,12 +202,12 @@ func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
 	id, err := parseID(r.URL.Path, "/users/")
 	if err != nil {
-		writeIDParseError(w, err)
+		writeError(w, ErrIDParse)
 		return
 	}
 
 	if err := s.store.DeleteUser(id); err != nil {
-		writeDeleteError(w, err)
+		writeError(w, ServerError{http.StatusNotFound, err})
 		return
 	}
 
@@ -232,7 +219,7 @@ func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
 
 	out, err := MarshalJSON(songs)
 	if err != nil {
-		writeMarshalError(w, err)
+		writeError(w, ServerError{http.StatusInternalServerError, err})
 		return
 	}
 
@@ -243,19 +230,19 @@ func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
 func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 	id, err := parseID(r.URL.Path, "/songs/")
 	if err != nil {
-		writeIDParseError(w, err)
+		writeError(w, ErrIDParse)
 		return
 	}
 
 	song, err := s.store.GetSong(id)
 	if err != nil {
-		writeNotFoundError(w, err)
+		writeError(w, ErrNotFound)
 		return
 	}
 
 	json, err := MarshalJSON(song)
 	if err != nil {
-		writeMarshalError(w, err)
+		writeError(w, ServerError{http.StatusInternalServerError, err})
 		return
 	}
 
@@ -266,13 +253,13 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 	songToAdd := Song{}
 	if err := UnmarshalJSON(r.Body, &songToAdd); err != nil {
-		writeUnmarshalError(w, err)
+		writeError(w, ServerError{http.StatusInternalServerError, err})
 		return
 	}
 
 	id, err := s.store.AddSong(songToAdd)
 	if err != nil {
-		writeConflictError(w, err)
+		writeError(w, ErrConflict)
 		return
 	}
 
@@ -283,12 +270,12 @@ func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 func (s *Server) deleteSong(w http.ResponseWriter, r *http.Request) {
 	id, err := parseID(r.URL.Path, "/songs/")
 	if err != nil {
-		writeIDParseError(w, err)
+		writeError(w, ErrIDParse)
 		return
 	}
 
 	if err := s.store.DeleteSong(id); err != nil {
-		writeDeleteError(w, err)
+		writeError(w, ServerError{http.StatusNotFound, err})
 		return
 	}
 
@@ -298,19 +285,19 @@ func (s *Server) deleteSong(w http.ResponseWriter, r *http.Request) {
 func (s *Server) updateSong(w http.ResponseWriter, r *http.Request) {
 	id, err := parseID(r.URL.Path, "/songs/")
 	if err != nil {
-		writeIDParseError(w, err)
+		writeError(w, ErrIDParse)
 		return
 	}
 
 	songToUpdate, err := s.store.GetSong(id)
 	if err != nil {
-		writeNotFoundError(w, err)
+		writeError(w, ErrNotFound)
 		return
 	}
 
 	updatedSong := Song{}
 	if err := UnmarshalJSON(r.Body, &updatedSong); err != nil {
-		writeUnmarshalError(w, err)
+		writeError(w, ServerError{http.StatusInternalServerError, err})
 		return
 	}
 
@@ -320,7 +307,7 @@ func (s *Server) updateSong(w http.ResponseWriter, r *http.Request) {
 
 	err = s.store.UpdateSong(id, songToUpdate)
 	if err != nil {
-		writeUpdateError(w, err)
+		writeError(w, ServerError{http.StatusInternalServerError, err})
 		return
 	}
 
@@ -330,12 +317,12 @@ func (s *Server) updateSong(w http.ResponseWriter, r *http.Request) {
 func (s *Server) addVote(w http.ResponseWriter, r *http.Request) {
 	id, err := parseID(r.URL.Path, "/songs/vote/")
 	if err != nil {
-		writeIDParseError(w, err)
+		writeError(w, ErrIDParse)
 		return
 	}
 
 	if err := s.store.AddVote(id); err != nil {
-		writeUpdateError(w, err)
+		writeError(w, ServerError{http.StatusInternalServerError, err})
 		return
 	}
 
@@ -345,12 +332,12 @@ func (s *Server) addVote(w http.ResponseWriter, r *http.Request) {
 func (s *Server) veto(w http.ResponseWriter, r *http.Request) {
 	id, err := parseID(r.URL.Path, "/songs/veto/")
 	if err != nil {
-		writeIDParseError(w, err)
+		writeError(w, ErrIDParse)
 		return
 	}
 
 	if err := s.store.Veto(id); err != nil {
-		writeUpdateError(w, err)
+		writeError(w, ServerError{http.StatusInternalServerError, err})
 		return
 	}
 
@@ -364,53 +351,4 @@ func parseID(path, prefix string) (int64, error) {
 		return 0, err
 	}
 	return id, nil
-}
-
-func writeError(w http.ResponseWriter, code int, message string) {
-	json, _ := json.Marshal(NewError(code, message))
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(code)
-	fmt.Fprint(w, json)
-}
-
-func writeNotFoundError(w http.ResponseWriter, err error) {
-	code := http.StatusNotFound
-	message := fmt.Sprintf("Problem retreiving: %v", err)
-	writeError(w, code, message)
-}
-
-func writeIDParseError(w http.ResponseWriter, err error) {
-	code := http.StatusInternalServerError
-	message := fmt.Sprintf("Problem parsing ID: %v", err)
-	writeError(w, code, message)
-}
-
-func writeUpdateError(w http.ResponseWriter, err error) {
-	code := http.StatusInternalServerError
-	message := fmt.Sprintf("Error updating: %v", err)
-	writeError(w, code, message)
-}
-
-func writeUnmarshalError(w http.ResponseWriter, err error) {
-	code := http.StatusInternalServerError
-	message := fmt.Sprintf("Problem parsing request body: %v", err)
-	writeError(w, code, message)
-}
-
-func writeMarshalError(w http.ResponseWriter, err error) {
-	code := http.StatusInternalServerError
-	message := fmt.Sprintf("Problem marshaling to JSON: %v", err)
-	writeError(w, code, message)
-}
-
-func writeConflictError(w http.ResponseWriter, err error) {
-	code := http.StatusConflict
-	message := fmt.Sprintf("Resource already exists: %v", err)
-	writeError(w, code, message)
-}
-
-func writeDeleteError(w http.ResponseWriter, err error) {
-	code := http.StatusNotFound
-	message := fmt.Sprintf("Could not delete: %v", err)
-	writeError(w, code, message)
 }
