@@ -20,7 +20,6 @@ type StubStore struct {
 	GetUserCalls      []int64        // calls to to GetUser
 	DeleteUserCalls   []int64        // calls to DeleteUser
 	UpdateUserCalls   map[int64]User // calls to UpdateUser
-	ToggleActiveCalls []int64        // calls to ToggleActive
 }
 
 // NewStubStore returns a reference to an empty StubStore.
@@ -63,14 +62,6 @@ func (s *StubStore) DeleteUser(id int64) error {
 
 func (s *StubStore) UpdateUser(id int64, user User) error {
 	s.UpdateUserCalls[id] = user
-	if id >= 10 {
-		return fmt.Errorf("user ID %d not found", id)
-	}
-	return nil
-}
-
-func (s *StubStore) ToggleActive(id int64) error {
-	s.ToggleActiveCalls = append(s.ToggleActiveCalls, id)
 	if id >= 10 {
 		return fmt.Errorf("user ID %d not found", id)
 	}

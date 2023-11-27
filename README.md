@@ -28,7 +28,6 @@
 
 ## TODO
 - Implement users
-  - ~~Get~~, ~~add~~, ~~update~~, ~~delete~~, toggle active
   - Track who adds a song
   - Track who voted for and vetoed a song
   - Password encryption

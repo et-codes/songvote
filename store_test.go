@@ -3,6 +3,7 @@ package songvote_test
 import (
 	"testing"
 
+	"github.com/et-codes/songvote"
 	"github.com/et-codes/songvote/internal/assert"
 )
 
@@ -84,29 +85,19 @@ func TestUpdateUserInStore(t *testing.T) {
 	populateWithUser(server, testUser)
 
 	t.Run("updates user name", func(t *testing.T) {
-		newUser := testUser
-		newUser.Name = "Fake User"
+		newUserData := songvote.User{
+			Active:   false,
+			Name:     "Fake User",
+			Password: "p3nc1l",
+		}
 
-		err := store.UpdateUser(1, newUser)
-		assert.NoError(t, err)
-
-		user, _ := store.GetUser(1)
-		assert.Equal(t, user.Name, newUser.Name)
-	})
-}
-
-func TestToggleActiveInStore(t *testing.T) {
-	teardownSuite, store, server := setupSuite(t)
-	defer teardownSuite(t)
-
-	populateWithUser(server, testUser)
-
-	t.Run("flips active status of user", func(t *testing.T) {
-		err := store.ToggleActive(1)
+		err := store.UpdateUser(1, newUserData)
 		assert.NoError(t, err)
 
 		user, _ := store.GetUser(1)
 		assert.False(t, user.Active)
+		assert.Equal(t, user.Name, newUserData.Name)
+		assert.Equal(t, user.Password, newUserData.Password)
 	})
 }
 
