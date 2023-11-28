@@ -15,15 +15,15 @@
 - `GET /songs` returns a list of all songs
 - `POST /songs` adds a song to the list
 - `GET /songs/{id}` info for particular song
-- `PATCH /songs/{id}` updates song information
+- `PUT /songs/{id}` updates song information
 - `DELETE /songs/{id}` remove a song from the list
 - `POST /songs/vote/{id}` add vote for a song
 - `POST /songs/veto/{id}` add veto for a song
 
-### Users (WIP)
+### Users (DONE)
 - `POST /users` adds a user
 - `GET /users/{id}` returns user information
-- `PATCH /users/{id}` updates user information
+- `PUT /users/{id}` updates user information
 - `DELETE /users/{id}` deletes a user
 
 ## TODO
@@ -34,12 +34,3 @@
 - Update integration tests for untested Song functions
 - Allow for undoing a vote or a veto? (TBD)
 - Have internal functions return ServerError with codes
-
-## Notes
-For each store method added:
-- write unit tests in store_test.go
-- update SQLiteStore to get it to pass
-- write unit tests in server_test.go
-- update SongVoteStore interface, StubStore, and server.go to get it to pass
-- write integration tests in server_integration_test.go
-- get them to pass
