@@ -278,12 +278,13 @@ func TestVoteForSong(t *testing.T) {
 	populateWithUsers(server, userTestDataFile)
 	populateWithSongs(server, songTestDataFile)
 
-	vote := songvote.Vote{SongID: 1, UserID: 1}
+	vote1 := songvote.Vote{SongID: 1, UserID: 1}
+	vote2 := songvote.Vote{SongID: 1, UserID: 2}
 
 	t.Run("vote count increments", func(t *testing.T) {
 		// Make vote.
 		response := httptest.NewRecorder()
-		request := newVoteRequest(vote)
+		request := newVoteRequest(vote1)
 
 		server.ServeHTTP(response, request)
 
@@ -291,7 +292,7 @@ func TestVoteForSong(t *testing.T) {
 
 		// Check song's vote count.
 		response = httptest.NewRecorder()
-		request = newGetSongRequest(vote.UserID)
+		request = newGetSongRequest(vote1.UserID)
 
 		server.ServeHTTP(response, request)
 
@@ -303,11 +304,33 @@ func TestVoteForSong(t *testing.T) {
 
 	t.Run("only one vote per user per song", func(t *testing.T) {
 		response := httptest.NewRecorder()
-		request := newVoteRequest(vote)
+		request := newVoteRequest(vote1)
 		server.ServeHTTP(response, request)
 
 		assert.Equal(t, response.Code, http.StatusConflict)
 	})
 
-	t.Run("can retreive list of votes", func(t *testing.T) {})
+	t.Run("can retreive list of votes", func(t *testing.T) {
+		// Add another vote to make it interesting.
+		response := httptest.NewRecorder()
+		request := newVoteRequest(vote2)
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusNoContent)
+
+		// Get votes for song.
+		response = httptest.NewRecorder()
+		request = newGetVotesRequest(1)
+		server.ServeHTTP(response, request)
+
+		votes := songvote.Votes{}
+		err := songvote.UnmarshalJSON(response.Body, &votes)
+		assert.NoError(t, err)
+		assert.Equal(t, len(votes), 2)
+		for _, vote := range votes {
+			if vote.UserID != int64(1) && vote.UserID != int64(2) {
+				t.Errorf("unexpected voter %d", vote.UserID)
+			}
+		}
+	})
 }
