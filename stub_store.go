@@ -12,6 +12,7 @@ type StubStore struct {
 	DeleteSongCalls   []int64         // calls to DeleteSong
 	UpdateSongCalls   map[int64]Song  // calls to UpdateSong
 	AddVoteCalls      Votes           // calls to AddVote
+	GetVotesCalls     []int64         // calls to GetVotes
 	VetoCalls         map[int64]int64 // calls to Veto, [songID]userID
 
 	NextUserID        int64          // next user ID to be used
@@ -111,6 +112,14 @@ func (s *StubStore) AddVote(vote Vote) error {
 		return fmt.Errorf("song ID %d not found", vote.SongID)
 	}
 	return nil
+}
+
+func (s *StubStore) GetVotesForSong(id int64) (Votes, error) {
+	s.GetVotesCalls = append(s.GetVotesCalls, id)
+	if id >= 10 {
+		return Votes{}, fmt.Errorf("song ID %d not found", id)
+	}
+	return Votes{{1, 1, 1}}, nil
 }
 
 func (s *StubStore) Veto(songID, userID int64) error {

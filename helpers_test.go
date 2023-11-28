@@ -201,6 +201,12 @@ func newVoteRequest(vote songvote.Vote) *http.Request {
 	return request
 }
 
+func newGetVotesRequest(id int64) *http.Request {
+	url := fmt.Sprintf("/songs/vote/%d", id)
+	request, _ := http.NewRequest(http.MethodGet, url, nil)
+	return request
+}
+
 func newVetoRequest(id int64) *http.Request {
 	url := fmt.Sprintf("/songs/veto/%d", id)
 	request, _ := http.NewRequest(http.MethodPost, url, nil)

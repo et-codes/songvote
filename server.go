@@ -17,6 +17,7 @@ type Store interface {
 	DeleteSong(id int64) error
 	UpdateSong(id int64, song Song) error
 	AddVote(vote Vote) error
+	GetVotesForSong(id int64) (Votes, error)
 	Veto(songID, userID int64) error
 
 	// User methods
@@ -40,10 +41,11 @@ func NewServer(store Store) *Server {
 
 	router := http.NewServeMux()
 
-	router.Handle("/songs/vote", http.HandlerFunc(s.handleVote))    // POST
-	router.Handle("/songs/veto/", http.HandlerFunc(s.handleVeto))   // POST
-	router.Handle("/songs/", http.HandlerFunc(s.handleSongsWithID)) // GET|PUT|DELETE
-	router.Handle("/songs", http.HandlerFunc(s.handleSongs))        // GET|POST
+	router.Handle("/songs/vote", http.HandlerFunc(s.handleAddVote))  // POST
+	router.Handle("/songs/vote/", http.HandlerFunc(s.handleGetVote)) // GET
+	router.Handle("/songs/veto/", http.HandlerFunc(s.handleVeto))    // POST
+	router.Handle("/songs/", http.HandlerFunc(s.handleSongsWithID))  // GET|PUT|DELETE
+	router.Handle("/songs", http.HandlerFunc(s.handleSongs))         // GET|POST
 
 	router.Handle("/users/", http.HandlerFunc(s.handleUsersWithID)) // GET|PUT|DELETE
 	router.Handle("/users", http.HandlerFunc(s.handleUsers))        // POST
@@ -121,10 +123,10 @@ func (s *Server) handleSongsWithID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleVote routes requests to "/songs/vote/{id}" depending on request type.
+// handleAddVote routes requests to "/songs/vote/{id}" depending on request type.
 // Allowable methods:
 //   - POST: vote for a song
-func (s *Server) handleVote(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleAddVote(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		s.addVote(w, r)
@@ -133,7 +135,18 @@ func (s *Server) handleVote(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleVote routes requests to "/songs/veto/{id}" depending on request type.
+// handleGetVote routes requests to "/songs/vote/{id}". Allowable methods:
+//   - GET: get list of votes for a song
+func (s *Server) handleGetVote(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		s.getVotes(w, r)
+	default:
+		writeError(w, ErrMethod)
+	}
+}
+
+// handleVeto routes requests to "/songs/veto/{id}" depending on request type.
 // Allowable methods:
 //   - POST: veto a song
 func (s *Server) handleVeto(w http.ResponseWriter, r *http.Request) {
@@ -359,6 +372,29 @@ func (s *Server) addVote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *Server) getVotes(w http.ResponseWriter, r *http.Request) {
+	songID, err := parseID(r.URL.Path, "/songs/vote/")
+	if err != nil {
+		writeError(w, ErrIDParse)
+		return
+	}
+
+	votes, err := s.store.GetVotesForSong(songID)
+	if err != nil {
+		writeError(w, ErrNotFound)
+		return
+	}
+
+	out, err := MarshalJSON(votes)
+	if err != nil {
+		writeError(w, ServerError{http.StatusInternalServerError, err})
+		return
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	fmt.Fprint(w, out)
 }
 
 func (s *Server) veto(w http.ResponseWriter, r *http.Request) {

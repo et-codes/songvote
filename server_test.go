@@ -333,6 +333,16 @@ func TestAddVoteOnServer(t *testing.T) {
 
 		assert.Equal(t, response.Code, http.StatusInternalServerError)
 	})
+
+	t.Run("can get list of votes for song", func(t *testing.T) {
+		request := newGetVotesRequest(1)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusOK)
+		assert.Equal(t, store.GetVotesCalls[0], int64(1))
+	})
 }
 
 func TestVetoSongOnServer(t *testing.T) {

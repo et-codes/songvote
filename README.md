@@ -17,7 +17,8 @@
 - `GET /songs/{id}` info for particular song
 - `PUT /songs/{id}` updates song information
 - `DELETE /songs/{id}` remove a song from the list
-- `POST /songs/vote/{id}` add vote for a song
+- `GET /songs/vote/{id}` get votes for a song
+- `POST /songs/vote` add vote for a song
 - `POST /songs/veto/{id}` add veto for a song
 
 ### Users (DONE)
