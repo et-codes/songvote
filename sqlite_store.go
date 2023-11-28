@@ -262,15 +262,36 @@ func (s *SQLiteStore) AddVote(vote Vote) error {
 		return fmt.Errorf("error updating song %d: %v", vote.SongID, err)
 	}
 
-	_, err = s.db.ExecContext(s.ctx,
+	result, err := s.db.ExecContext(s.ctx,
 		"INSERT INTO VOTES(song, user) VALUES ($1, $2);",
 		vote.SongID, vote.UserID,
 	)
 	if err != nil {
-		return fmt.Errorf("error updating vote records: %v", err)
+		return fmt.Errorf("error recording vote: %v", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil || rowsAffected == 0 {
+		return fmt.Errorf("error recording vote: %v", err)
 	}
 
 	return nil
+}
+
+// GetVotesForSong returns array of Vote objects for the Song with given ID.
+func (s *SQLiteStore) GetVotesForSong(id int64) (Votes, error) {
+	rows, err := s.db.QueryContext(s.ctx, "SELECT * FROM votes WHERE song = $1", id)
+	if err != nil {
+		log.Fatalf("error querying songs from store: %v", err)
+	}
+	defer rows.Close()
+
+	votes, err := rowsToVotes(rows)
+	if err != nil {
+		return Votes{}, err
+	}
+
+	return votes, nil
 }
 
 // Veto sets the Vetoed field of the Song with the given ID to true.
@@ -421,6 +442,27 @@ func (s *SQLiteStore) userExists(user User) bool {
 	default:
 		return true
 	}
+}
+
+func rowsToVotes(rows *sql.Rows) (Votes, error) {
+	votes := Votes{}
+	for rows.Next() {
+		var vote Vote
+		if err := rows.Scan(
+			&vote.ID,
+			&vote.SongID,
+			&vote.UserID,
+		); err != nil {
+			return votes, err
+		}
+		votes = append(votes, vote)
+	}
+
+	if err := rows.Err(); err != nil {
+		return votes, fmt.Errorf("problem scanning rows: %v", err)
+	}
+
+	return votes, nil
 }
 
 // rowToVeto marshals a *sql.Row into a Veo struct.

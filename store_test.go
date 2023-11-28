@@ -208,7 +208,12 @@ func TestAddVoteToSongInStore(t *testing.T) {
 	})
 
 	t.Run("tracks who voted for the song", func(t *testing.T) {
-		t.Errorf("not implemented yet")
+		want := songvote.Votes{
+			{ID: 1, SongID: 1, UserID: 1},
+		}
+		got, err := store.GetVotesForSong(1)
+		assert.NoError(t, err)
+		assert.Equal(t, got, want)
 	})
 }
 
