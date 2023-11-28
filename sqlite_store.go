@@ -331,8 +331,8 @@ func (s *SQLiteStore) songExists(song Song) bool {
 	case err == sql.ErrNoRows:
 		return false
 	case err != nil:
-		log.Fatalf("error checking for song %q: %v\n", song.Name, err)
-		return false
+		log.Printf("error checking for song %q: %v\n", song.Name, err)
+		return true
 	default:
 		return true
 	}
@@ -352,8 +352,8 @@ func (s *SQLiteStore) userExists(user User) bool {
 	case err == sql.ErrNoRows:
 		return false
 	case err != nil:
-		log.Fatalf("error checking for user %q: %v\n", user.Name, err)
-		return false
+		log.Printf("error checking for user %q: %v\n", user.Name, err)
+		return true
 	default:
 		return true
 	}
