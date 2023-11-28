@@ -300,17 +300,21 @@ func TestAddVoteOnServer(t *testing.T) {
 	defer teardownSuite(t)
 
 	t.Run("update vote count", func(t *testing.T) {
-		request := newVoteRequest(1)
+		vote := songvote.Vote{
+			SongID: 1,
+			UserID: 1,
+		}
+		request := newVoteRequest(vote)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
 
 		assert.Equal(t, response.Code, http.StatusNoContent)
-		assert.Equal(t, store.AddVoteCalls[0], int64(1))
+		assert.Equal(t, store.AddVoteCalls[0], vote)
 	})
 
 	t.Run("returns 405 when wrong method used", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodGet, "/songs/vote/1", nil)
+		request, _ := http.NewRequest(http.MethodGet, "/songs/vote", nil)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
@@ -319,7 +323,10 @@ func TestAddVoteOnServer(t *testing.T) {
 	})
 
 	t.Run("returns error if song not found", func(t *testing.T) {
-		request := newVoteRequest(10)
+		request := newVoteRequest(songvote.Vote{
+			SongID: 10,
+			UserID: 2,
+		})
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)

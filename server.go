@@ -16,7 +16,7 @@ type Store interface {
 	GetSong(id int64) (Song, error)
 	DeleteSong(id int64) error
 	UpdateSong(id int64, song Song) error
-	AddVote(id int64) error
+	AddVote(vote Vote) error
 	Veto(songID, userID int64) error
 
 	// User methods
@@ -40,7 +40,7 @@ func NewServer(store Store) *Server {
 
 	router := http.NewServeMux()
 
-	router.Handle("/songs/vote/", http.HandlerFunc(s.handleVote))   // POST
+	router.Handle("/songs/vote", http.HandlerFunc(s.handleVote))    // POST
 	router.Handle("/songs/veto/", http.HandlerFunc(s.handleVeto))   // POST
 	router.Handle("/songs/", http.HandlerFunc(s.handleSongsWithID)) // GET|PUT|DELETE
 	router.Handle("/songs", http.HandlerFunc(s.handleSongs))        // GET|POST
@@ -346,13 +346,14 @@ func (s *Server) updateSong(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) addVote(w http.ResponseWriter, r *http.Request) {
-	id, err := parseID(r.URL.Path, "/songs/vote/")
+	vote := Vote{}
+	err := UnmarshalJSON(r.Body, &vote)
 	if err != nil {
-		writeError(w, ErrIDParse)
+		writeError(w, ServerError{http.StatusInternalServerError, err})
 		return
 	}
 
-	if err := s.store.AddVote(id); err != nil {
+	if err := s.store.AddVote(vote); err != nil {
 		writeError(w, ServerError{http.StatusInternalServerError, err})
 		return
 	}

@@ -28,6 +28,7 @@
 
 ## TODO
 - Implement users
+  - Fix user ID in (s *Server) veto
   - Track who adds a song
   - Track who voted for and vetoed a song
   - Password encryption

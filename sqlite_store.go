@@ -248,20 +248,26 @@ func (s *SQLiteStore) UpdateSong(id int64, song Song) error {
 }
 
 // AddVote increments the Vote count on a Song with the given ID.
-func (s *SQLiteStore) AddVote(id int64) error {
-	song, err := s.GetSong(id)
+func (s *SQLiteStore) AddVote(vote Vote) error {
+	song, err := s.GetSong(vote.SongID)
 	if err != nil {
 		return err
 	}
 
-	votes := song.Votes + 1
-
 	_, err = s.db.ExecContext(s.ctx,
 		"UPDATE songs SET votes = $1 WHERE id = $2",
-		votes, id,
+		song.Votes+1, vote.SongID,
 	)
 	if err != nil {
-		return fmt.Errorf("error updating song %d: %v", id, err)
+		return fmt.Errorf("error updating song %d: %v", vote.SongID, err)
+	}
+
+	_, err = s.db.ExecContext(s.ctx,
+		"INSERT INTO VOTES(song, user) VALUES ($1, $2);",
+		vote.SongID, vote.UserID,
+	)
+	if err != nil {
+		return fmt.Errorf("error updating vote records: %v", err)
 	}
 
 	return nil

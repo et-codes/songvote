@@ -190,9 +190,14 @@ func newUpdateSongRequest(id int64, song songvote.Song) *http.Request {
 	return request
 }
 
-func newVoteRequest(id int64) *http.Request {
-	url := fmt.Sprintf("/songs/vote/%d", id)
-	request, _ := http.NewRequest(http.MethodPost, url, nil)
+func newVoteRequest(vote songvote.Vote) *http.Request {
+	json, err := songvote.MarshalJSON(vote)
+	if err != nil {
+		log.Fatalf("problem marshalling Song JSON, %v", err)
+	}
+	url := "/songs/vote"
+	bodyReader := bytes.NewBuffer([]byte(json))
+	request, _ := http.NewRequest(http.MethodPost, url, bodyReader)
 	return request
 }
 

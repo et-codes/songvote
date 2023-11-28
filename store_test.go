@@ -197,7 +197,10 @@ func TestAddVoteToSongInStore(t *testing.T) {
 	populateWithSong(server, testSong)
 
 	t.Run("updates vote count", func(t *testing.T) {
-		err := store.AddVote(1)
+		err := store.AddVote(songvote.Vote{
+			SongID: 1,
+			UserID: 1,
+		})
 		assert.NoError(t, err)
 
 		song, _ := store.GetSong(1)
