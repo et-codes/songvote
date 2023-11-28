@@ -203,6 +203,10 @@ func TestAddVoteToSongInStore(t *testing.T) {
 		song, _ := store.GetSong(1)
 		assert.Equal(t, song.Votes, 11)
 	})
+
+	t.Run("tracks who voted for the song", func(t *testing.T) {
+		t.Errorf("not implemented yet")
+	})
 }
 
 func TestVetoSongInStore(t *testing.T) {
@@ -221,9 +225,8 @@ func TestVetoSongInStore(t *testing.T) {
 	})
 
 	t.Run("records who vetoed what", func(t *testing.T) {
-		song, user, err := store.GetVetoedBy(1)
+		user, err := store.GetVetoedBy(1)
 		assert.NoError(t, err)
-		assert.Equal(t, song.Name, testSong.Name)
 		assert.Equal(t, user.Name, testUser.Name)
 	})
 }

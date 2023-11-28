@@ -300,35 +300,35 @@ func (s *SQLiteStore) getVetoesRemaining(userID int64) (int, error) {
 	return user.Vetoes, nil
 }
 
-func (s *SQLiteStore) GetVetoedBy(songID int64) (Song, User, error) {
+func (s *SQLiteStore) GetVetoedBy(songID int64) (User, error) {
 	// Fetch the song.
 	song, err := s.GetSong(songID)
 	if err != nil {
-		return Song{}, User{}, err
+		return User{}, err
 	}
 
 	// Check if it is actually vetoed.
 	if !song.Vetoed {
-		return Song{}, User{}, fmt.Errorf("song is not vetoed")
+		return User{}, fmt.Errorf("song is not vetoed")
 	}
 
 	// Fetch the veto record.
 	row := s.db.QueryRowContext(s.ctx, `SELECT * FROM vetoes WHERE song = $1`, songID)
 	if row.Err() != nil {
-		return Song{}, User{}, fmt.Errorf("error querying vetoes: %v", row.Err())
+		return User{}, fmt.Errorf("error querying vetoes: %v", row.Err())
 	}
 
 	veto, err := s.rowToVeto(row)
 	if err != nil {
-		return Song{}, User{}, err
+		return User{}, err
 	}
 
 	user, err := s.GetUser(veto.User.ID)
 	if err != nil {
-		return Song{}, User{}, err
+		return User{}, err
 	}
 
-	return song, user, nil
+	return user, nil
 }
 
 // createTables creates the database tables if they do not already exist.
