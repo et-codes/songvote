@@ -240,3 +240,33 @@ func TestDeleteSong(t *testing.T) {
 		assert.Equal(t, response.Code, http.StatusNotFound)
 	})
 }
+
+func TestUpdateSong(t *testing.T) {
+	teardownSuite, _, server := setupSuite(t)
+	defer teardownSuite(t)
+
+	populateWithSong(server, testSong)
+
+	t.Run("song is updated", func(t *testing.T) {
+		newName := "Test Name"
+		renamedSong := testSong
+		renamedSong.Name = newName
+
+		response := httptest.NewRecorder()
+		request := newUpdateSongRequest(1, renamedSong)
+
+		server.ServeHTTP(response, request)
+		assert.Equal(t, response.Code, http.StatusNoContent)
+
+		response = httptest.NewRecorder()
+		request = newGetSongRequest(1)
+
+		server.ServeHTTP(response, request)
+		assert.Equal(t, response.Code, http.StatusOK)
+
+		updatedSong := songvote.Song{}
+		err := songvote.UnmarshalJSON(response.Body, &updatedSong)
+		assert.NoError(t, err)
+		assert.Equal(t, updatedSong.Name, newName)
+	})
+}

@@ -31,6 +31,5 @@
   - Track who adds a song
   - Track who voted for and vetoed a song
   - Password encryption
-- Update integration tests for untested Song functions
 - Allow for undoing a vote or a veto? (TBD)
 - Have internal functions return ServerError with codes
