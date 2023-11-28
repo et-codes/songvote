@@ -249,6 +249,10 @@ func (s *SQLiteStore) UpdateSong(id int64, song Song) error {
 
 // AddVote increments the Vote count on a Song with the given ID.
 func (s *SQLiteStore) AddVote(vote Vote) error {
+	if s.alreadyVoted(vote) {
+		return fmt.Errorf("user already voted for this song")
+	}
+
 	song, err := s.GetSong(vote.SongID)
 	if err != nil {
 		return err
@@ -276,6 +280,22 @@ func (s *SQLiteStore) AddVote(vote Vote) error {
 	}
 
 	return nil
+}
+
+// alreadyVoted checks if there is already a vote for the same song and user.
+func (s *SQLiteStore) alreadyVoted(vote Vote) bool {
+	votes, err := s.GetVotesForSong(vote.SongID)
+	if err != nil {
+		return true
+	}
+
+	for _, v := range votes {
+		if v.UserID == vote.UserID {
+			return true
+		}
+	}
+
+	return false
 }
 
 // GetVotesForSong returns array of Vote objects for the Song with given ID.

@@ -195,6 +195,7 @@ func TestAddVoteToSongInStore(t *testing.T) {
 	defer teardownSuite(t)
 
 	populateWithSong(server, testSong)
+	populateWithUser(server, testUser)
 
 	t.Run("updates vote count", func(t *testing.T) {
 		err := store.AddVote(songvote.Vote{
@@ -214,6 +215,18 @@ func TestAddVoteToSongInStore(t *testing.T) {
 		got, err := store.GetVotesForSong(1)
 		assert.NoError(t, err)
 		assert.Equal(t, got, want)
+	})
+
+	t.Run("only one vote per user per song", func(t *testing.T) {
+		err := store.AddVote(songvote.Vote{
+			SongID: 1,
+			UserID: 1,
+		})
+		assert.Error(t, err)
+
+		got, err := store.GetVotesForSong(1)
+		assert.NoError(t, err)
+		assert.Equal(t, len(got), 1)
 	})
 }
 

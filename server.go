@@ -367,7 +367,12 @@ func (s *Server) addVote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := s.store.AddVote(vote); err != nil {
-		writeError(w, ServerError{http.StatusInternalServerError, err})
+		switch err.Error() {
+		case "user already voted for this song":
+			writeError(w, ErrConflict)
+		default:
+			writeError(w, ServerError{http.StatusInternalServerError, err})
+		}
 		return
 	}
 

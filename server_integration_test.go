@@ -278,9 +278,10 @@ func TestVoteForSong(t *testing.T) {
 	populateWithUsers(server, userTestDataFile)
 	populateWithSongs(server, songTestDataFile)
 
+	vote := songvote.Vote{SongID: 1, UserID: 1}
+
 	t.Run("vote count increments", func(t *testing.T) {
 		// Make vote.
-		vote := songvote.Vote{SongID: 1, UserID: 1}
 		response := httptest.NewRecorder()
 		request := newVoteRequest(vote)
 
@@ -300,7 +301,13 @@ func TestVoteForSong(t *testing.T) {
 		assert.Equal(t, updatedSong.Votes, 11)
 	})
 
-	t.Run("only one vote per user per song", func(t *testing.T) {})
+	t.Run("only one vote per user per song", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		request := newVoteRequest(vote)
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusConflict)
+	})
 
 	t.Run("can retreive list of votes", func(t *testing.T) {})
 }
