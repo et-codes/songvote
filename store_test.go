@@ -210,12 +210,20 @@ func TestVetoSongInStore(t *testing.T) {
 	defer teardownSuite(t)
 
 	populateWithSong(server, testSong)
+	populateWithUser(server, testUser)
 
 	t.Run("sets veto value to true", func(t *testing.T) {
-		err := store.Veto(1)
+		err := store.Veto(1, 1)
 		assert.NoError(t, err)
 
 		song, _ := store.GetSong(1)
 		assert.True(t, song.Vetoed)
+	})
+
+	t.Run("records who vetoed what", func(t *testing.T) {
+		song, user, err := store.GetVetoedBy(1)
+		assert.NoError(t, err)
+		assert.Equal(t, song.Name, testSong.Name)
+		assert.Equal(t, user.Name, testUser.Name)
 	})
 }

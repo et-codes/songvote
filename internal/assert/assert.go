@@ -15,21 +15,21 @@ func Error(t testing.TB, err error) {
 func NoError(t testing.TB, err error) {
 	t.Helper()
 	if err != nil {
-		t.Errorf("got error but did not want one, %v", err)
+		t.Errorf("got error but did not want one, %+v", err)
 	}
 }
 
 func Equal(t testing.TB, got, want any) {
 	t.Helper()
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("got %v, wanted %v", got, want)
+		t.Errorf("got %+v, wanted %+v", got, want)
 	}
 }
 
 func NotEqual(t testing.TB, a, b any) {
 	t.Helper()
 	if reflect.DeepEqual(a, b) {
-		t.Errorf("%v and %v are equal, but should not be", a, b)
+		t.Errorf("%+v and %+v are equal, but should not be", a, b)
 	}
 }
 

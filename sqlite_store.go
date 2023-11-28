@@ -268,16 +268,67 @@ func (s *SQLiteStore) AddVote(id int64) error {
 }
 
 // Veto sets the Vetoed field of the Song with the given ID to true.
-func (s *SQLiteStore) Veto(id int64) error {
-	_, err := s.db.ExecContext(s.ctx,
-		"UPDATE songs SET vetoed = $1 WHERE id = $2",
-		true, id,
+func (s *SQLiteStore) Veto(songID, userID int64) error {
+	vetoes, err := s.getVetoesRemaining(userID)
+	if err != nil {
+		return err
+	}
+
+	if vetoes < 1 {
+		return fmt.Errorf("user %d doesn't have any vetoes left", userID)
+	}
+
+	_, err = s.db.ExecContext(s.ctx,
+		`UPDATE songs SET vetoed = $1 WHERE id = $2;
+		UPDATE users SET vetoes = $3 WHERE id = $4;
+		INSERT INTO vetoes(song, user) VALUES ($5, $6);`,
+		true, songID, vetoes-1, userID, songID, userID,
 	)
 	if err != nil {
-		return fmt.Errorf("error updating song %d: %v", id, err)
+		return fmt.Errorf("error processing veto: %v", err)
 	}
 
 	return nil
+}
+
+// getVetoesRemaining returns the number of vetoes left to the User.
+func (s *SQLiteStore) getVetoesRemaining(userID int64) (int, error) {
+	user, err := s.GetUser(userID)
+	if err != nil {
+		return 0, err
+	}
+	return user.Vetoes, nil
+}
+
+func (s *SQLiteStore) GetVetoedBy(songID int64) (Song, User, error) {
+	// Fetch the song.
+	song, err := s.GetSong(songID)
+	if err != nil {
+		return Song{}, User{}, err
+	}
+
+	// Check if it is actually vetoed.
+	if !song.Vetoed {
+		return Song{}, User{}, fmt.Errorf("song is not vetoed")
+	}
+
+	// Fetch the veto record.
+	row := s.db.QueryRowContext(s.ctx, `SELECT * FROM vetoes WHERE song = $1`, songID)
+	if row.Err() != nil {
+		return Song{}, User{}, fmt.Errorf("error querying vetoes: %v", row.Err())
+	}
+
+	veto, err := s.rowToVeto(row)
+	if err != nil {
+		return Song{}, User{}, err
+	}
+
+	user, err := s.GetUser(veto.User.ID)
+	if err != nil {
+		return Song{}, User{}, err
+	}
+
+	return song, user, nil
 }
 
 // createTables creates the database tables if they do not already exist.
@@ -301,10 +352,17 @@ func (s *SQLiteStore) createTables() error {
 		CREATE TABLE IF NOT EXISTS votes (
 			id INTEGER PRIMARY KEY,
 			song INTEGER,
-			voted_by INTEGER,
+			user INTEGER,
 			FOREIGN KEY(song) REFERENCES songs(id),
-			FOREIGN KEY(voted_by) REFERENCES users(id)
-		)`,
+			FOREIGN KEY(user) REFERENCES users(id)
+		);
+		CREATE TABLE IF NOT EXISTS vetoes (
+			id INTEGER PRIMARY KEY,
+			song INTEGER,
+			user INTEGER,
+			FOREIGN KEY(song) REFERENCES songs(id),
+			FOREIGN KEY(user) REFERENCES users(id)
+		);`,
 	)
 	if err != nil {
 		return fmt.Errorf("error creating users table: %v", err)
@@ -357,6 +415,31 @@ func (s *SQLiteStore) userExists(user User) bool {
 	default:
 		return true
 	}
+}
+
+// rowToVeto marshals a *sql.Row into a Veo struct.
+func (s *SQLiteStore) rowToVeto(row *sql.Row) (Veto, error) {
+	var veto Veto
+	var songID, userID int64
+
+	if err := row.Scan(&veto.ID, &songID, &userID); err != nil {
+		return Veto{}, err
+	}
+
+	song, err := s.GetSong(songID)
+	if err != nil {
+		return Veto{}, err
+	}
+
+	user, err := s.GetUser(userID)
+	if err != nil {
+		return Veto{}, err
+	}
+
+	veto.Song = song
+	veto.User = user
+
+	return veto, nil
 }
 
 // rowToSong marshals a *sql.Row result into a Song struct.

@@ -5,14 +5,14 @@ import "fmt"
 // StubStore implements the SongStore interface, and keeps track of
 // the calls against its methods. It is meant to be used for testing.
 type StubStore struct {
-	NextSongID        int64          // next song ID to be used
-	AddSongCalls      Songs          // calls to AddSong
-	GetSongsCallCount int            // count of calls to GetSongs
-	GetSongCalls      []int64        // calls to to GetSong
-	DeleteSongCalls   []int64        // calls to DeleteSong
-	UpdateSongCalls   map[int64]Song // calls to UpdateSong
-	AddVoteCalls      []int64        // calls to AddVote
-	VetoCalls         []int64        // calls to Veto
+	NextSongID        int64           // next song ID to be used
+	AddSongCalls      Songs           // calls to AddSong
+	GetSongsCallCount int             // count of calls to GetSongs
+	GetSongCalls      []int64         // calls to to GetSong
+	DeleteSongCalls   []int64         // calls to DeleteSong
+	UpdateSongCalls   map[int64]Song  // calls to UpdateSong
+	AddVoteCalls      []int64         // calls to AddVote
+	VetoCalls         map[int64]int64 // calls to Veto, [songID]userID
 
 	NextUserID        int64          // next user ID to be used
 	AddUserCalls      Users          // calls to AddUser
@@ -27,6 +27,7 @@ func NewStubStore() *StubStore {
 	return &StubStore{
 		NextSongID:      1,
 		UpdateSongCalls: make(map[int64]Song),
+		VetoCalls:       make(map[int64]int64),
 		NextUserID:      1,
 		UpdateUserCalls: make(map[int64]User),
 	}
@@ -112,10 +113,10 @@ func (s *StubStore) AddVote(id int64) error {
 	return nil
 }
 
-func (s *StubStore) Veto(id int64) error {
-	s.VetoCalls = append(s.VetoCalls, id)
-	if id >= 10 {
-		return fmt.Errorf("song ID %d not found", id)
+func (s *StubStore) Veto(songID, userID int64) error {
+	s.VetoCalls[songID] = userID
+	if songID >= 10 {
+		return fmt.Errorf("song ID %d not found", songID)
 	}
 	return nil
 }

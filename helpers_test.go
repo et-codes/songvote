@@ -19,6 +19,7 @@ var (
 	songTestDataFile = "./testdata/songs.json"
 
 	testSong = songvote.Song{
+		ID:      1,
 		Name:    "Mirror In The Bathroom",
 		Artist:  "Oingo Boingo",
 		LinkURL: "https://youtu.be/SHWrmIzgB5A?si=R96_BWKxol3i7kQe",
@@ -26,6 +27,7 @@ var (
 		Vetoed:  false,
 	}
 	testUser = songvote.User{
+		ID:       1,
 		Active:   true,
 		Name:     "John Doe",
 		Password: "p@ssword",

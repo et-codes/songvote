@@ -32,4 +32,3 @@
   - Track who voted for and vetoed a song
   - Password encryption
 - Allow for undoing a vote or a veto? (TBD)
-- Have internal functions return ServerError with codes

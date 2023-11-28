@@ -17,7 +17,7 @@ type Store interface {
 	DeleteSong(id int64) error
 	UpdateSong(id int64, song Song) error
 	AddVote(id int64) error
-	Veto(id int64) error
+	Veto(songID, userID int64) error
 
 	// User methods
 	AddUser(user User) (int64, error)
@@ -361,13 +361,14 @@ func (s *Server) addVote(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) veto(w http.ResponseWriter, r *http.Request) {
-	id, err := parseID(r.URL.Path, "/songs/veto/")
+	songID, err := parseID(r.URL.Path, "/songs/veto/")
 	if err != nil {
 		writeError(w, ErrIDParse)
 		return
 	}
 
-	if err := s.store.Veto(id); err != nil {
+	userID := int64(1) // TODO: FIX THIS!!!
+	if err := s.store.Veto(songID, userID); err != nil {
 		writeError(w, ServerError{http.StatusInternalServerError, err})
 		return
 	}
