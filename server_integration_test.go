@@ -270,3 +270,37 @@ func TestUpdateSong(t *testing.T) {
 		assert.Equal(t, updatedSong.Name, newName)
 	})
 }
+
+func TestVoteForSong(t *testing.T) {
+	teardownSuite, _, server := setupSuite(t)
+	defer teardownSuite(t)
+
+	populateWithUsers(server, userTestDataFile)
+	populateWithSongs(server, songTestDataFile)
+
+	t.Run("vote count increments", func(t *testing.T) {
+		// Make vote.
+		vote := songvote.Vote{SongID: 1, UserID: 1}
+		response := httptest.NewRecorder()
+		request := newVoteRequest(vote)
+
+		server.ServeHTTP(response, request)
+
+		assert.Equal(t, response.Code, http.StatusNoContent)
+
+		// Check song's vote count.
+		response = httptest.NewRecorder()
+		request = newGetSongRequest(vote.UserID)
+
+		server.ServeHTTP(response, request)
+
+		updatedSong := songvote.Song{}
+		err := songvote.UnmarshalJSON(response.Body, &updatedSong)
+		assert.NoError(t, err)
+		assert.Equal(t, updatedSong.Votes, 11)
+	})
+
+	t.Run("only one vote per user per song", func(t *testing.T) {})
+
+	t.Run("can retreive list of votes", func(t *testing.T) {})
+}
