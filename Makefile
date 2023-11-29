@@ -15,6 +15,6 @@ test: lint
 	@go tool cover -html=cover.out -o cover.html
 
 commit: test
-	git add .
-	git commit
-	git push
+	@git add .
+	@git commit
+	@git push
