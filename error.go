@@ -20,9 +20,13 @@ func NewServerError(code int, message string) ServerError {
 
 // Common errors
 var (
-	ErrMethod   = NewServerError(http.StatusMethodNotAllowed, "method not allowed")
+	// Method Not Allowed (405)
+	ErrMethod = NewServerError(http.StatusMethodNotAllowed, "method not allowed")
+	// Conflict (409) - resource already exists
 	ErrConflict = NewServerError(http.StatusConflict, "resource already exists")
-	ErrIDParse  = NewServerError(http.StatusBadRequest, "error parsing ID")
+	// Bad Request (400) - error parsing ID
+	ErrIDParse = NewServerError(http.StatusBadRequest, "error parsing ID")
+	// Not Found (404)
 	ErrNotFound = NewServerError(http.StatusNotFound, "resource not found")
 )
 
