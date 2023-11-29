@@ -13,3 +13,8 @@ run: build
 test: lint
 	@go test -coverprofile=cover.out
 	@go tool cover -html=cover.out -o cover.html
+
+commit: test
+	git add .
+	git commit
+	git push
