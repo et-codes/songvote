@@ -237,8 +237,10 @@ func TestVetoSongInStore(t *testing.T) {
 	populateWithSongs(server, songTestDataFile)
 	populateWithUsers(server, userTestDataFile)
 
+	veto := songvote.Veto{1, 1, 1}
+
 	t.Run("sets veto value to true", func(t *testing.T) {
-		err := store.Veto(1, 1)
+		err := store.Veto(veto)
 		assert.NoError(t, err)
 
 		song, _ := store.GetSong(1)
@@ -252,15 +254,15 @@ func TestVetoSongInStore(t *testing.T) {
 	})
 
 	t.Run("can't veto if user has no vetoes left", func(t *testing.T) {
-		err := store.Veto(1, 1)
+		err := store.Veto(veto)
 		assert.Error(t, err)
 	})
 
 	t.Run("returns error if song or user not found", func(t *testing.T) {
-		err := store.Veto(99, 2)
+		err := store.Veto(songvote.Veto{1, 99, 2})
 		assert.Error(t, err)
 
-		err = store.Veto(2, 99)
+		err = store.Veto(songvote.Veto{1, 2, 99})
 		assert.Error(t, err)
 	})
 }

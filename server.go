@@ -18,7 +18,7 @@ type Store interface {
 	UpdateSong(id int64, song Song) error
 	AddVote(vote Vote) error
 	GetVotesForSong(id int64) (Votes, error)
-	Veto(songID, userID int64) error
+	Veto(veto Veto) error
 
 	// User methods
 	AddUser(user User) (int64, error)
@@ -409,7 +409,7 @@ func (s *Server) veto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := int64(1) // TODO: FIX THIS!!!
+	userID := int64(1) === FIX THIS!!! ===
 	if err := s.store.Veto(songID, userID); err != nil {
 		writeError(w, ServerError{http.StatusInternalServerError, err})
 		return

@@ -334,3 +334,16 @@ func TestVoteForSong(t *testing.T) {
 		}
 	})
 }
+
+func TestVetoSong(t *testing.T) {
+	teardownSuite, _, server := setupSuite(t)
+	defer teardownSuite(t)
+
+	populateWithUsers(server, userTestDataFile)
+	populateWithSongs(server, songTestDataFile)
+
+	veto := songvote.Veto{1, 1, 1}
+	_ = veto
+
+	t.Errorf("tests not implemented")
+}

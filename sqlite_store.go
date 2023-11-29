@@ -315,18 +315,18 @@ func (s *SQLiteStore) GetVotesForSong(id int64) (Votes, error) {
 }
 
 // Veto sets the Vetoed field of the Song with the given ID to true.
-func (s *SQLiteStore) Veto(songID, userID int64) error {
-	vetoes, err := s.getVetoesRemaining(userID)
+func (s *SQLiteStore) Veto(veto Veto) error {
+	vetoes, err := s.getVetoesRemaining(veto.UserID)
 	if err != nil {
 		return err
 	}
 
 	if vetoes < 1 {
-		return fmt.Errorf("user %d doesn't have any vetoes left", userID)
+		return fmt.Errorf("user %d doesn't have any vetoes left", veto.UserID)
 	}
 
 	r, err := s.db.ExecContext(s.ctx,
-		`UPDATE songs SET vetoed = $1 WHERE id = $2;`, true, songID)
+		`UPDATE songs SET vetoed = $1 WHERE id = $2;`, true, veto.SongID)
 	if err != nil {
 		return fmt.Errorf("error applying veto: %v", err)
 	}
@@ -336,7 +336,7 @@ func (s *SQLiteStore) Veto(songID, userID int64) error {
 	}
 
 	r, err = s.db.ExecContext(s.ctx,
-		`UPDATE users SET vetoes = $1 WHERE id = $2;`, vetoes-1, userID)
+		`UPDATE users SET vetoes = $1 WHERE id = $2;`, vetoes-1, veto.UserID)
 	if err != nil {
 		return fmt.Errorf("error processing veto: %v", err)
 	}
@@ -346,7 +346,7 @@ func (s *SQLiteStore) Veto(songID, userID int64) error {
 	}
 
 	r, err = s.db.ExecContext(s.ctx,
-		`INSERT INTO vetoes(song, user) VALUES ($1, $2);`, songID, userID)
+		`INSERT INTO vetoes(song, user) VALUES ($1, $2);`, veto.SongID, veto.UserID)
 	if err != nil {
 		return fmt.Errorf("error recording veto: %v", err)
 	}
@@ -390,7 +390,7 @@ func (s *SQLiteStore) GetVetoedBy(songID int64) (User, error) {
 		return User{}, err
 	}
 
-	user, err := s.GetUser(veto.User.ID)
+	user, err := s.GetUser(veto.UserID)
 	if err != nil {
 		return User{}, err
 	}
@@ -514,18 +514,8 @@ func (s *SQLiteStore) rowToVeto(row *sql.Row) (Veto, error) {
 		return Veto{}, err
 	}
 
-	song, err := s.GetSong(songID)
-	if err != nil {
-		return Veto{}, err
-	}
-
-	user, err := s.GetUser(userID)
-	if err != nil {
-		return Veto{}, err
-	}
-
-	veto.Song = song
-	veto.User = user
+	veto.SongID = songID
+	veto.UserID = userID
 
 	return veto, nil
 }

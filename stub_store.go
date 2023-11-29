@@ -5,15 +5,15 @@ import "fmt"
 // StubStore implements the SongStore interface, and keeps track of
 // the calls against its methods. It is meant to be used for testing.
 type StubStore struct {
-	NextSongID        int64           // next song ID to be used
-	AddSongCalls      Songs           // calls to AddSong
-	GetSongsCallCount int             // count of calls to GetSongs
-	GetSongCalls      []int64         // calls to to GetSong
-	DeleteSongCalls   []int64         // calls to DeleteSong
-	UpdateSongCalls   map[int64]Song  // calls to UpdateSong
-	AddVoteCalls      Votes           // calls to AddVote
-	GetVotesCalls     []int64         // calls to GetVotes
-	VetoCalls         map[int64]int64 // calls to Veto, [songID]userID
+	NextSongID        int64          // next song ID to be used
+	AddSongCalls      Songs          // calls to AddSong
+	GetSongsCallCount int            // count of calls to GetSongs
+	GetSongCalls      []int64        // calls to to GetSong
+	DeleteSongCalls   []int64        // calls to DeleteSong
+	UpdateSongCalls   map[int64]Song // calls to UpdateSong
+	AddVoteCalls      Votes          // calls to AddVote
+	GetVotesCalls     []int64        // calls to GetVotes
+	VetoCalls         Vetoes         // calls to Veto
 
 	NextUserID        int64          // next user ID to be used
 	AddUserCalls      Users          // calls to AddUser
@@ -28,7 +28,6 @@ func NewStubStore() *StubStore {
 	return &StubStore{
 		NextSongID:      1,
 		UpdateSongCalls: make(map[int64]Song),
-		VetoCalls:       make(map[int64]int64),
 		NextUserID:      1,
 		UpdateUserCalls: make(map[int64]User),
 	}
@@ -122,10 +121,10 @@ func (s *StubStore) GetVotesForSong(id int64) (Votes, error) {
 	return Votes{{1, 1, 1}}, nil
 }
 
-func (s *StubStore) Veto(songID, userID int64) error {
-	s.VetoCalls[songID] = userID
-	if songID >= 10 {
-		return fmt.Errorf("song ID %d not found", songID)
+func (s *StubStore) Veto(veto Veto) error {
+	s.VetoCalls = append(s.VetoCalls, veto)
+	if veto.SongID >= 10 {
+		return fmt.Errorf("song ID %d not found", veto.SongID)
 	}
 	return nil
 }
