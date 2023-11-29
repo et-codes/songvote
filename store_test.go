@@ -234,8 +234,8 @@ func TestVetoSongInStore(t *testing.T) {
 	teardownSuite, store, server := setupSuite(t)
 	defer teardownSuite(t)
 
-	populateWithSong(server, testSong)
-	populateWithUser(server, testUser)
+	populateWithSongs(server, songTestDataFile)
+	populateWithUsers(server, userTestDataFile)
 
 	t.Run("sets veto value to true", func(t *testing.T) {
 		err := store.Veto(1, 1)
@@ -249,5 +249,18 @@ func TestVetoSongInStore(t *testing.T) {
 		user, err := store.GetVetoedBy(1)
 		assert.NoError(t, err)
 		assert.Equal(t, user.Name, testUser.Name)
+	})
+
+	t.Run("can't veto if user has no vetoes left", func(t *testing.T) {
+		err := store.Veto(1, 1)
+		assert.Error(t, err)
+	})
+
+	t.Run("returns error if song or user not found", func(t *testing.T) {
+		err := store.Veto(99, 2)
+		assert.Error(t, err)
+
+		err = store.Veto(2, 99)
+		assert.Error(t, err)
 	})
 }
