@@ -43,7 +43,7 @@ func NewServer(store Store) *Server {
 
 	router.Handle("/songs/vote", http.HandlerFunc(s.handleAddVote))  // POST
 	router.Handle("/songs/vote/", http.HandlerFunc(s.handleGetVote)) // GET
-	router.Handle("/songs/veto/", http.HandlerFunc(s.handleVeto))    // POST
+	router.Handle("/songs/veto", http.HandlerFunc(s.handleVeto))    // POST
 	router.Handle("/songs/", http.HandlerFunc(s.handleSongsWithID))  // GET|PUT|DELETE
 	router.Handle("/songs", http.HandlerFunc(s.handleSongs))         // GET|POST
 
@@ -146,7 +146,7 @@ func (s *Server) handleGetVote(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleVeto routes requests to "/songs/veto/{id}" depending on request type.
+// handleVeto routes requests to "/songs/veto".
 // Allowable methods:
 //   - POST: veto a song
 func (s *Server) handleVeto(w http.ResponseWriter, r *http.Request) {
@@ -403,14 +403,14 @@ func (s *Server) getVotes(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) veto(w http.ResponseWriter, r *http.Request) {
-	songID, err := parseID(r.URL.Path, "/songs/veto/")
+	veto := Veto{}
+	err := UnmarshalJSON(r.Body, &veto)
 	if err != nil {
-		writeError(w, ErrIDParse)
+		writeError(w, ServerError{http.StatusInternalServerError, err})
 		return
 	}
 
-	userID := int64(1) === FIX THIS!!! ===
-	if err := s.store.Veto(songID, userID); err != nil {
+	if err := s.store.Veto(veto); err != nil {
 		writeError(w, ServerError{http.StatusInternalServerError, err})
 		return
 	}

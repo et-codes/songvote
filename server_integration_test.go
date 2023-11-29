@@ -343,7 +343,45 @@ func TestVetoSong(t *testing.T) {
 	populateWithSongs(server, songTestDataFile)
 
 	veto := songvote.Veto{1, 1, 1}
-	_ = veto
+	veto2 := songvote.Veto{1, 1, 2}
 
-	t.Errorf("tests not implemented")
+	t.Run("sets veto to true", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		request := newVetoRequest(veto)
+		server.ServeHTTP(response, request)
+		assert.Equal(t, response.Code, http.StatusNoContent)
+
+		response = httptest.NewRecorder()
+		request = newGetSongRequest(veto.SongID)
+		server.ServeHTTP(response, request)
+		song := songvote.Song{}
+		err := songvote.UnmarshalJSON(response.Body, &song)
+		assert.NoError(t, err)
+		assert.True(t, song.Vetoed)
+	})
+
+	t.Run("no error when vetoing twice", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		request := newVetoRequest(veto2)
+		server.ServeHTTP(response, request)
+		if response.Code != http.StatusNoContent {
+			serverError := songvote.ServerError{}
+			_ = songvote.UnmarshalJSON(response.Body, &serverError)
+			t.Errorf("didn't want error, got %d: %+v", response.Code, serverError)
+		}
+	})
+
+	t.Run("returns error if song not found", func(t *testing.T) {
+		veto.SongID = 99
+		request := newVetoRequest(veto)
+		response := httptest.NewRecorder()
+		server.ServeHTTP(response, request)
+	})
+
+	t.Run("returns 405 when wrong method used", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodGet, "/songs/veto", nil)
+		response := httptest.NewRecorder()
+		server.ServeHTTP(response, request)
+		assert.Equal(t, response.Code, http.StatusMethodNotAllowed)
+	})
 }

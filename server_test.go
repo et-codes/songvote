@@ -349,8 +349,14 @@ func TestVetoSongOnServer(t *testing.T) {
 	teardownSuite, store, server := setupStubSuite(t)
 	defer teardownSuite(t)
 
+	veto := songvote.Veto{
+		ID: 1,
+		SongID: 1,
+		UserID: 1,
+	}
+
 	t.Run("veto a song", func(t *testing.T) {
-		request := newVetoRequest(1)
+		request := newVetoRequest(veto)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
@@ -360,7 +366,8 @@ func TestVetoSongOnServer(t *testing.T) {
 	})
 
 	t.Run("returns error if song not found", func(t *testing.T) {
-		request := newVetoRequest(10)
+		veto.SongID = 99
+		request := newVetoRequest(veto)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
@@ -369,7 +376,7 @@ func TestVetoSongOnServer(t *testing.T) {
 	})
 
 	t.Run("returns 405 when wrong method used", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodGet, "/songs/veto/1", nil)
+		request, _ := http.NewRequest(http.MethodGet, "/songs/veto", nil)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)

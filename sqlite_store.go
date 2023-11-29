@@ -316,25 +316,30 @@ func (s *SQLiteStore) GetVotesForSong(id int64) (Votes, error) {
 
 // Veto sets the Vetoed field of the Song with the given ID to true.
 func (s *SQLiteStore) Veto(veto Veto) error {
+	// Get remaining vetoes for user.
 	vetoes, err := s.getVetoesRemaining(veto.UserID)
 	if err != nil {
 		return err
 	}
 
+	// Return error if user doesn't have any vetoes left.
 	if vetoes < 1 {
 		return fmt.Errorf("user %d doesn't have any vetoes left", veto.UserID)
 	}
 
+	// Set vetoed = true on the Song and check for errors.
 	r, err := s.db.ExecContext(s.ctx,
 		`UPDATE songs SET vetoed = $1 WHERE id = $2;`, true, veto.SongID)
 	if err != nil {
 		return fmt.Errorf("error applying veto: %v", err)
 	}
+	// If ID does not exist, it won't return an error, but n will be 0.
 	n, err := r.RowsAffected()
 	if err != nil || n == 0 {
-		return fmt.Errorf("error processing veto: %v", err)
+		return fmt.Errorf("error applying veto: %v", err)
 	}
 
+	// Reduce user's veto count by 1.
 	r, err = s.db.ExecContext(s.ctx,
 		`UPDATE users SET vetoes = $1 WHERE id = $2;`, vetoes-1, veto.UserID)
 	if err != nil {
@@ -345,14 +350,11 @@ func (s *SQLiteStore) Veto(veto Veto) error {
 		return fmt.Errorf("error updating user veto count: %v", err)
 	}
 
-	r, err = s.db.ExecContext(s.ctx,
+	// Add veto record to vetoes table.
+	_, err = s.db.ExecContext(s.ctx,
 		`INSERT INTO vetoes(song, user) VALUES ($1, $2);`, veto.SongID, veto.UserID)
 	if err != nil {
 		return fmt.Errorf("error recording veto: %v", err)
-	}
-	n, err = r.RowsAffected()
-	if err != nil || n == 0 {
-		return fmt.Errorf("error processing veto: %v", err)
 	}
 
 	return nil

@@ -1,31 +1,32 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/go
 {
-	"name": "Go",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/go:1-1.21-bullseye",
+  "name": "Go",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "image": "mcr.microsoft.com/devcontainers/go:1-1.21-bullseye",
 
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
+  // Give the container a better name
+  "runArgs": ["--name", "songvote_devcontainer"],
 
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  // "features": {},
 
-	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "git config --global user.email \"ericthornton43@gmail.com\" && git config --global user.name \"et-codes\"",
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // "forwardPorts": [],
 
-	// Configure tool-specific properties.
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"ms-vscode.makefile-tools"
-			]
-		}
-	},
-	"features": {
-		"ghcr.io/warrenbuckley/codespace-features/sqlite:1": {}
-	}
+  // Use 'postCreateCommand' to run commands after the container is created.
+  "postCreateCommand": "git config --global user.email \"ericthornton43@gmail.com\" && git config --global user.name \"et-codes\"",
 
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
+  // Configure tool-specific properties.
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-vscode.makefile-tools"]
+    }
+  },
+  "features": {
+    "ghcr.io/warrenbuckley/codespace-features/sqlite:1": {}
+  }
+
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  // "remoteUser": "root"
 }

@@ -23,7 +23,7 @@ func UnmarshalJSON(in io.Reader, obj any) error {
 		return fmt.Errorf("problem reading input: %w", err)
 	}
 	if err := json.Unmarshal(data, obj); err != nil {
-		return fmt.Errorf("problem unmarshalling JSON: %w", err)
+		return fmt.Errorf("problem unmarshalling %v: %w", data, err)
 	}
 	return nil
 }

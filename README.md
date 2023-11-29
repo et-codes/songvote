@@ -1,6 +1,4 @@
-# SongVote
-
-## Under development...
+# SongVote (in development)
 
 **SongVote** is an app to allow users to:
 - Adding songs, voting, and vetoing are done in rounds
@@ -11,7 +9,9 @@
 - When a round ends, the song list resets. The song list from previous rounds is stored. Vetoes are resupplied to the users.
 
 ## API
+
 ### Songs (DONE)
+
 - `GET /songs` returns a list of all songs
 - `POST /songs` adds a song to the list
 - `GET /songs/{id}` info for particular song
@@ -19,18 +19,21 @@
 - `DELETE /songs/{id}` remove a song from the list
 - `GET /songs/vote/{id}` get votes for a song
 - `POST /songs/vote` add vote for a song
-- `POST /songs/veto/{id}` add veto for a song
+- `POST /songs/veto` add veto for a song
 
 ### Users (DONE)
+
 - `POST /users` adds a user
 - `GET /users/{id}` returns user information
 - `PUT /users/{id}` updates user information
 - `DELETE /users/{id}` deletes a user
 
 ## TODO
+
 - Implement users
   - Fix user ID in (s *Server) veto
   - Track who adds a song
   - Track who voted for and vetoed a song
   - Password encryption
 - Allow for undoing a vote or a veto? (TBD)
+- Use JSON arrays in SQLite instead of separate vote and veto tables - see [documentation](https://www.sqlite.org/json1.html).

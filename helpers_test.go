@@ -114,18 +114,15 @@ func populateWithSongs(server *songvote.Server, path string) {
 }
 
 func newAddUserRequest(user songvote.User) *http.Request {
-	json, err := songvote.MarshalJSON(user)
-	log.Printf("%s  %#v", json, user)
-	if err != nil {
-		log.Fatalf("problem marshalling User JSON, %v", err)
-	}
-	bodyReader := bytes.NewBuffer([]byte(json))
-	request, _ := http.NewRequest(http.MethodPost, "/users", bodyReader)
+	url := "/users"
+	body := createResponseBody(user)
+	request, _ := http.NewRequest(http.MethodPost, url, body)
 	return request
 }
 
 func newGetUsersRequest() *http.Request {
-	request, _ := http.NewRequest(http.MethodGet, "/users", nil)
+	url := "/users"
+	request, _ := http.NewRequest(http.MethodGet, url, nil)
 	return request
 }
 
@@ -142,13 +139,9 @@ func newDeleteUserRequest(id int64) *http.Request {
 }
 
 func newUpdateUserRequest(id int64, user songvote.User) *http.Request {
-	json, err := songvote.MarshalJSON(user)
-	if err != nil {
-		log.Fatalf("problem marshalling JSON, %v", err)
-	}
 	url := fmt.Sprintf("/users/%d", id)
-	bodyReader := bytes.NewBuffer([]byte(json))
-	request, _ := http.NewRequest(http.MethodPut, url, bodyReader)
+	body := createResponseBody(user)
+	request, _ := http.NewRequest(http.MethodPut, url, body)
 	return request
 }
 
@@ -159,17 +152,15 @@ func newGetSongRequest(id int64) *http.Request {
 }
 
 func newGetSongsRequest() *http.Request {
-	request, _ := http.NewRequest(http.MethodGet, "/songs", nil)
+	url := "/songs"
+	request, _ := http.NewRequest(http.MethodGet, url, nil)
 	return request
 }
 
 func newAddSongRequest(song songvote.Song) *http.Request {
-	json, err := songvote.MarshalJSON(song)
-	if err != nil {
-		log.Fatalf("problem marshalling Song JSON, %v", err)
-	}
-	bodyReader := bytes.NewBuffer([]byte(json))
-	request, _ := http.NewRequest(http.MethodPost, "/songs", bodyReader)
+	url := "/songs"
+	body := createResponseBody(song)
+	request, _ := http.NewRequest(http.MethodPost, url, body)
 	return request
 }
 
@@ -180,24 +171,16 @@ func newDeleteSongRequest(id int64) *http.Request {
 }
 
 func newUpdateSongRequest(id int64, song songvote.Song) *http.Request {
-	json, err := songvote.MarshalJSON(song)
-	if err != nil {
-		log.Fatalf("problem marshalling Song JSON, %v", err)
-	}
 	url := fmt.Sprintf("/songs/%d", id)
-	bodyReader := bytes.NewBuffer([]byte(json))
-	request, _ := http.NewRequest(http.MethodPut, url, bodyReader)
+	body := createResponseBody(song)
+	request, _ := http.NewRequest(http.MethodPut, url, body)
 	return request
 }
 
 func newVoteRequest(vote songvote.Vote) *http.Request {
-	json, err := songvote.MarshalJSON(vote)
-	if err != nil {
-		log.Fatalf("problem marshalling Song JSON, %v", err)
-	}
 	url := "/songs/vote"
-	bodyReader := bytes.NewBuffer([]byte(json))
-	request, _ := http.NewRequest(http.MethodPost, url, bodyReader)
+	body := createResponseBody(vote)
+	request, _ := http.NewRequest(http.MethodPost, url, body)
 	return request
 }
 
@@ -207,8 +190,17 @@ func newGetVotesRequest(id int64) *http.Request {
 	return request
 }
 
-func newVetoRequest(id int64) *http.Request {
-	url := fmt.Sprintf("/songs/veto/%d", id)
-	request, _ := http.NewRequest(http.MethodPost, url, nil)
+func newVetoRequest(veto songvote.Veto) *http.Request {
+	url := "/songs/veto"
+	body := createResponseBody(veto)
+	request, _ := http.NewRequest(http.MethodPost, url, body)
 	return request
+}
+
+func createResponseBody(obj any) *bytes.Buffer {
+	json, err := songvote.MarshalJSON(obj)
+	if err != nil {
+		log.Fatalf("problem marshalling JSON, %v", err)
+	}
+	return bytes.NewBuffer([]byte(json))
 }
