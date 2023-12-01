@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 
+	"golang.org/x/crypto/bcrypt"
 	_ "modernc.org/sqlite"
 )
 
@@ -53,12 +54,17 @@ func (s *SQLiteStore) AddUser(user User) (int64, error) {
 		return 0, fmt.Errorf("user %q already exists", user.Name)
 	}
 
+	pwd, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return 0, fmt.Errorf("error encrypting password: %v", err)
+	}
+
 	result, err := s.db.ExecContext(s.ctx,
 		`INSERT INTO users(inactive, name, password, vetoes) 
 			VALUES ($1, $2, $3, $4)`,
 		user.Inactive,
 		user.Name,
-		user.Password,
+		pwd,
 		user.Vetoes,
 	)
 	if err != nil {
@@ -133,11 +139,27 @@ func (s *SQLiteStore) DeleteUser(id int64) error {
 func (s *SQLiteStore) UpdateUser(id int64, user User) error {
 	newInactive := user.Inactive
 	newName := user.Name
-	newPassword := user.Password
+	newPassword := []byte(user.Password)
 
-	_, err := s.db.ExecContext(s.ctx,
+	currentUser, err := s.GetUser(id)
+	if err != nil {
+		return fmt.Errorf("error retreiving user data: %v", err)
+	}
+
+	// Check if password has changed
+	err = bcrypt.CompareHashAndPassword([]byte(currentUser.Password), newPassword)
+	if err != nil {
+		newPassword, err = bcrypt.GenerateFromPassword(newPassword, bcrypt.DefaultCost)
+		if err != nil {
+			return fmt.Errorf("error encrypting password: %v", err)
+		}
+	} else {
+		newPassword = []byte(currentUser.Password)
+	}
+
+	_, err = s.db.ExecContext(s.ctx,
 		"UPDATE users SET name = $1, password = $2, inactive = $3 WHERE id = $4",
-		newName, newPassword, newInactive, id,
+		newName, string(newPassword), newInactive, id,
 	)
 	if err != nil {
 		return fmt.Errorf("error updating user %d: %v", id, err)

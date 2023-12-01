@@ -18,6 +18,12 @@ func TestAddUserToStore(t *testing.T) {
 			t.Errorf("got bad id %d", id)
 		}
 	})
+
+	t.Run("passwords are stored hashed", func(t *testing.T) {
+		user, err := store.GetUser(1)
+		assert.NoError(t, err)
+		assert.NotEqual(t, user.Password, testUser.Password)
+	})
 }
 
 func TestGetAllUsersFromStore(t *testing.T) {
@@ -97,7 +103,6 @@ func TestUpdateUserInStore(t *testing.T) {
 		user, _ := store.GetUser(1)
 		assert.False(t, user.Inactive)
 		assert.Equal(t, user.Name, newUserData.Name)
-		assert.Equal(t, user.Password, newUserData.Password)
 	})
 }
 
