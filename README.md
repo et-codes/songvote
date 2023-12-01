@@ -30,10 +30,6 @@
 
 ## TODO
 
-- Implement users
-  - Fix user ID in (s *Server) veto
-  - Track who adds a song
-  - Track who voted for and vetoed a song
-  - Password encryption
+- Add logging to server errors and successes
+- Password encryption
 - Allow for undoing a vote or a veto? (TBD)
-- Use JSON arrays in SQLite instead of separate vote and veto tables - see [documentation](https://www.sqlite.org/json1.html).
