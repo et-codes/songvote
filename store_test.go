@@ -208,6 +208,24 @@ func TestAddVoteToSongInStore(t *testing.T) {
 		assert.Equal(t, song.Votes, 11)
 	})
 
+	t.Run("inactive user cannot vote", func(t *testing.T) {
+		inactiveUser := songvote.User{
+			ID:       2,
+			Inactive: true,
+			Name:     "Jane Doe",
+			Password: "p@ssword",
+			Vetoes:   1,
+		}
+
+		populateWithUser(server, inactiveUser)
+
+		err := store.AddVote(songvote.Vote{
+			SongID: 1,
+			UserID: 2,
+		})
+		assert.Error(t, err)
+	})
+
 	t.Run("tracks who voted for the song", func(t *testing.T) {
 		want := songvote.Votes{
 			{ID: 1, SongID: 1, UserID: 1},

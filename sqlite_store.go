@@ -145,6 +145,15 @@ func (s *SQLiteStore) UpdateUser(id int64, user User) error {
 	return nil
 }
 
+// userInactive returns whether or not the user is flagged as inactive.
+func (s *SQLiteStore) userInactive(id int64) bool {
+	user, err := s.GetUser(id)
+	if err != nil {
+		return true
+	}
+	return user.Inactive
+}
+
 // GetSong returns a Song object with the given ID, or an error if it cannot
 // be found.
 func (s *SQLiteStore) GetSong(id int64) (Song, error) {
@@ -249,6 +258,9 @@ func (s *SQLiteStore) UpdateSong(id int64, song Song) error {
 
 // AddVote increments the Vote count on a Song with the given ID.
 func (s *SQLiteStore) AddVote(vote Vote) error {
+	if s.userInactive(vote.UserID) {
+		return fmt.Errorf("user is inactive and cannot vote")
+	}
 	if s.alreadyVoted(vote) {
 		return fmt.Errorf("user already voted for this song")
 	}
