@@ -283,4 +283,22 @@ func TestVetoSongInStore(t *testing.T) {
 		err = store.Veto(songvote.Veto{1, 2, 99})
 		assert.Error(t, err)
 	})
+
+	t.Run("inactive user cannot veto", func(t *testing.T) {
+		inactiveUser := songvote.User{
+			ID:       9,
+			Inactive: true,
+			Name:     "Jane Doe, Jr.",
+			Password: "p@ssword",
+			Vetoes:   1,
+		}
+
+		populateWithUser(server, inactiveUser)
+
+		err := store.Veto(songvote.Veto{
+			SongID: 1,
+			UserID: 9,
+		})
+		assert.Error(t, err)
+	})
 }

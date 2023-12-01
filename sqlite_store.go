@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	dbDriver = "sqlite"
+	dbDriver     = "sqlite"
+	userInactive = "user is inactive and cannot perform this action"
 )
 
 // SQLiteStore is a data store backed by a SQL database.
@@ -259,7 +260,7 @@ func (s *SQLiteStore) UpdateSong(id int64, song Song) error {
 // AddVote increments the Vote count on a Song with the given ID.
 func (s *SQLiteStore) AddVote(vote Vote) error {
 	if s.userInactive(vote.UserID) {
-		return fmt.Errorf("user is inactive and cannot vote")
+		return fmt.Errorf(userInactive)
 	}
 	if s.alreadyVoted(vote) {
 		return fmt.Errorf("user already voted for this song")
@@ -328,6 +329,10 @@ func (s *SQLiteStore) GetVotesForSong(id int64) (Votes, error) {
 
 // Veto sets the Vetoed field of the Song with the given ID to true.
 func (s *SQLiteStore) Veto(veto Veto) error {
+	if s.userInactive(veto.UserID) {
+		return fmt.Errorf(userInactive)
+	}
+
 	// Get remaining vetoes for user.
 	vetoes, err := s.getVetoesRemaining(veto.UserID)
 	if err != nil {
