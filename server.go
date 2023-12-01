@@ -2,6 +2,7 @@ package songvote
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -43,7 +44,7 @@ func NewServer(store Store) *Server {
 
 	router.Handle("/songs/vote", http.HandlerFunc(s.handleAddVote))  // POST
 	router.Handle("/songs/vote/", http.HandlerFunc(s.handleGetVote)) // GET
-	router.Handle("/songs/veto", http.HandlerFunc(s.handleVeto))    // POST
+	router.Handle("/songs/veto", http.HandlerFunc(s.handleVeto))     // POST
 	router.Handle("/songs/", http.HandlerFunc(s.handleSongsWithID))  // GET|PUT|DELETE
 	router.Handle("/songs", http.HandlerFunc(s.handleSongs))         // GET|POST
 
@@ -161,12 +162,13 @@ func (s *Server) handleVeto(w http.ResponseWriter, r *http.Request) {
 func (s *Server) addUser(w http.ResponseWriter, r *http.Request) {
 	userToAdd := User{}
 	if err := UnmarshalJSON(r.Body, &userToAdd); err != nil {
-		writeError(w, ServerError{http.StatusInternalServerError, err})
+		writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
 		return
 	}
 
 	id, err := s.store.AddUser(userToAdd)
 	if err != nil {
+		log.Printf("Error adding user: %v", err)
 		writeError(w, ErrConflict)
 		return
 	}
@@ -180,7 +182,7 @@ func (s *Server) getAllUsers(w http.ResponseWriter, r *http.Request) {
 
 	out, err := MarshalJSON(users)
 	if err != nil {
-		writeError(w, ServerError{http.StatusInternalServerError, err})
+		writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
 		return
 	}
 
@@ -203,7 +205,7 @@ func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 
 	json, err := MarshalJSON(user)
 	if err != nil {
-		writeError(w, ServerError{http.StatusInternalServerError, err})
+		writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
 		return
 	}
 
@@ -219,7 +221,7 @@ func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := s.store.DeleteUser(id); err != nil {
-		writeError(w, ServerError{http.StatusNotFound, err})
+		writeError(w, ServerError{http.StatusNotFound, err.Error()})
 		return
 	}
 
@@ -242,7 +244,7 @@ func (s *Server) updateUser(w http.ResponseWriter, r *http.Request) {
 
 	updatedUser := User{}
 	if err := UnmarshalJSON(r.Body, &updatedUser); err != nil {
-		writeError(w, ServerError{http.StatusInternalServerError, err})
+		writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
 		return
 	}
 
@@ -251,7 +253,7 @@ func (s *Server) updateUser(w http.ResponseWriter, r *http.Request) {
 
 	err = s.store.UpdateUser(id, userToUpdate)
 	if err != nil {
-		writeError(w, ServerError{http.StatusInternalServerError, err})
+		writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
 		return
 	}
 
@@ -263,7 +265,7 @@ func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
 
 	out, err := MarshalJSON(songs)
 	if err != nil {
-		writeError(w, ServerError{http.StatusInternalServerError, err})
+		writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
 		return
 	}
 
@@ -286,7 +288,7 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 
 	json, err := MarshalJSON(song)
 	if err != nil {
-		writeError(w, ServerError{http.StatusInternalServerError, err})
+		writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
 		return
 	}
 
@@ -297,7 +299,7 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 	songToAdd := Song{}
 	if err := UnmarshalJSON(r.Body, &songToAdd); err != nil {
-		writeError(w, ServerError{http.StatusInternalServerError, err})
+		writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
 		return
 	}
 
@@ -319,7 +321,7 @@ func (s *Server) deleteSong(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := s.store.DeleteSong(id); err != nil {
-		writeError(w, ServerError{http.StatusNotFound, err})
+		writeError(w, ServerError{http.StatusNotFound, err.Error()})
 		return
 	}
 
@@ -341,7 +343,7 @@ func (s *Server) updateSong(w http.ResponseWriter, r *http.Request) {
 
 	updatedSong := Song{}
 	if err := UnmarshalJSON(r.Body, &updatedSong); err != nil {
-		writeError(w, ServerError{http.StatusInternalServerError, err})
+		writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
 		return
 	}
 
@@ -351,7 +353,7 @@ func (s *Server) updateSong(w http.ResponseWriter, r *http.Request) {
 
 	err = s.store.UpdateSong(id, songToUpdate)
 	if err != nil {
-		writeError(w, ServerError{http.StatusInternalServerError, err})
+		writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
 		return
 	}
 
@@ -362,7 +364,7 @@ func (s *Server) addVote(w http.ResponseWriter, r *http.Request) {
 	vote := Vote{}
 	err := UnmarshalJSON(r.Body, &vote)
 	if err != nil {
-		writeError(w, ServerError{http.StatusInternalServerError, err})
+		writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
 		return
 	}
 
@@ -371,7 +373,7 @@ func (s *Server) addVote(w http.ResponseWriter, r *http.Request) {
 		case "user already voted for this song":
 			writeError(w, ErrConflict)
 		default:
-			writeError(w, ServerError{http.StatusInternalServerError, err})
+			writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
 		}
 		return
 	}
@@ -394,7 +396,7 @@ func (s *Server) getVotes(w http.ResponseWriter, r *http.Request) {
 
 	out, err := MarshalJSON(votes)
 	if err != nil {
-		writeError(w, ServerError{http.StatusInternalServerError, err})
+		writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
 		return
 	}
 
@@ -406,12 +408,12 @@ func (s *Server) veto(w http.ResponseWriter, r *http.Request) {
 	veto := Veto{}
 	err := UnmarshalJSON(r.Body, &veto)
 	if err != nil {
-		writeError(w, ServerError{http.StatusInternalServerError, err})
+		writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
 		return
 	}
 
 	if err := s.store.Veto(veto); err != nil {
-		writeError(w, ServerError{http.StatusInternalServerError, err})
+		writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
 		return
 	}
 

@@ -86,7 +86,7 @@ func TestUpdateUserInStore(t *testing.T) {
 
 	t.Run("updates user name", func(t *testing.T) {
 		newUserData := songvote.User{
-			Active:   false,
+			Inactive: false,
 			Name:     "Fake User",
 			Password: "p3nc1l",
 		}
@@ -95,7 +95,7 @@ func TestUpdateUserInStore(t *testing.T) {
 		assert.NoError(t, err)
 
 		user, _ := store.GetUser(1)
-		assert.False(t, user.Active)
+		assert.False(t, user.Inactive)
 		assert.Equal(t, user.Name, newUserData.Name)
 		assert.Equal(t, user.Password, newUserData.Password)
 	})

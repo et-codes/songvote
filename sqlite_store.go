@@ -53,9 +53,9 @@ func (s *SQLiteStore) AddUser(user User) (int64, error) {
 	}
 
 	result, err := s.db.ExecContext(s.ctx,
-		`INSERT INTO users(active, name, password, vetoes) 
+		`INSERT INTO users(inactive, name, password, vetoes) 
 			VALUES ($1, $2, $3, $4)`,
-		true,
+		user.Inactive,
 		user.Name,
 		user.Password,
 		user.Vetoes,
@@ -126,17 +126,17 @@ func (s *SQLiteStore) DeleteUser(id int64) error {
 	return nil
 }
 
-// UpdateUser allows changing the Name, Password, and Active status of the user.
+// UpdateUser allows changing the Name, Password, and Inactive status of the user.
 // Parameters are the ID of the user and a User object which contains the
-// desired changes. Fields other than Name, Password, and Active are ignored.
+// desired changes. Fields other than Name, Password, and Inactive are ignored.
 func (s *SQLiteStore) UpdateUser(id int64, user User) error {
-	newActive := user.Active
+	newInactive := user.Inactive
 	newName := user.Name
 	newPassword := user.Password
 
 	_, err := s.db.ExecContext(s.ctx,
-		"UPDATE users SET name = $1, password = $2, active = $3 WHERE id = $4",
-		newName, newPassword, newActive, id,
+		"UPDATE users SET name = $1, password = $2, inactive = $3 WHERE id = $4",
+		newName, newPassword, newInactive, id,
 	)
 	if err != nil {
 		return fmt.Errorf("error updating user %d: %v", id, err)
@@ -405,7 +405,7 @@ func (s *SQLiteStore) createTables() error {
 	_, err := s.db.ExecContext(s.ctx,
 		`CREATE TABLE IF NOT EXISTS users (
 			id INTEGER PRIMARY KEY,
-			active BOOLEAN,
+			inactive BOOLEAN,
 			name TEXT NOT NULL,
 			password TEXT NOT NULL,
 			vetoes INTEGER
@@ -568,7 +568,7 @@ func rowToUser(row *sql.Row) (User, error) {
 	var user User
 	if err := row.Scan(
 		&user.ID,
-		&user.Active,
+		&user.Inactive,
 		&user.Name,
 		&user.Password,
 		&user.Vetoes,
@@ -585,7 +585,7 @@ func rowsToUsers(rows *sql.Rows) (Users, error) {
 		var user User
 		if err := rows.Scan(
 			&user.ID,
-			&user.Active,
+			&user.Inactive,
 			&user.Name,
 			&user.Password,
 			&user.Vetoes,

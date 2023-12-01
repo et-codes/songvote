@@ -1,28 +1,28 @@
 [
   {
     "id": 1,
-    "active": true,
+    "inactive": false,
     "name": "John Doe",
     "password": "p@ssword",
     "vetoes": 1
   },
   {
     "id": 2,
-    "active": true,
+    "inactive": false,
     "name": "Jane Doe",
     "password": "p@ssword",
     "vetoes": 1
   },
   {
     "id": 3,
-    "active": true,
+    "inactive": false,
     "name": "Joe Sixpack",
     "password": "p@ssword",
     "vetoes": 1
   },
   {
     "id": 4,
-    "active": true,
+    "inactive": false,
     "name": "Mary Housecoat",
     "password": "p@ssword",
     "vetoes": 1
