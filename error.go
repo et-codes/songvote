@@ -7,14 +7,14 @@ import (
 )
 
 type ServerError struct {
-	Code int   `json:"code"`
-	Err  error `json:"error"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
 }
 
 func NewServerError(code int, message string) ServerError {
 	return ServerError{
-		Code: code,
-		Err:  fmt.Errorf(message),
+		Code:    code,
+		Message: message,
 	}
 }
 
@@ -31,12 +31,12 @@ var (
 )
 
 func (e ServerError) Error() string {
-	return fmt.Sprintf("status: %d, error: %v", e.Code, e.Err)
+	return fmt.Sprintf("status: %d, error: %v", e.Code, e.Message)
 }
 
 func writeError(w http.ResponseWriter, e ServerError) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(e.Code)
 	json, _ := json.Marshal(e)
-	fmt.Fprint(w, json)
+	fmt.Fprint(w, string(json))
 }
