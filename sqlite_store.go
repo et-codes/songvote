@@ -47,6 +47,22 @@ func NewSQLiteStore(dbPath string) *SQLiteStore {
 	return store
 }
 
+// ClearDB deletes all the tables in the database and recreates them. This
+// will obviously wipe all data, so use with caution. It requires the
+// confirmation message "DELETE_IT_ALL" to be passed in, to make sure you
+// are sure you want to do this.
+func (s *SQLiteStore) ClearDB(confirm string) error {
+	if confirm != "DELETE_IT_ALL" {
+		return fmt.Errorf("confirmation message DELETE_IT_ALL not received")
+	}
+	_, err := s.db.ExecContext(s.ctx,
+		"DROP TABLE vetoes; DROP TABLE votes; DROP TABLE songs; DROP TABLE users;")
+	if err != nil {
+		return fmt.Errorf("error dropping tables: %v", err)
+	}
+	return s.createTables()
+}
+
 // AddUser adds the given User to the store. Returns an error if the username
 // given already exists in the store.
 func (s *SQLiteStore) AddUser(user User) (int64, error) {

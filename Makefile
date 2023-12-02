@@ -1,14 +1,17 @@
-BINARY = bin/songvote
-SOURCE = cmd/songvote
+SONGVOTE_BINARY = bin/songvote
+SONGVOTE_SOURCE = cmd/songvote
+SEED_BINARY = bin/seed
+SEED_SOURCE = cmd/seed
 
 lint:
 	@golangci-lint run
 
 build: lint
-	@go build -o ${BINARY} ${SOURCE}/*.go
+	@go build -o ${SONGVOTE_BINARY} ${SONGVOTE_SOURCE}/*.go
+	@go build -o ${SEED_BINARY} ${SEED_SOURCE}/*.go
 
 run: build
-	@./${BINARY}
+	@./${SONGVOTE_BINARY}
 
 test: lint
 	@go test -coverprofile=cover.out
