@@ -31,5 +31,4 @@
 ## TODO
 
 - Add logging to server errors and successes
-- Password encryption
 - Allow for undoing a vote or a veto? (TBD)
