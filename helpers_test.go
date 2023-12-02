@@ -14,10 +14,12 @@ import (
 	"github.com/et-codes/songvote"
 )
 
-var (
+const (
 	userTestDataFile = "./testdata/users.json"
 	songTestDataFile = "./testdata/songs.json"
+)
 
+var (
 	testSong = songvote.Song{
 		ID:      1,
 		Name:    "Mirror In The Bathroom",
