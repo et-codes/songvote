@@ -2,7 +2,10 @@ module github.com/et-codes/songvote
 
 go 1.21.3
 
-require modernc.org/sqlite v1.27.0
+require (
+	golang.org/x/crypto v0.16.0
+	modernc.org/sqlite v1.27.0
+)
 
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
@@ -10,7 +13,6 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	golang.org/x/crypto v0.16.0 // indirect
 	golang.org/x/mod v0.3.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/tools v0.0.0-20201124115921-2c860bdd6e78 // indirect
