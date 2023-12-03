@@ -25,7 +25,7 @@ var (
 		Name:    "Mirror In The Bathroom",
 		Artist:  "Oingo Boingo",
 		LinkURL: "https://youtu.be/SHWrmIzgB5A?si=R96_BWKxol3i7kQe",
-		Votes:   10,
+		Votes:   0,
 		Vetoed:  false,
 	}
 	testUser = songvote.User{

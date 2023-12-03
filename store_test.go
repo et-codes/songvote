@@ -210,7 +210,7 @@ func TestAddVoteToSongInStore(t *testing.T) {
 		assert.NoError(t, err)
 
 		song, _ := store.GetSong(1)
-		assert.Equal(t, song.Votes, 11)
+		assert.Equal(t, song.Votes, 1)
 	})
 
 	t.Run("inactive user cannot vote", func(t *testing.T) {

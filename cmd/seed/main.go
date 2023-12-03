@@ -13,6 +13,7 @@ const (
 	dbPath           = "./db/songvote.db"
 	userTestDataFile = "./testdata/users.json"
 	songTestDataFile = "./testdata/songs.json"
+	voteTestDataFile = "./testdata/votes.json"
 )
 
 func main() {
@@ -23,6 +24,7 @@ func main() {
 
 	populateWithUsers(store, userTestDataFile)
 	populateWithSongs(store, songTestDataFile)
+	populateWithVotes(store, voteTestDataFile)
 
 	log.Printf("Successfully cleared database and seeded with sample data.")
 }
@@ -55,6 +57,23 @@ func populateWithSongs(store *songvote.SQLiteStore, path string) {
 	}
 	for _, song := range songs {
 		_, err := store.AddSong(song)
+		if err != nil {
+			log.Fatalf("Could not add song: %v", err)
+		}
+	}
+}
+
+func populateWithVotes(store *songvote.SQLiteStore, path string) {
+	file, err := os.ReadFile(path)
+	if err != nil {
+		log.Fatalf("Could not open file %s: %v", path, err)
+	}
+	votes := songvote.Votes{}
+	if err = json.Unmarshal(file, &votes); err != nil {
+		log.Fatalf("Could not unmarshal JSON from %s: %v", path, err)
+	}
+	for _, vote := range votes {
+		err := store.AddVote(vote)
 		if err != nil {
 			log.Fatalf("Could not add song: %v", err)
 		}

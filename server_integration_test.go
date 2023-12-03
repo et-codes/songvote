@@ -299,7 +299,7 @@ func TestVoteForSong(t *testing.T) {
 		updatedSong := songvote.Song{}
 		err := songvote.UnmarshalJSON(response.Body, &updatedSong)
 		assert.NoError(t, err)
-		assert.Equal(t, updatedSong.Votes, 11)
+		assert.Equal(t, updatedSong.Votes, 1)
 	})
 
 	t.Run("only one vote per user per song", func(t *testing.T) {
