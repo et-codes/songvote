@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -98,7 +97,8 @@ func (s *Server) getAllUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
-	id, err := parseID(r.URL.Path, "/users/")
+	vars := mux.Vars(r)
+	id, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
 		writeError(w, ErrIDParse)
 		return
@@ -121,7 +121,8 @@ func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
-	id, err := parseID(r.URL.Path, "/users/")
+	vars := mux.Vars(r)
+	id, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
 		writeError(w, ErrIDParse)
 		return
@@ -137,7 +138,8 @@ func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
 
 // updateUser updates the User with new name and/or password.
 func (s *Server) updateUser(w http.ResponseWriter, r *http.Request) {
-	id, err := parseID(r.URL.Path, "/users/")
+	vars := mux.Vars(r)
+	id, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
 		writeError(w, ErrIDParse)
 		return
@@ -181,7 +183,8 @@ func (s *Server) getAllSongs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
-	id, err := parseID(r.URL.Path, "/songs/")
+	vars := mux.Vars(r)
+	id, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
 		writeError(w, ErrIDParse)
 		return
@@ -221,7 +224,8 @@ func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) deleteSong(w http.ResponseWriter, r *http.Request) {
-	id, err := parseID(r.URL.Path, "/songs/")
+	vars := mux.Vars(r)
+	id, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
 		writeError(w, ErrIDParse)
 		return
@@ -236,7 +240,8 @@ func (s *Server) deleteSong(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) updateSong(w http.ResponseWriter, r *http.Request) {
-	id, err := parseID(r.URL.Path, "/songs/")
+	vars := mux.Vars(r)
+	id, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
 		writeError(w, ErrIDParse)
 		return
@@ -277,7 +282,7 @@ func (s *Server) addVote(w http.ResponseWriter, r *http.Request) {
 
 	if err := s.store.AddVote(vote); err != nil {
 		switch err.Error() {
-		case "user already voted for this song", "user is inactive and cannot vote":
+		case "user already voted for this song", "user is inactive and cannot perform this action":
 			writeError(w, ErrConflict)
 		default:
 			writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
@@ -289,13 +294,14 @@ func (s *Server) addVote(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) getVotes(w http.ResponseWriter, r *http.Request) {
-	songID, err := parseID(r.URL.Path, "/songs/vote/")
+	vars := mux.Vars(r)
+	id, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
 		writeError(w, ErrIDParse)
 		return
 	}
 
-	votes, err := s.store.GetVotesForSong(songID)
+	votes, err := s.store.GetVotesForSong(id)
 	if err != nil {
 		writeError(w, ErrNotFound)
 		return
@@ -325,15 +331,6 @@ func (s *Server) veto(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-}
-
-func parseID(path, prefix string) (int64, error) {
-	idString := strings.TrimPrefix(path, prefix)
-	id, err := strconv.ParseInt(idString, 10, 64)
-	if err != nil {
-		return 0, err
-	}
-	return id, nil
 }
 
 func logRequests(next http.Handler) http.Handler {
