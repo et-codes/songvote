@@ -38,25 +38,24 @@ type Server struct {
 // NewServer returns a reference to an initialized Server.
 func NewServer(store Store) *Server {
 	s := new(Server)
-
 	s.store = store
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/songs/vote/{id}", s.getVotes).Methods("GET")
-	r.HandleFunc("/songs/vote", s.addVote).Methods("POST")
-	r.HandleFunc("/songs/veto", s.veto).Methods("POST")
-	r.HandleFunc("/songs/{id}", s.getSong).Methods("GET")
-	r.HandleFunc("/songs/{id}", s.updateSong).Methods("PUT")
-	r.HandleFunc("/songs/{id}", s.deleteSong).Methods("DELETE")
-	r.HandleFunc("/songs", s.getAllSongs).Methods("GET")
-	r.HandleFunc("/songs", s.addSong).Methods("POST")
+	r.HandleFunc("/songs/vote/{id}", s.getVotes).Methods(http.MethodGet)
+	r.HandleFunc("/songs/vote", s.addVote).Methods(http.MethodPost)
+	r.HandleFunc("/songs/veto", s.veto).Methods(http.MethodPost)
+	r.HandleFunc("/songs/{id}", s.getSong).Methods(http.MethodGet)
+	r.HandleFunc("/songs/{id}", s.updateSong).Methods(http.MethodPut)
+	r.HandleFunc("/songs/{id}", s.deleteSong).Methods(http.MethodDelete)
+	r.HandleFunc("/songs", s.getAllSongs).Methods(http.MethodGet)
+	r.HandleFunc("/songs", s.addSong).Methods(http.MethodPost)
 
-	r.HandleFunc("/users/{id}", s.getUser).Methods("GET")
-	r.HandleFunc("/users/{id}", s.updateUser).Methods("PUT")
-	r.HandleFunc("/users/{id}", s.deleteUser).Methods("DELETE")
-	r.HandleFunc("/users", s.getAllUsers).Methods("GET")
-	r.HandleFunc("/users", s.addUser).Methods("POST")
+	r.HandleFunc("/users/{id}", s.getUser).Methods(http.MethodGet)
+	r.HandleFunc("/users/{id}", s.updateUser).Methods(http.MethodPut)
+	r.HandleFunc("/users/{id}", s.deleteUser).Methods(http.MethodDelete)
+	r.HandleFunc("/users", s.getAllUsers).Methods(http.MethodGet)
+	r.HandleFunc("/users", s.addUser).Methods(http.MethodPost)
 
 	r.Use(logRequests)
 
