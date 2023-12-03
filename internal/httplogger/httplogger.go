@@ -41,7 +41,29 @@ func (l *HTTPLogger) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Write log message.
-	log.Printf("%s %s %s", r.Method, r.URL.Path, body)
+	log.Printf("%s - %s (%s) - %s", r.Method, r.URL.Path, r.RemoteAddr, body)
 
 	l.handler.ServeHTTP(w, r)
+}
+
+func LogRequests(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var body string
+
+		// Check if the body contains anything.
+		if r.ContentLength > 0 {
+			// Read body contents.
+			buf, _ := io.ReadAll(r.Body)
+			body = string(buf)
+
+			// Put body contents into a reader and add it back to the request.
+			reader := io.NopCloser(bytes.NewBuffer(buf))
+			r.Body = reader
+		}
+
+		// Write log message.
+		log.Printf("%s - %s (%s) - %s", r.Method, r.URL.Path, r.RemoteAddr, body)
+
+		next.ServeHTTP(w, r)
+	})
 }

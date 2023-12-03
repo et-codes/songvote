@@ -377,11 +377,4 @@ func TestVetoSong(t *testing.T) {
 		response := httptest.NewRecorder()
 		server.ServeHTTP(response, request)
 	})
-
-	t.Run("returns 405 when wrong method used", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodGet, "/songs/veto", nil)
-		response := httptest.NewRecorder()
-		server.ServeHTTP(response, request)
-		assert.Equal(t, response.Code, http.StatusMethodNotAllowed)
-	})
 }

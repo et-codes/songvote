@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"github.com/et-codes/songvote/internal/httplogger"
+
+	"github.com/gorilla/mux"
 )
 
 type Store interface {
@@ -40,116 +42,29 @@ func NewServer(store Store) *Server {
 
 	s.store = store
 
-	router := http.NewServeMux()
+	r := mux.NewRouter()
 
-	router.Handle("/songs/vote/", http.HandlerFunc(s.handleVotes))
-	router.Handle("/songs/vote", http.HandlerFunc(s.handleVotes))
-	router.Handle("/songs/veto", http.HandlerFunc(s.handleVeto))
-	router.Handle("/songs/", http.HandlerFunc(s.handleSongsWithID))
-	router.Handle("/songs", http.HandlerFunc(s.handleSongs))
+	r.HandleFunc("/songs/vote/{id}", s.getVotes).Methods("GET")
+	r.HandleFunc("/songs/vote", s.addVote).Methods("POST")
+	r.HandleFunc("/songs/veto", s.veto).Methods("POST")
+	r.HandleFunc("/songs/{id}", s.getSong).Methods("GET")
+	r.HandleFunc("/songs/{id}", s.updateSong).Methods("PUT")
+	r.HandleFunc("/songs/{id}", s.deleteSong).Methods("DELETE")
+	r.HandleFunc("/songs", s.getAllSongs).Methods("GET")
+	r.HandleFunc("/songs", s.addSong).Methods("POST")
 
-	router.Handle("/users/", http.HandlerFunc(s.handleUsersWithID))
-	router.Handle("/users", http.HandlerFunc(s.handleUsers))
+	r.HandleFunc("/users/{id}", s.getUser).Methods("GET")
+	r.HandleFunc("/users/{id}", s.updateUser).Methods("PUT")
+	r.HandleFunc("/users/{id}", s.deleteUser).Methods("DELETE")
+	r.HandleFunc("/users", s.getAllUsers).Methods("GET")
+	r.HandleFunc("/users", s.addUser).Methods("POST")
 
-	loggingRouter := httplogger.New(router)
+	// r.Use(httplogger.LogRequests)
+	loggingRouter := httplogger.New(r)
 
 	s.Handler = loggingRouter
 
 	return s
-}
-
-// handleUsers routes requests to "/users" depending on request type.
-// Allowable methods:
-//   - GET:  get all users
-//   - POST: add user
-func (s *Server) handleUsers(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		s.getAllUsers(w, r)
-	case http.MethodPost:
-		s.addUser(w, r)
-	default:
-		writeError(w, ErrMethod)
-	}
-}
-
-// handleUsersWithID routes requests to "/users/{id}" depending on request type.
-// Allowable methods:
-//   - GET:    get the user
-//   - PUT:    update the user
-//   - DELETE: delete the user
-func (s *Server) handleUsersWithID(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		s.getUser(w, r)
-	case http.MethodPut:
-		s.updateUser(w, r)
-	case http.MethodDelete:
-		s.deleteUser(w, r)
-	default:
-		writeError(w, ErrMethod)
-	}
-}
-
-// handleSongs routes requests to "/songs" depending on request type.
-// Allowable methods:
-//   - GET:  get all songs
-//   - POST: add song
-func (s *Server) handleSongs(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		s.getAllSongs(w, r)
-	case http.MethodPost:
-		s.addSong(w, r)
-	default:
-		writeError(w, ErrMethod)
-	}
-}
-
-// handleSongsWithID routes requests to "/songs/{id}" depending on request type.
-// Allowable methods:
-//   - GET:    get the song
-//   - PUT:    update the song
-//   - DELETE: delete the song
-func (s *Server) handleSongsWithID(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		s.getSong(w, r)
-	case http.MethodPut:
-		s.updateSong(w, r)
-	case http.MethodDelete:
-		s.deleteSong(w, r)
-	default:
-		writeError(w, ErrMethod)
-	}
-}
-
-// handleVotes routes requests to "/songs/vote".
-// Allowable methods:
-//   - GET: get votes for a song
-//   - POST: vote for a song
-func (s *Server) handleVotes(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Handling vote %s request...", r.Method)
-	switch r.Method {
-	case http.MethodGet:
-		s.getVotes(w, r)
-	case http.MethodPost:
-		s.addVote(w, r)
-	default:
-		writeError(w, ErrMethod)
-	}
-}
-
-// handleVeto routes requests to "/songs/veto".
-// Allowable methods:
-//   - POST: veto a song
-func (s *Server) handleVeto(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodPost:
-		s.veto(w, r)
-	default:
-		writeError(w, ErrMethod)
-	}
 }
 
 func (s *Server) addUser(w http.ResponseWriter, r *http.Request) {

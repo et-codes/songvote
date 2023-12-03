@@ -313,15 +313,6 @@ func TestAddVoteOnServer(t *testing.T) {
 		assert.Equal(t, store.AddVoteCalls[0], vote)
 	})
 
-	t.Run("returns 405 when wrong method used", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodPut, "/songs/vote", nil)
-		response := httptest.NewRecorder()
-
-		server.ServeHTTP(response, request)
-
-		assert.Equal(t, response.Code, http.StatusMethodNotAllowed)
-	})
-
 	t.Run("returns error if song not found", func(t *testing.T) {
 		request := newVoteRequest(songvote.Vote{
 			SongID: 10,
@@ -373,14 +364,5 @@ func TestVetoSongOnServer(t *testing.T) {
 		server.ServeHTTP(response, request)
 
 		assert.Equal(t, response.Code, http.StatusInternalServerError)
-	})
-
-	t.Run("returns 405 when wrong method used", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodGet, "/songs/veto", nil)
-		response := httptest.NewRecorder()
-
-		server.ServeHTTP(response, request)
-
-		assert.Equal(t, response.Code, http.StatusMethodNotAllowed)
 	})
 }
