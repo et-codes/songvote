@@ -42,14 +42,14 @@ func NewServer(store Store) *Server {
 
 	router := http.NewServeMux()
 
-	router.Handle("/songs/vote", http.HandlerFunc(s.handleAddVote))  // POST
-	router.Handle("/songs/vote/", http.HandlerFunc(s.handleGetVote)) // GET
-	router.Handle("/songs/veto", http.HandlerFunc(s.handleVeto))     // POST
-	router.Handle("/songs/", http.HandlerFunc(s.handleSongsWithID))  // GET|PUT|DELETE
-	router.Handle("/songs", http.HandlerFunc(s.handleSongs))         // GET|POST
+	router.Handle("/songs/vote/", http.HandlerFunc(s.handleVotes))
+	router.Handle("/songs/vote", http.HandlerFunc(s.handleVotes))
+	router.Handle("/songs/veto", http.HandlerFunc(s.handleVeto))
+	router.Handle("/songs/", http.HandlerFunc(s.handleSongsWithID))
+	router.Handle("/songs", http.HandlerFunc(s.handleSongs))
 
-	router.Handle("/users/", http.HandlerFunc(s.handleUsersWithID)) // GET|PUT|DELETE
-	router.Handle("/users", http.HandlerFunc(s.handleUsers))        // POST
+	router.Handle("/users/", http.HandlerFunc(s.handleUsersWithID))
+	router.Handle("/users", http.HandlerFunc(s.handleUsers))
 
 	loggingRouter := httplogger.New(router)
 
@@ -124,24 +124,17 @@ func (s *Server) handleSongsWithID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleAddVote routes requests to "/songs/vote/{id}" depending on request type.
+// handleVotes routes requests to "/songs/vote".
 // Allowable methods:
+//   - GET: get votes for a song
 //   - POST: vote for a song
-func (s *Server) handleAddVote(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodPost:
-		s.addVote(w, r)
-	default:
-		writeError(w, ErrMethod)
-	}
-}
-
-// handleGetVote routes requests to "/songs/vote/{id}". Allowable methods:
-//   - GET: get list of votes for a song
-func (s *Server) handleGetVote(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleVotes(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Handling vote %s request...", r.Method)
 	switch r.Method {
 	case http.MethodGet:
 		s.getVotes(w, r)
+	case http.MethodPost:
+		s.addVote(w, r)
 	default:
 		writeError(w, ErrMethod)
 	}

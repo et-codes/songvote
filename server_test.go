@@ -314,7 +314,7 @@ func TestAddVoteOnServer(t *testing.T) {
 	})
 
 	t.Run("returns 405 when wrong method used", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodGet, "/songs/vote", nil)
+		request, _ := http.NewRequest(http.MethodPut, "/songs/vote", nil)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
@@ -350,7 +350,7 @@ func TestVetoSongOnServer(t *testing.T) {
 	defer teardownSuite(t)
 
 	veto := songvote.Veto{
-		ID: 1,
+		ID:     1,
 		SongID: 1,
 		UserID: 1,
 	}

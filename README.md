@@ -31,4 +31,4 @@
 ## TODO
 
 - Add logging to server errors and successes
-- Allow for undoing a vote or a veto? (TBD)
+- Start making a UI
