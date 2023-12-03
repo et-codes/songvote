@@ -1,13 +1,13 @@
 package songvote
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
-
-	"github.com/et-codes/songvote/internal/httplogger"
 
 	"github.com/gorilla/mux"
 )
@@ -59,10 +59,9 @@ func NewServer(store Store) *Server {
 	r.HandleFunc("/users", s.getAllUsers).Methods("GET")
 	r.HandleFunc("/users", s.addUser).Methods("POST")
 
-	// r.Use(httplogger.LogRequests)
-	loggingRouter := httplogger.New(r)
+	r.Use(logRequests)
 
-	s.Handler = loggingRouter
+	s.Handler = r
 
 	return s
 }
@@ -335,4 +334,26 @@ func parseID(path, prefix string) (int64, error) {
 		return 0, err
 	}
 	return id, nil
+}
+
+func logRequests(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var body string
+
+		// Check if the body contains anything.
+		if r.ContentLength > 0 {
+			// Read body contents.
+			buf, _ := io.ReadAll(r.Body)
+			body = string(buf)
+
+			// Put body contents into a reader and add it back to the request.
+			reader := io.NopCloser(bytes.NewBuffer(buf))
+			r.Body = reader
+		}
+
+		// Write log message.
+		log.Printf("%s - %s (%s) - %s", r.Method, r.URL.Path, r.RemoteAddr, body)
+
+		next.ServeHTTP(w, r)
+	})
 }
