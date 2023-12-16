@@ -4,10 +4,21 @@
 
 <p>Below are the songs in the database:</p>
 
-<ul>
+<table class="table table-hover table-sm">
+  <tr>
+    <th>Title</th>
+    <th>Artist</th>
+    <th>Votes</th>
+    <th>Veto</th>
+  </tr>
   {{range .}}
-    <li><a href="{{.LinkURL}}">{{.Name}}</a> - {{.Artist}} - Votes: {{.Votes}}</li>
+  <tr>
+    <td><a href="{{.LinkURL}}">{{.Name}}</a></td>
+    <td>{{.Artist}}</td>
+    <td>{{.Votes}}</td>
+    <td>{{.Vetoed}}</td>
+  </tr>
   {{end}}
-</ul>
+</table>
 
 {{template "footer"}}
