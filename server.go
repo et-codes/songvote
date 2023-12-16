@@ -3,8 +3,10 @@ package songvote
 import (
 	"bytes"
 	"fmt"
+	"html/template"
 	"io"
 	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -35,8 +37,12 @@ type Server struct {
 	http.Handler
 }
 
+var tpl *template.Template
+
 // NewServer returns a reference to an initialized Server.
 func NewServer(store Store) *Server {
+	tpl = template.Must(template.ParseGlob("templates/*"))
+
 	s := new(Server)
 	s.store = store
 
@@ -57,11 +63,21 @@ func NewServer(store Store) *Server {
 	r.HandleFunc("/users", s.getAllUsers).Methods(http.MethodGet)
 	r.HandleFunc("/users", s.addUser).Methods(http.MethodPost)
 
+	r.HandleFunc("/", s.index).Methods(http.MethodGet)
+
 	r.Use(logRequests)
 
 	s.Handler = r
 
 	return s
+}
+
+func (s *Server) index(w http.ResponseWriter, r *http.Request) {
+	songs := s.store.GetSongs()
+
+	if err := tpl.ExecuteTemplate(w, "index.gohtml", songs); err != nil {
+		slog.Error("error executing template", err)
+	}
 }
 
 func (s *Server) addUser(w http.ResponseWriter, r *http.Request) {
