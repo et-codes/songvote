@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/et-codes/songvote"
@@ -15,6 +16,6 @@ const (
 func main() {
 	store := songvote.NewSQLiteStore(dbPath)
 	server := songvote.NewServer(store)
-	log.Printf("Listening on port %s ...\n", port)
+	slog.Info("Listening...", "port", port)
 	log.Fatal(http.ListenAndServe(port, server))
 }

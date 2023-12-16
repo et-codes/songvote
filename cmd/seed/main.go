@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/et-codes/songvote"
@@ -19,29 +19,33 @@ const (
 func main() {
 	store := songvote.NewSQLiteStore(dbPath)
 	if err := store.ClearDB("DELETE_IT_ALL"); err != nil {
-		log.Fatalf("Error clearing DB: %v", err)
+		slog.Error("Error clearing DB: %v", err)
+		os.Exit(1)
 	}
 
 	populateWithUsers(store, userTestDataFile)
 	populateWithSongs(store, songTestDataFile)
 	populateWithVotes(store, voteTestDataFile)
 
-	log.Printf("Successfully cleared database and seeded with sample data.")
+	slog.Info("Successfully cleared database and seeded with sample data.")
 }
 
 func populateWithUsers(store *songvote.SQLiteStore, path string) {
 	file, err := os.ReadFile(path)
 	if err != nil {
-		log.Fatalf("Could not open file %s: %v", path, err)
+		slog.Error("Could not open file %s: %v", path, err)
+		os.Exit(1)
 	}
 	users := songvote.Users{}
 	if err = json.Unmarshal(file, &users); err != nil {
-		log.Fatalf("Could not unmarshal JSON from %s: %v", path, err)
+		slog.Error("Could not unmarshal JSON from %s: %v", path, err)
+		os.Exit(1)
 	}
 	for _, user := range users {
 		_, err := store.AddUser(user)
 		if err != nil {
-			log.Fatalf("Could not add user: %v", err)
+			slog.Error("Could not add user: %v", err)
+			os.Exit(1)
 		}
 	}
 }
@@ -49,16 +53,19 @@ func populateWithUsers(store *songvote.SQLiteStore, path string) {
 func populateWithSongs(store *songvote.SQLiteStore, path string) {
 	file, err := os.ReadFile(path)
 	if err != nil {
-		log.Fatalf("Could not open file %s: %v", path, err)
+		slog.Error("Could not open file %s: %v", path, err)
+		os.Exit(1)
 	}
 	songs := songvote.Songs{}
 	if err = json.Unmarshal(file, &songs); err != nil {
-		log.Fatalf("Could not unmarshal JSON from %s: %v", path, err)
+		slog.Error("Could not unmarshal JSON from %s: %v", path, err)
+		os.Exit(1)
 	}
 	for _, song := range songs {
 		_, err := store.AddSong(song)
 		if err != nil {
-			log.Fatalf("Could not add song: %v", err)
+			slog.Error("Could not add song: %v", err)
+			os.Exit(1)
 		}
 	}
 }
@@ -66,16 +73,19 @@ func populateWithSongs(store *songvote.SQLiteStore, path string) {
 func populateWithVotes(store *songvote.SQLiteStore, path string) {
 	file, err := os.ReadFile(path)
 	if err != nil {
-		log.Fatalf("Could not open file %s: %v", path, err)
+		slog.Error("Could not open file %s: %v", path, err)
+		os.Exit(1)
 	}
 	votes := songvote.Votes{}
 	if err = json.Unmarshal(file, &votes); err != nil {
-		log.Fatalf("Could not unmarshal JSON from %s: %v", path, err)
+		slog.Error("Could not unmarshal JSON from %s: %v", path, err)
+		os.Exit(1)
 	}
 	for _, vote := range votes {
 		err := store.AddVote(vote)
 		if err != nil {
-			log.Fatalf("Could not add song: %v", err)
+			slog.Error("Could not add song: %v", err)
+			os.Exit(1)
 		}
 	}
 }
