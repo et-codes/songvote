@@ -4,19 +4,19 @@
   <tr>
     <th>Title</th>
     <th>Artist</th>
-    <th>Votes</th>
-    <th>Vetoed?</th>
-    <th></th>
-    <th></th>
+    <th>Vote</th>
+    <th>Veto</th>
   </tr>
   {{range .}}
   <tr class="align-middle">
     <td><a href="{{.LinkURL}}">{{.Name}}</a></td>
     <td>{{.Artist}}</td>
-    <td>{{.Votes}}</td>
-    <td>{{.Vetoed}}</td>
-    <td><button type="button" class="btn btn-outline-success btn-sm">VOTE</button></td>
-    <td><button type="button" class="btn btn-outline-danger btn-sm">VETO</button></td>
+    <td>
+      <button type="button" class="btn btn-outline-success btn-sm px-3">{{.Votes}}</button>
+    </td>
+    <td>
+      <button type="button" class="btn btn-outline-danger btn-sm px-3">{{.Vetoed}}</button>
+    </td>
   </tr>
   {{end}}
 </table>
