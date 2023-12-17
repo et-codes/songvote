@@ -223,9 +223,9 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
 	songToAdd := Song{
-		Name: r.FormValue("name"),
-		Artist: r.FormValue("artist"),
-		LinkURL: r.FormValue("link_url"),
+		Name: r.FormValue("songName"),
+		Artist: r.FormValue("songArtist"),
+		LinkURL: r.FormValue("songLinkURL"),
 	}
 
 	_, err := s.store.AddSong(songToAdd)
