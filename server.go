@@ -222,20 +222,19 @@ func (s *Server) getSong(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) addSong(w http.ResponseWriter, r *http.Request) {
-	songToAdd := Song{}
-	if err := UnmarshalJSON(r.Body, &songToAdd); err != nil {
-		writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
-		return
+	songToAdd := Song{
+		Name: r.FormValue("name"),
+		Artist: r.FormValue("artist"),
+		LinkURL: r.FormValue("link_url"),
 	}
 
-	id, err := s.store.AddSong(songToAdd)
+	_, err := s.store.AddSong(songToAdd)
 	if err != nil {
 		writeError(w, ErrConflict)
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	fmt.Fprint(w, id)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (s *Server) deleteSong(w http.ResponseWriter, r *http.Request) {

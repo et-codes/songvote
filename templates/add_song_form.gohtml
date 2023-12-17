@@ -1,17 +1,17 @@
 {{define "addSongForm"}}
 <h3>Add Song</h3>
-<form>
+<form action="/songs" method="post">
   <div class="mb-3">
-    <label for="songName" class="form-label">Title</label>
-    <input type="text" class="form-control" id="songName">
+    <label for="name" class="form-label">Title</label>
+    <input type="text" class="form-control" id="name" name="name">
   </div>
   <div class="mb-3">
-    <label for="songArtist" class="form-label">Artist</label>
-    <input type="text" class="form-control" id="songArtist">
+    <label for="artist" class="form-label">Artist</label>
+    <input type="text" class="form-control" id="artist" name="artist">
   </div>
   <div class="mb-3">
-    <label for="songLinkURL" class="form-label">Link URL</label>
-    <input type="text" class="form-control" id="songLinkURL">
+    <label for="link_url" class="form-label">Link URL</label>
+    <input type="text" class="form-control" id="link_url" name="link_url">
   </div>
   <button type="submit" class="btn btn-primary">Submit</button>
 </form>
