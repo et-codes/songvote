@@ -25,12 +25,10 @@ func NewServer(port string) *Server {
 func (s *Server) ListenAndServe() error {
 	router := mux.NewRouter()
 
-	router.HandleFunc("/", s.index)
+	router.HandleFunc("/", s.index).Methods(http.MethodGet)
 
 	slog.Info("Server listening...", "port", port)
-	err := http.ListenAndServe(port, router)
-
-	return err
+	return http.ListenAndServe(port, router)
 }
 
 func (s *Server) index(w http.ResponseWriter, r *http.Request) {
