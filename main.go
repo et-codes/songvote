@@ -7,7 +7,7 @@ const (
 )
 
 func main() {
-	store, err := NewStore("templates/songvote.db")
+	store, err := NewStore("db/songvote.db")
 	if err != nil {
 		log.Fatal(err)
 	}
