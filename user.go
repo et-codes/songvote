@@ -13,6 +13,10 @@ type NewUserRequest struct {
 	Password string `json:"password"`
 }
 
+type NewUserResponse struct {
+	ID int64 `json:"id"`
+}
+
 const (
 	defaultVetoes = 1
 )

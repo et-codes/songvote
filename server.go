@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log/slog"
 	"net/http"
 	"text/template"
@@ -28,6 +29,7 @@ func (s *Server) ListenAndServe() error {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/", s.index).Methods(http.MethodGet)
+	router.HandleFunc("/api/user", s.createUser).Methods(http.MethodPost)
 
 	router.Use(logRequests)
 
@@ -38,6 +40,23 @@ func (s *Server) ListenAndServe() error {
 func (s *Server) index(w http.ResponseWriter, r *http.Request) {
 	if err := s.tpl.ExecuteTemplate(w, "index.gohtml", nil); err != nil {
 		slog.Error(err.Error())
+	}
+}
+
+func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
+	userReq := NewUserRequest{
+		Name:     r.FormValue("username"),
+		Password: r.FormValue("password"),
+	}
+
+	id, err := s.store.CreateUser(userReq)
+	if err != nil {
+		writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
+	}
+	w.WriteHeader(http.StatusCreated)
+	resp := NewUserResponse{id}
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
 	}
 }
 
