@@ -1,14 +1,11 @@
 SONGVOTE_BINARY = bin/songvote
 SONGVOTE_SOURCE = cmd/songvote
-SEED_BINARY = bin/seed
-SEED_SOURCE = cmd/seed
 
 lint:
 	@golangci-lint run
 
 build: lint
 	@go build -o ${SONGVOTE_BINARY} ${SONGVOTE_SOURCE}/*.go
-	@go build -o ${SEED_BINARY} ${SEED_SOURCE}/*.go
 
 run: build
 	@./${SONGVOTE_BINARY}
