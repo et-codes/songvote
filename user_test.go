@@ -8,7 +8,7 @@ import (
 
 func TestNewUser(t *testing.T) {
 	req := NewUserRequest{"John Doe", "password"}
-	got := NewUser(req)
+	got := AddUser(req)
 
 	assert.Greater(t, got.ID, uint64(0))
 	assert.Equal(t, "John Doe", got.Name)

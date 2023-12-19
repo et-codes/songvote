@@ -11,15 +11,15 @@ type User struct {
 }
 
 type NewUserRequest struct {
-	Name     string
-	Password string
+	Name     string `json:"username"`
+	Password string `json:"password"`
 }
 
 const (
 	defaultVetoes = 1
 )
 
-func NewUser(req NewUserRequest) *User {
+func AddUser(req NewUserRequest) *User {
 	id := rand.Uint64()
 	return &User{
 		ID:       id,
