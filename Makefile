@@ -1,5 +1,5 @@
 SONGVOTE_BINARY = bin/songvote
-SONGVOTE_SOURCE = cmd/songvote
+SONGVOTE_SOURCE = .
 
 lint:
 	@golangci-lint run
