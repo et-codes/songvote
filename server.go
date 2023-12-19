@@ -51,12 +51,15 @@ func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
 
 	id, err := s.store.CreateUser(userReq)
 	if err != nil {
-		writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
+		writeError(w, err.(ServerError))
+		return
 	}
+
 	w.WriteHeader(http.StatusCreated)
 	resp := NewUserResponse{id}
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		writeError(w, ServerError{http.StatusInternalServerError, err.Error()})
+		return
 	}
 }
 

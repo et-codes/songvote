@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
+	"net/http"
 
 	_ "modernc.org/sqlite"
 )
@@ -35,33 +36,46 @@ func NewStore(dbPath string) (*Store, error) {
 }
 
 func (s *Store) CreateUser(req NewUserRequest) (int64, error) {
+	if s.userExists(req.Name) {
+		return 0, ErrConflict
+	}
+
 	result, err := s.db.Exec(
 		`INSERT INTO users(name, password, inactive, vetoes) VALUES($1, $2, $3, $4)`,
 		req.Name, req.Password, false, defaultVetoes,
 	)
 	if err != nil {
-		return 0, err
+		return 0, NewServerError(http.StatusInternalServerError, err.Error())
 	}
 
 	id, err := result.LastInsertId()
 	if err != nil {
-		return id, err
+		return id, NewServerError(http.StatusInternalServerError, err.Error())
 	}
 
 	slog.Info("New user created", "id", id)
 	return id, nil
 }
 
-func (s *Store) GetUser(id int64) (*User, error) {
+func (s *Store) GetUserByID(id int64) (*User, error) {
 	user := User{}
 
 	row := s.db.QueryRow("SELECT * FROM users WHERE id = $1", id)
 	err := row.Scan(&user.ID, &user.Name, &user.Password, &user.Inactive, &user.Vetoes)
 	if err != nil {
-		return nil, err
+		return nil, ErrNotFound
 	}
 
 	return &user, nil
+}
+
+func (s *Store) userExists(username string) bool {
+	row := s.db.QueryRow("SELECT id FROM users WHERE name = $1", username)
+	var id int64
+	if err := row.Scan(&id); err != nil {
+		return false
+	}
+	return true
 }
 
 func (s *Store) createUserTable() error {
