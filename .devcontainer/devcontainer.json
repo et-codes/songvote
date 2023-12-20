@@ -20,7 +20,7 @@
   // Configure tool-specific properties.
   "customizations": {
     "vscode": {
-      "extensions": ["ms-vscode.makefile-tools"]
+      "extensions": ["ms-vscode.makefile-tools", "jinliming2.vscode-go-template"]
     }
   },
   "features": {
