@@ -8,6 +8,7 @@ import (
 
 	"github.com/alexedwards/scs/sqlite3store"
 	"github.com/alexedwards/scs/v2"
+	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -37,7 +38,16 @@ func NewServer(port string, store *Store) *Server {
 
 // ListenAndServe starts the web server.
 func (s *Server) ListenAndServe() error {
-	router := NewRouter(s)
+	router := mux.NewRouter()
+	router.HandleFunc("/", s.index).Methods(http.MethodGet)
+	router.HandleFunc("/api/user", s.createUser).Methods(http.MethodPost)
+	router.HandleFunc("/api/login", s.loginUser).Methods(http.MethodPost)
+	router.HandleFunc("/api/logout", s.logoutUser).Methods(http.MethodGet)
+
+	fs := http.FileServer(http.Dir("./static/"))
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
+
+	router.Use(logRequests)
 
 	slog.Info("Server listening", "port", port)
 	return http.ListenAndServe(port, s.sessionManager.LoadAndSave(router))
