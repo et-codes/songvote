@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateUser(t *testing.T) {
+func TestUserStore(t *testing.T) {
 	s, _ := NewStore(":memory:")
 
 	t.Run("creates user and gets id", func(t *testing.T) {
@@ -42,5 +42,11 @@ func TestCreateUser(t *testing.T) {
 		req := NewUserRequest{"John Doe", "password"}
 		_, err := s.CreateUser(req)
 		assert.Error(t, err)
+	})
+
+	t.Run("get user by name works", func(t *testing.T) {
+		user, err := s.GetUserByName("John Doe")
+		assert.NoError(t, err)
+		assert.Equal(t, "John Doe", user.Name)
 	})
 }

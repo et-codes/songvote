@@ -24,8 +24,10 @@ var (
 	ErrMethod = NewServerError(http.StatusMethodNotAllowed, "method not allowed")
 	// Conflict (409) - resource already exists
 	ErrConflict = NewServerError(http.StatusConflict, "resource already exists")
-	// Bad Request (400) - error parsing ID
-	ErrIDParse = NewServerError(http.StatusBadRequest, "error parsing ID")
+	// Bad Request (400)
+	ErrBadRequest = NewServerError(http.StatusBadRequest, "bad request")
+	// Unauthorized (401)
+	ErrUnauthorized = NewServerError(http.StatusUnauthorized, "unauthorized")
 	// Not Found (404)
 	ErrNotFound = NewServerError(http.StatusNotFound, "resource not found")
 )

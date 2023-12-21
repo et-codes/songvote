@@ -79,6 +79,17 @@ func (s *Store) GetUserByID(id int64) (*User, error) {
 	return &user, nil
 }
 
+// GetUserByName returns user data that matches the given username.
+func (s *Store) GetUserByName(username string) (*User, error) {
+	row := s.db.QueryRow("SELECT * FROM users WHERE name = $1", username)
+	user := &User{}
+	err := row.Scan(&user.ID, &user.Name, &user.Password, &user.Inactive, &user.Vetoes)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 // userExists returns true if a user with the given name is in the database.
 func (s *Store) userExists(username string) bool {
 	row := s.db.QueryRow("SELECT id FROM users WHERE name = $1", username)

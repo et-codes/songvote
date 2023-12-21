@@ -9,6 +9,7 @@ import (
 	"github.com/alexedwards/scs/sqlite3store"
 	"github.com/alexedwards/scs/v2"
 	"github.com/gorilla/mux"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Server contains configuration for the server.
@@ -40,6 +41,8 @@ func (s *Server) ListenAndServe() error {
 	router := mux.NewRouter()
 	router.HandleFunc("/", s.index).Methods(http.MethodGet)
 	router.HandleFunc("/api/user", s.createUser).Methods(http.MethodPost)
+	router.HandleFunc("/api/login", s.loginUser).Methods(http.MethodPost)
+	router.HandleFunc("/api/logout", s.logoutUser).Methods(http.MethodGet)
 
 	fs := http.FileServer(http.Dir("./static/"))
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
@@ -63,6 +66,43 @@ func (s *Server) index(w http.ResponseWriter, r *http.Request) {
 	if err := s.tmpl.ExecuteTemplate(w, "index.gohtml", data); err != nil {
 		slog.Error(err.Error())
 	}
+}
+
+// logoutUser logs out the user by clearing session data.
+func (s *Server) logoutUser(w http.ResponseWriter, r *http.Request) {
+	if err := s.sessionManager.Clear(r.Context()); err != nil {
+		slog.Error(err.Error())
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+// loginUser processes requests to log in an existing user.
+func (s *Server) loginUser(w http.ResponseWriter, r *http.Request) {
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+
+	user, err := s.store.GetUserByName(username)
+	if err != nil {
+		writeError(w, ErrNotFound)
+		return
+	}
+
+	if user.Inactive {
+		writeError(w, NewServerError(http.StatusUnauthorized, "user is inactive"))
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if err != nil {
+		writeError(w, NewServerError(http.StatusUnauthorized,
+			"incorrect username and/or password"))
+		return
+	}
+
+	s.sessionManager.Put(r.Context(), "user_id", user.ID)
+	s.sessionManager.Put(r.Context(), "username", user.Name)
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 // createUser processes requests to create a new user.
