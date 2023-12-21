@@ -41,6 +41,9 @@ func (s *Server) ListenAndServe() error {
 	router.HandleFunc("/", s.index).Methods(http.MethodGet)
 	router.HandleFunc("/api/user", s.createUser).Methods(http.MethodPost)
 
+	fs := http.FileServer(http.Dir("./static/"))
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
+
 	router.Use(logRequests)
 
 	slog.Info("Server listening", "port", port)

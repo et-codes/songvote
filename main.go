@@ -3,11 +3,12 @@ package main
 import "log"
 
 const (
-	port = ":5050"
+	port   = ":5050"
+	dbFile = "db/songvote.db"
 )
 
 func main() {
-	store, err := NewStore("db/songvote.db")
+	store, err := NewStore(dbFile)
 	if err != nil {
 		log.Fatal(err)
 	}
