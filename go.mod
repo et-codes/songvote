@@ -3,6 +3,8 @@ module github.com/et-codes/songvote
 go 1.21.3
 
 require (
+	github.com/alexedwards/scs/sqlite3store v0.0.0-20231113091146-cef4b05350c8
+	github.com/alexedwards/scs/v2 v2.7.0
 	github.com/gorilla/mux v1.8.1
 	github.com/stretchr/testify v1.8.4
 	modernc.org/sqlite v1.28.0

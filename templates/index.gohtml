@@ -2,7 +2,12 @@
 
 {{define "content"}}
   <div class="container">
-    <h1>Hello.</h1>
+    {{if eq .Username ""}}
+      <h1>Hello.</h1>
+    {{else}}
+      <h1>Hello, {{.Username}}.</h1>
+    {{end}}
+    
     <form action="/api/user" method="post">
       <div>
         <label for="username" class="form-label">Username</label>

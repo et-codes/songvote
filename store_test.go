@@ -16,7 +16,7 @@ func TestCreateUser(t *testing.T) {
 		assert.Equal(t, id, int64(1))
 	})
 
-	t.Run("user contains correct info", func(t *testing.T) {
+	t.Run("created user contains correct info", func(t *testing.T) {
 		user, err := s.GetUserByID(1)
 		assert.NoError(t, err)
 		assert.Equal(t, "John Doe", user.Name)

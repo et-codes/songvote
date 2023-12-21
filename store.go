@@ -9,10 +9,12 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+// Store contains data related to storage.
 type Store struct {
 	db *sql.DB
 }
 
+// NewStore creates a new SQLite3 database store.
 func NewStore(dbPath string) (*Store, error) {
 	slog.Info("Opening db", "path", dbPath)
 
@@ -28,13 +30,14 @@ func NewStore(dbPath string) (*Store, error) {
 
 	store := &Store{db}
 
-	if err := store.createUserTable(); err != nil {
-		return nil, fmt.Errorf("error creating user table: %v", err)
+	if err := store.createTables(); err != nil {
+		return nil, fmt.Errorf("error creating tables: %v", err)
 	}
 
 	return store, nil
 }
 
+// CreateUser creates a new user with the given request data.
 func (s *Store) CreateUser(req NewUserRequest) (int64, error) {
 	if s.userExists(req.Name) {
 		return 0, ErrConflict
@@ -53,10 +56,11 @@ func (s *Store) CreateUser(req NewUserRequest) (int64, error) {
 		return id, NewServerError(http.StatusInternalServerError, err.Error())
 	}
 
-	slog.Info("New user created", "id", id)
+	slog.Info("New user created", "id", id, "name", req.Name)
 	return id, nil
 }
 
+// GetUserByID returns user data that matches the given ID.
 func (s *Store) GetUserByID(id int64) (*User, error) {
 	user := User{}
 
@@ -69,6 +73,7 @@ func (s *Store) GetUserByID(id int64) (*User, error) {
 	return &user, nil
 }
 
+// userExists returns true if a user with the given name is in the database.
 func (s *Store) userExists(username string) bool {
 	row := s.db.QueryRow("SELECT id FROM users WHERE name = $1", username)
 	var id int64
@@ -78,6 +83,7 @@ func (s *Store) userExists(username string) bool {
 	return true
 }
 
+// createUserTable creates the users table in the db if it doesn't exist.
 func (s *Store) createUserTable() error {
 	_, err := s.db.Exec(
 		`CREATE TABLE IF NOT EXISTS users (
@@ -88,4 +94,27 @@ func (s *Store) createUserTable() error {
 			vetoes INTEGER
 		);`)
 	return err
+}
+
+// createSessionsTable creates the sessions table in the db if it doesn't exist.
+func (s *Store) createSessionsTable() error {
+	_, err := s.db.Exec(
+		`CREATE TABLE IF NOT EXISTS sessions (
+			token TEXT PRIMARY KEY,
+			data BLOB NOT NULL,
+			expiry REAL NOT NULL
+		);
+		CREATE INDEX IF NOT EXISTS sessions_expiry_idx ON sessions(expiry)`)
+	return err
+}
+
+// createTables creates all tables required for the app.
+func (s *Store) createTables() error {
+	if err := s.createUserTable(); err != nil {
+		return err
+	}
+	if err := s.createSessionsTable(); err != nil {
+		return err
+	}
+	return nil
 }
