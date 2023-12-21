@@ -70,9 +70,14 @@ func (s *Server) index(w http.ResponseWriter, r *http.Request) {
 
 // logoutUser logs out the user by clearing session data.
 func (s *Server) logoutUser(w http.ResponseWriter, r *http.Request) {
+	username := s.sessionManager.Get(r.Context(), "username")
+	id := s.sessionManager.Get(r.Context(), "user_id")
+
 	if err := s.sessionManager.Clear(r.Context()); err != nil {
 		slog.Error(err.Error())
 	}
+
+	slog.Info("Logged out user", "user", username, "ID", id)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
@@ -101,6 +106,7 @@ func (s *Server) loginUser(w http.ResponseWriter, r *http.Request) {
 
 	s.sessionManager.Put(r.Context(), "user_id", user.ID)
 	s.sessionManager.Put(r.Context(), "username", user.Name)
+	slog.Info("Logged in user", "user", user.Name, "ID", user.ID)
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
