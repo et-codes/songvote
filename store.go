@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"golang.org/x/crypto/bcrypt"
 	_ "modernc.org/sqlite"
 )
 
@@ -43,9 +44,14 @@ func (s *Store) CreateUser(req NewUserRequest) (int64, error) {
 		return 0, ErrConflict
 	}
 
+	pwd, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return 0, NewServerError(http.StatusInternalServerError, err.Error())
+	}
+
 	result, err := s.db.Exec(
 		`INSERT INTO users(name, password, inactive, vetoes) VALUES($1, $2, $3, $4)`,
-		req.Name, req.Password, false, defaultVetoes,
+		req.Name, pwd, false, defaultVetoes,
 	)
 	if err != nil {
 		return 0, NewServerError(http.StatusInternalServerError, err.Error())

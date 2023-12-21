@@ -13,10 +13,10 @@ import (
 
 // Server contains configuration for the server.
 type Server struct {
-	port           string
-	tmpl           *template.Template
-	store          *Store
-	sessionManager *scs.SessionManager
+	port           string              // port number
+	tmpl           *template.Template  // parsed templates
+	store          *Store              // data storage
+	sessionManager *scs.SessionManager // session manager
 }
 
 // NewServer creates and configures a new server.

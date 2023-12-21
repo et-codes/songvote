@@ -20,7 +20,7 @@ func TestCreateUser(t *testing.T) {
 		user, err := s.GetUserByID(1)
 		assert.NoError(t, err)
 		assert.Equal(t, "John Doe", user.Name)
-		assert.Equal(t, "password", user.Password)
+		assert.NotEmpty(t, user.Password)
 		assert.False(t, user.Inactive)
 		assert.Greater(t, user.Vetoes, 0)
 	})
