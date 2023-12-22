@@ -20,6 +20,12 @@ type Server struct {
 	sessionManager *scs.SessionManager // session manager
 }
 
+// PageData holds data being passed to a page template.
+type PageData struct {
+	UserID   int
+	Username string
+}
+
 // NewServer creates and configures a new server.
 func NewServer(port string, store *Store) *Server {
 	var tmpl = template.Must(template.ParseGlob("templates/*"))
@@ -39,7 +45,9 @@ func NewServer(port string, store *Store) *Server {
 // ListenAndServe starts the web server.
 func (s *Server) ListenAndServe() error {
 	router := mux.NewRouter()
-	router.HandleFunc("/", s.index).Methods(http.MethodGet)
+	router.HandleFunc("/", s.render("index.gohtml")).Methods(http.MethodGet)
+	router.HandleFunc("/login", s.render("login.gohtml")).Methods(http.MethodGet)
+	router.HandleFunc("/register", s.render("register.gohtml")).Methods(http.MethodGet)
 	router.HandleFunc("/api/user", s.createUser).Methods(http.MethodPost)
 	router.HandleFunc("/api/login", s.loginUser).Methods(http.MethodPost)
 	router.HandleFunc("/api/logout", s.logoutUser).Methods(http.MethodGet)
@@ -53,18 +61,16 @@ func (s *Server) ListenAndServe() error {
 	return http.ListenAndServe(port, s.sessionManager.LoadAndSave(router))
 }
 
-// index executes the index page template.
-func (s *Server) index(w http.ResponseWriter, r *http.Request) {
-	data := struct {
-		UserID   int
-		Username string
-	}{
-		UserID:   s.sessionManager.GetInt(r.Context(), "user_id"),
-		Username: s.sessionManager.GetString(r.Context(), "username"),
-	}
-
-	if err := s.tmpl.ExecuteTemplate(w, "index.gohtml", data); err != nil {
-		slog.Error(err.Error())
+// render returns a handler function that executes the given template.
+func (s *Server) render(template string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		data := PageData{
+			UserID:   s.sessionManager.GetInt(r.Context(), "user_id"),
+			Username: s.sessionManager.GetString(r.Context(), "username"),
+		}
+		if err := s.tmpl.ExecuteTemplate(w, template, data); err != nil {
+			slog.Error(err.Error())
+		}
 	}
 }
 
