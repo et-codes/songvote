@@ -7,7 +7,8 @@ import (
 )
 
 func TestUserStore(t *testing.T) {
-	s, _ := NewStore(":memory:")
+	s, err := NewStore(":memory:")
+	assert.NoError(t, err)
 
 	t.Run("creates user and gets id", func(t *testing.T) {
 		req := NewUserRequest{"John Doe", "password"}
@@ -48,5 +49,36 @@ func TestUserStore(t *testing.T) {
 		user, err := s.GetUserByName("John Doe")
 		assert.NoError(t, err)
 		assert.Equal(t, "John Doe", user.Name)
+	})
+}
+
+func TestSongStore(t *testing.T) {
+
+	var s *Store
+	var user *User
+	var err error
+
+	t.Run("set up store and user", func(t *testing.T) {
+		s, err = NewStore(":memory:")
+		assert.NoError(t, err)
+
+		req := NewUserRequest{"John Doe", "password"}
+		_, err = s.CreateUser(req)
+		assert.NoError(t, err)
+
+		user, err = s.GetUserByName("John Doe")
+		assert.NoError(t, err)
+	})
+
+	t.Run("creates song and returns id", func(t *testing.T) {
+		req := NewSongRequest{
+			Title:   "Mirror In The Bathroom",
+			Artist:  "Oingo Boingo",
+			LinkURL: "https://youtu.be/SHWrmIzgB5A",
+			AddedBy: user.ID,
+		}
+		id, err := s.CreateSong(req)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, id)
 	})
 }

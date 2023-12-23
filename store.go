@@ -31,7 +31,7 @@ func NewStore(dbPath string) (*Store, error) {
 
 	store := &Store{db}
 
-	if err := store.createTables(); err != nil {
+	if err := store.CreateTables(); err != nil {
 		return nil, fmt.Errorf("error creating tables: %v", err)
 	}
 
@@ -51,7 +51,7 @@ func (s *Store) CreateUser(req NewUserRequest) (int64, error) {
 
 	result, err := s.db.Exec(
 		`INSERT INTO users(name, password, inactive, vetoes) VALUES($1, $2, $3, $4)`,
-		req.Name, pwd, false, defaultVetoes,
+		req.Name, pwd, false, initialVetoes,
 	)
 	if err != nil {
 		return 0, NewServerError(http.StatusInternalServerError, err.Error())
@@ -100,38 +100,26 @@ func (s *Store) userExists(username string) bool {
 	return true
 }
 
-// createUserTable creates the users table in the db if it doesn't exist.
-func (s *Store) createUserTable() error {
-	_, err := s.db.Exec(
-		`CREATE TABLE IF NOT EXISTS users (
-			id INTEGER PRIMARY KEY,
-			name TEXT NOT NULL,
-			password TEXT NOT NULL,
-			inactive BOOLEAN,
-			vetoes INTEGER
-		);`)
-	return err
-}
+// CreateSong creates a new user with the given request data.
+func (s *Store) CreateSong(req NewSongRequest) (int64, error) {
+	// if s.songExists(req.Title, req.Artist) {
+	// 	return 0, ErrConflict
+	// }
 
-// createSessionsTable creates the sessions table in the db if it doesn't exist.
-func (s *Store) createSessionsTable() error {
-	_, err := s.db.Exec(
-		`CREATE TABLE IF NOT EXISTS sessions (
-			token TEXT PRIMARY KEY,
-			data BLOB NOT NULL,
-			expiry REAL NOT NULL
-		);
-		CREATE INDEX IF NOT EXISTS sessions_expiry_idx ON sessions(expiry)`)
-	return err
-}
+	result, err := s.db.Exec(
+		`INSERT INTO songs(title, artist, link_url, votes, vetoed, added_by) 
+		VALUES($1, $2, $3, $4, $5, $6)`,
+		req.Title, req.Artist, req.LinkURL, 1, false, req.AddedBy,
+	)
+	if err != nil {
+		return 0, NewServerError(http.StatusInternalServerError, err.Error())
+	}
 
-// createTables creates all tables required for the app.
-func (s *Store) createTables() error {
-	if err := s.createUserTable(); err != nil {
-		return err
+	id, err := result.LastInsertId()
+	if err != nil {
+		return id, NewServerError(http.StatusInternalServerError, err.Error())
 	}
-	if err := s.createSessionsTable(); err != nil {
-		return err
-	}
-	return nil
+
+	slog.Info("New song created", "id", id, "title", req.Title, "artist", req.Artist)
+	return id, nil
 }
