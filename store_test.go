@@ -81,4 +81,35 @@ func TestSongStore(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotEmpty(t, id)
 	})
+
+	t.Run("can get song", func(t *testing.T) {
+		song, err := s.GetSongByID(1)
+		assert.NoError(t, err)
+		assert.Equal(t, song.ID, int64(1))
+		assert.Equal(t, song.Title, "Mirror In The Bathroom")
+		assert.Equal(t, song.Artist, "Oingo Boingo")
+		assert.Equal(t, song.LinkURL, "https://youtu.be/SHWrmIzgB5A")
+		assert.Equal(t, song.AddedBy, int64(1))
+		assert.Equal(t, song.Votes, 1)
+	})
+
+	t.Run("cannot create duplicate song/artist", func(t *testing.T) {
+		req := NewSongRequest{
+			Title:   "Mirror In The Bathroom",
+			Artist:  "Oingo Boingo",
+			LinkURL: "https://youtu.be/SHWrmIzgB5A",
+			AddedBy: user.ID,
+		}
+		_, err := s.CreateSong(req)
+		assert.Error(t, err)
+	})
+
+	t.Run("creating song records a vote by submitter", func(t *testing.T) {
+		votes, err := s.GetVotesBySongID(1)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(votes))
+		if len(votes) > 0 {
+			assert.Equal(t, int64(1), votes[0].UserID)
+		}
+	})
 }

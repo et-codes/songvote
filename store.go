@@ -102,9 +102,9 @@ func (s *Store) userExists(username string) bool {
 
 // CreateSong creates a new user with the given request data.
 func (s *Store) CreateSong(req NewSongRequest) (int64, error) {
-	// if s.songExists(req.Title, req.Artist) {
-	// 	return 0, ErrConflict
-	// }
+	if s.songExists(req.Title, req.Artist) {
+		return 0, ErrConflict
+	}
 
 	result, err := s.db.Exec(
 		`INSERT INTO songs(title, artist, link_url, votes, vetoed, added_by) 
@@ -121,5 +121,82 @@ func (s *Store) CreateSong(req NewSongRequest) (int64, error) {
 	}
 
 	slog.Info("New song created", "id", id, "title", req.Title, "artist", req.Artist)
+
+	voteReq := NewVoteRequest{SongID: id, UserID: req.AddedBy}
+	_, err = s.CreateVote(voteReq)
+	if err != nil {
+		return id, err
+	}
+
+	return id, nil
+}
+
+// GetSongByID returns song data that matches the given ID.
+func (s *Store) GetSongByID(id int64) (*Song, error) {
+	song := Song{}
+
+	row := s.db.QueryRow("SELECT * FROM songs WHERE id = $1", id)
+	err := row.Scan(&song.ID, &song.Title, &song.Artist, &song.LinkURL,
+		&song.Votes, &song.Vetoed, &song.AddedBy)
+	if err != nil {
+		slog.Error("error retreiving song", "error", err)
+		return nil, ErrNotFound
+	}
+
+	return &song, nil
+}
+
+// songExists checks whether a title/artist combination already exists.
+func (s *Store) songExists(title, artist string) bool {
+	var id int64
+	row := s.db.QueryRow("SELECT id FROM songs WHERE title = $1 AND artist = $2",
+		title, artist)
+	err := row.Scan(&id)
+	return err == nil
+}
+
+// GetVotesBySongID returns a slice of votes for the given song ID.
+func (s *Store) GetVotesBySongID(songID int64) ([]Vote, error) {
+	votes := []Vote{}
+	rows, err := s.db.Query("SELECT * FROM votes WHERE song_id = $1", songID)
+	if err != nil {
+		slog.Error("error querying votes", "error", err)
+		return nil, fmt.Errorf("error querying votes: %v", err)
+	}
+
+	for rows.Next() {
+		vote := Vote{}
+		err := rows.Scan(&vote.ID, &vote.SongID, &vote.UserID)
+		if err != nil {
+			slog.Error("Error scanning rows", "error", err)
+			return nil, fmt.Errorf("error scanning rows: %v", err)
+		}
+		votes = append(votes, vote)
+	}
+
+	return votes, nil
+}
+
+// CreateVote adds a vote to the database.
+func (s *Store) CreateVote(req NewVoteRequest) (int64, error) {
+	if req.SongID < 1 || req.UserID < 1 {
+		return 0, fmt.Errorf("invalid song/user ID")
+	}
+
+	result, err := s.db.Exec("INSERT INTO votes(song_id, user_id) VALUES($1, $2)",
+		req.SongID, req.UserID)
+	if err != nil {
+		slog.Error("Error recording vote", "error", err)
+		return 0, fmt.Errorf("error recording vote: %v", err)
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		slog.Error("error retreiving vote id", "error", err)
+		return id, fmt.Errorf("error retreiving vote id: %v", err)
+	}
+
+	slog.Info("New vote created", "id", id, "song_id", req.SongID, "user_id", req.UserID)
+
 	return id, nil
 }
