@@ -109,7 +109,7 @@ func (s *Store) CreateSong(req NewSongRequest) (int64, error) {
 	result, err := s.db.Exec(
 		`INSERT INTO songs(title, artist, link_url, votes, vetoed, added_by) 
 		VALUES($1, $2, $3, $4, $5, $6)`,
-		req.Title, req.Artist, req.LinkURL, 1, false, req.AddedBy,
+		req.Title, req.Artist, req.LinkURL, 0, false, req.AddedBy,
 	)
 	if err != nil {
 		return 0, NewServerError(http.StatusInternalServerError, err.Error())
@@ -144,6 +144,29 @@ func (s *Store) GetSongByID(id int64) (*Song, error) {
 	}
 
 	return &song, nil
+}
+
+// GetSongs returns all songs in the database.
+func (s *Store) GetSongs() ([]*Song, error) {
+	songs := []*Song{}
+
+	rows, err := s.db.Query("SELECT * FROM songs")
+	if err != nil {
+		slog.Error("error getting songs from db", "error", err)
+		return nil, err
+	}
+
+	for rows.Next() {
+		song := Song{}
+		err := rows.Scan(&song.ID, &song.Title, &song.Artist, &song.LinkURL,
+			&song.Votes, &song.Vetoed, &song.AddedBy)
+		if err != nil {
+			slog.Error("error scanning rows", "error", err)
+		}
+		songs = append(songs, &song)
+	}
+
+	return songs, nil
 }
 
 // songExists checks whether a title/artist combination already exists.
@@ -183,6 +206,20 @@ func (s *Store) CreateVote(req NewVoteRequest) (int64, error) {
 		return 0, fmt.Errorf("invalid song/user ID")
 	}
 
+	// Check if user has already voted for the song.
+	votes, err := s.GetVotesBySongID(req.SongID)
+	if err != nil {
+		slog.Error("error getting votes", "error", err)
+		return 0, fmt.Errorf("error getting votes: %v", err)
+	}
+
+	for _, vote := range votes {
+		if vote.SongID == req.SongID && vote.UserID == req.UserID {
+			return 0, fmt.Errorf("user has already voted for this song")
+		}
+	}
+
+	// Create the vote record.
 	result, err := s.db.Exec("INSERT INTO votes(song_id, user_id) VALUES($1, $2)",
 		req.SongID, req.UserID)
 	if err != nil {
@@ -197,6 +234,14 @@ func (s *Store) CreateVote(req NewVoteRequest) (int64, error) {
 	}
 
 	slog.Info("New vote created", "id", id, "song_id", req.SongID, "user_id", req.UserID)
+
+	// Update vote count on the song.
+	_, err = s.db.Exec("UPDATE songs SET votes = $1 WHERE id = $2",
+		len(votes)+1, req.SongID)
+	if err != nil {
+		slog.Error("error updating vote count", "error", err)
+		return id, fmt.Errorf("error updating vote count: %v", err)
+	}
 
 	return id, nil
 }

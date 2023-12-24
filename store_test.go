@@ -112,4 +112,29 @@ func TestSongStore(t *testing.T) {
 			assert.Equal(t, int64(1), votes[0].UserID)
 		}
 	})
+
+	t.Run("can vote for a song", func(t *testing.T) {
+		req := NewVoteRequest{1, 2}
+		_, err := s.CreateVote(req)
+		assert.NoError(t, err)
+
+		song, err := s.GetSongByID(1)
+		assert.NoError(t, err)
+		assert.Equal(t, 2, song.Votes)
+	})
+
+	t.Run("user cannot vote for same song twice", func(t *testing.T) {
+		req := NewVoteRequest{1, 1}
+		_, err := s.CreateVote(req)
+		assert.Error(t, err)
+	})
+
+	t.Run("can get all songs", func(t *testing.T) {
+		songs, err := s.GetSongs()
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(songs))
+
+		song, _ := s.GetSongByID(1)
+		assert.Equal(t, song, songs[0])
+	})
 }
