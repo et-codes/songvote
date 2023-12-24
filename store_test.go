@@ -118,7 +118,7 @@ func TestSongStore(t *testing.T) {
 	})
 
 	t.Run("can vote for a song", func(t *testing.T) {
-		req := NewVoteRequest{1, 2}
+		req := VoteRequest{1, 2}
 		_, err := s.VoteForSong(req)
 		assert.NoError(t, err)
 
@@ -128,7 +128,7 @@ func TestSongStore(t *testing.T) {
 	})
 
 	t.Run("user cannot vote for same song twice", func(t *testing.T) {
-		req := NewVoteRequest{1, 1}
+		req := VoteRequest{1, 1}
 		_, err := s.VoteForSong(req)
 		assert.Error(t, err)
 	})
@@ -143,12 +143,41 @@ func TestSongStore(t *testing.T) {
 	})
 
 	t.Run("voting for nonexistent song or user ID", func(t *testing.T) {
-		req := NewVoteRequest{999, 1}
+		req := VoteRequest{999, 1}
 		_, err := s.VoteForSong(req)
 		assert.Error(t, err)
 
-		req = NewVoteRequest{1, 999}
+		req = VoteRequest{1, 999}
 		_, err = s.VoteForSong(req)
+		assert.Error(t, err)
+	})
+
+	t.Run("can veto a song", func(t *testing.T) {
+		req := VetoRequest{1, 1}
+		id, err := s.VetoSong(req)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, id)
+	})
+
+	t.Run("cannot veto a song twice", func(t *testing.T) {
+		req := VetoRequest{1, 2}
+		_, err := s.VetoSong(req)
+		assert.Error(t, err)
+	})
+
+	t.Run("user can't veto without vetoes", func(t *testing.T) {
+		songReq := NewSongRequest{
+			Title:   "Some Other Song",
+			Artist:  "No Oingos Or Boingos",
+			LinkURL: "https://youtu.be/SHWrmIzgB5A",
+			AddedBy: user.ID,
+		}
+		id, err := s.CreateSong(songReq)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, id)
+
+		vetoReq := VetoRequest{2, 1}
+		_, err = s.VetoSong(vetoReq)
 		assert.Error(t, err)
 	})
 }

@@ -17,10 +17,6 @@ type NewUserRequest struct {
 	Password string `json:"password"`
 }
 
-type NewUserResponse struct {
-	ID int64 `json:"id"`
-}
-
 // Song types
 
 type Song struct {
@@ -48,7 +44,7 @@ type Vote struct {
 	UserID int64 `json:"user_id"`
 }
 
-type NewVoteRequest struct {
+type VoteRequest struct {
 	SongID int64 `json:"song_id"`
 	UserID int64 `json:"user_id"`
 }
@@ -61,7 +57,7 @@ type Veto struct {
 	UserID int64 `json:"user_id"`
 }
 
-type NewVetoRequest struct {
+type VetoRequest struct {
 	SongID int64 `json:"song_id"`
 	UserID int64 `json:"user_id"`
 }

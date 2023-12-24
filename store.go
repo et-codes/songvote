@@ -130,7 +130,7 @@ func (s *Store) CreateSong(req NewSongRequest) (int64, error) {
 
 	slog.Info("New song created", "id", id, "title", req.Title, "artist", req.Artist)
 
-	voteReq := NewVoteRequest{SongID: id, UserID: req.AddedBy}
+	voteReq := VoteRequest{SongID: id, UserID: req.AddedBy}
 	_, err = s.VoteForSong(voteReq)
 	if err != nil {
 		return id, err
@@ -217,7 +217,7 @@ func (s *Store) GetVotesBySongID(songID int64) ([]Vote, error) {
 }
 
 // VoteForSong adds a vote to a song.
-func (s *Store) VoteForSong(req NewVoteRequest) (int64, error) {
+func (s *Store) VoteForSong(req VoteRequest) (int64, error) {
 	// Validate input.
 	if req.SongID < 1 || req.UserID < 1 {
 		return 0, fmt.Errorf("invalid song/user ID")
@@ -264,7 +264,7 @@ func (s *Store) VoteForSong(req NewVoteRequest) (int64, error) {
 }
 
 // createVote adds a vote record to the database.
-func (s *Store) createVote(req NewVoteRequest) (int64, error) {
+func (s *Store) createVote(req VoteRequest) (int64, error) {
 	result, err := s.db.Exec("INSERT INTO votes(song_id, user_id) VALUES($1, $2)",
 		req.SongID, req.UserID)
 	if err != nil {
@@ -276,6 +276,85 @@ func (s *Store) createVote(req NewVoteRequest) (int64, error) {
 	if err != nil {
 		slog.Error("error retreiving vote id", "error", err)
 		return id, fmt.Errorf("error retreiving vote id: %v", err)
+	}
+
+	return id, nil
+}
+
+// VetoSong adds a veto for a song.
+func (s *Store) VetoSong(req VetoRequest) (int64, error) {
+	// Validate input.
+	if req.SongID < 1 || req.UserID < 1 {
+		return 0, fmt.Errorf("invalid song/user ID")
+	}
+
+	if !s.userIDExists(req.UserID) {
+		return 0, fmt.Errorf("user %d not found", req.UserID)
+	}
+
+	if !s.songIDExists(req.SongID) {
+		return 0, fmt.Errorf("song %d not found", req.SongID)
+	}
+
+	// Check if song is already vetoed.
+	song, err := s.GetSongByID(req.SongID)
+	if err != nil {
+		return 0, err
+	}
+
+	if song.Vetoed {
+		return 0, fmt.Errorf("song %d is already vetoed", req.SongID)
+	}
+
+	// Check if user has vetoes remaining.
+	user, err := s.GetUserByID(req.UserID)
+	if err != nil {
+		return 0, err
+	}
+
+	if user.Vetoes == 0 {
+		return 0, fmt.Errorf("user %d doesn't have any vetoes remaining", req.UserID)
+	}
+
+	// Add veto record.
+	id, err := s.createVeto(req)
+	if err != nil {
+		return id, err
+	}
+	slog.Info("New veto created", "id", id, "song_id", req.SongID, "user_id", req.UserID)
+
+	// Update veto flag of song.
+	_, err = s.db.Exec("UPDATE songs SET vetoed = $1 WHERE id = $2",
+		true, req.SongID)
+	if err != nil {
+		slog.Error("error updating veto field of song", "error", err)
+		return id, fmt.Errorf("error updating veto field of song: %v", err)
+	}
+
+	// Update veto count of user.
+	_, err = s.db.Exec("UPDATE users SET vetoes = $1 WHERE id = $2",
+		user.Vetoes-1, req.UserID)
+	if err != nil {
+		slog.Error("error updating user veto count", "error", err)
+		return id, fmt.Errorf("error updating user veto count: %v", err)
+	}
+
+	return id, nil
+}
+
+// createVeto adds a veto record to the database.
+func (s *Store) createVeto(req VetoRequest) (int64, error) {
+	result, err := s.db.Exec("INSERT INTO vetoes(song_id, user_id) VALUES($1, $2)",
+		req.SongID, req.UserID)
+	if err != nil {
+		slog.Error("Error recording veto", "error", err)
+		return 0, fmt.Errorf("error recording veto: %v", err)
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		slog.Error("error retreiving veto id", "error", err)
+		return id, fmt.Errorf("error retreiving veto id: %v", err)
 	}
 
 	return id, nil
