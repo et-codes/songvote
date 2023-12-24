@@ -32,10 +32,10 @@ func TestUserStore(t *testing.T) {
 	})
 
 	t.Run("userExists works", func(t *testing.T) {
-		exists := s.userExists("John Doe")
+		exists := s.usernameExists("John Doe")
 		assert.True(t, exists)
 
-		exists = s.userExists("Aloysius Abercrombie")
+		exists = s.usernameExists("Aloysius Abercrombie")
 		assert.False(t, exists)
 	})
 
@@ -63,6 +63,10 @@ func TestSongStore(t *testing.T) {
 		assert.NoError(t, err)
 
 		req := NewUserRequest{"John Doe", "password"}
+		_, err = s.CreateUser(req)
+		assert.NoError(t, err)
+
+		req = NewUserRequest{"Jane Doe", "password"}
 		_, err = s.CreateUser(req)
 		assert.NoError(t, err)
 
@@ -115,7 +119,7 @@ func TestSongStore(t *testing.T) {
 
 	t.Run("can vote for a song", func(t *testing.T) {
 		req := NewVoteRequest{1, 2}
-		_, err := s.CreateVote(req)
+		_, err := s.VoteForSong(req)
 		assert.NoError(t, err)
 
 		song, err := s.GetSongByID(1)
@@ -125,7 +129,7 @@ func TestSongStore(t *testing.T) {
 
 	t.Run("user cannot vote for same song twice", func(t *testing.T) {
 		req := NewVoteRequest{1, 1}
-		_, err := s.CreateVote(req)
+		_, err := s.VoteForSong(req)
 		assert.Error(t, err)
 	})
 
@@ -136,5 +140,15 @@ func TestSongStore(t *testing.T) {
 
 		song, _ := s.GetSongByID(1)
 		assert.Equal(t, song, songs[0])
+	})
+
+	t.Run("voting for nonexistent song or user ID", func(t *testing.T) {
+		req := NewVoteRequest{999, 1}
+		_, err := s.VoteForSong(req)
+		assert.Error(t, err)
+
+		req = NewVoteRequest{1, 999}
+		_, err = s.VoteForSong(req)
+		assert.Error(t, err)
 	})
 }
