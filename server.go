@@ -1,9 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"log/slog"
 	"net/http"
-	"text/template"
+	"strconv"
 	"time"
 
 	"github.com/alexedwards/scs/sqlite3store"
@@ -15,20 +16,12 @@ import (
 // Server contains configuration for the server.
 type Server struct {
 	port           string              // port number
-	tmpl           *template.Template  // parsed templates
 	store          *Store              // data storage
 	sessionManager *scs.SessionManager // session manager
 }
 
-// PageData holds data being passed to a page template.
-type PageData struct {
-	UserID   int
-	Username string
-}
-
 // NewServer creates and configures a new server.
 func NewServer(port string, store *Store) *Server {
-	var tmpl = template.Must(template.ParseGlob("templates/*"))
 	sessionManager := scs.New()
 	sessionManager.Store = sqlite3store.New(store.db)
 	sessionManager.Lifetime = 24 * time.Hour
@@ -36,7 +29,6 @@ func NewServer(port string, store *Store) *Server {
 
 	return &Server{
 		port:           port,
-		tmpl:           tmpl,
 		store:          store,
 		sessionManager: sessionManager,
 	}
@@ -44,16 +36,14 @@ func NewServer(port string, store *Store) *Server {
 
 // ListenAndServe starts the web server.
 func (s *Server) ListenAndServe() error {
+	fs := http.FileServer(http.Dir("./static/"))
+
 	router := mux.NewRouter()
-	router.HandleFunc("/", s.render("index.gohtml")).Methods(http.MethodGet)
-	router.HandleFunc("/login", s.render("login.gohtml")).Methods(http.MethodGet)
-	router.HandleFunc("/register", s.render("register.gohtml")).Methods(http.MethodGet)
+	router.HandleFunc("/", fs.ServeHTTP).Methods(http.MethodGet)
 	router.HandleFunc("/api/user", s.createUser).Methods(http.MethodPost)
+	router.HandleFunc("/api/user/{id}", s.getUser).Methods(http.MethodGet)
 	router.HandleFunc("/api/login", s.loginUser).Methods(http.MethodPost)
 	router.HandleFunc("/api/logout", s.logoutUser).Methods(http.MethodGet)
-
-	fs := http.FileServer(http.Dir("./static/"))
-	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
 
 	router.Use(logRequests)
 
@@ -61,17 +51,19 @@ func (s *Server) ListenAndServe() error {
 	return http.ListenAndServe(port, s.sessionManager.LoadAndSave(router))
 }
 
-// render returns a handler function that executes the given template.
-func (s *Server) render(template string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		data := PageData{
-			UserID:   s.sessionManager.GetInt(r.Context(), "user_id"),
-			Username: s.sessionManager.GetString(r.Context(), "username"),
-		}
-		if err := s.tmpl.ExecuteTemplate(w, template, data); err != nil {
-			slog.Error(err.Error())
-		}
+// getUser returns the user with the given id.
+func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
+	userID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
+	if err != nil {
+		writeError(w, NewServerError(http.StatusInternalServerError, err.Error()))
 	}
+
+	user, err := s.store.GetUserByID(userID)
+	if err != nil {
+		writeError(w, ErrNotFound)
+	}
+
+	writeJSON(w, http.StatusOK, user)
 }
 
 // logoutUser logs out the user by clearing session data.
@@ -84,7 +76,8 @@ func (s *Server) logoutUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	slog.Info("Logged out user", "user", username, "ID", id)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+
+	writeJSON(w, http.StatusNoContent, nil)
 }
 
 // loginUser processes requests to log in an existing user.
@@ -114,7 +107,7 @@ func (s *Server) loginUser(w http.ResponseWriter, r *http.Request) {
 	s.sessionManager.Put(r.Context(), "username", user.Name)
 	slog.Info("Logged in user", "user", user.Name, "ID", user.ID)
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	writeJSON(w, http.StatusNoContent, nil)
 }
 
 // createUser processes requests to create a new user.
@@ -133,5 +126,19 @@ func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
 	s.sessionManager.Put(r.Context(), "user_id", id)
 	s.sessionManager.Put(r.Context(), "username", userReq.Name)
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	newUser := NewUserResponse{id, userReq.Name}
+
+	writeJSON(w, http.StatusCreated, newUser)
+}
+
+// writeJSON encodes v into a JSON object and writes it to the response writer
+// with the provided status code in the header.
+func writeJSON(w http.ResponseWriter, status int, v any) {
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(status)
+	if v != nil {
+		if err := json.NewEncoder(w).Encode(v); err != nil {
+			writeError(w, err.(ServerError))
+		}
+	}
 }

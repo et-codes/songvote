@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 )
 
@@ -36,9 +37,11 @@ func (e ServerError) Error() string {
 	return fmt.Sprintf("status: %d, error: %v", e.Code, e.Message)
 }
 
+// writeError sends a JSON response containing ServerError.
 func writeError(w http.ResponseWriter, e ServerError) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(e.Code)
-	json, _ := json.Marshal(e)
-	fmt.Fprint(w, string(json))
+	if err := json.NewEncoder(w).Encode(e); err != nil {
+		slog.Error("error encoding JSON", "error", err.Error())
+	}
 }

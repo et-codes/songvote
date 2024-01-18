@@ -17,6 +17,11 @@ type NewUserRequest struct {
 	Password string `json:"password"`
 }
 
+type NewUserResponse struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
 // Song types
 
 type Song struct {
