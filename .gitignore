@@ -24,6 +24,3 @@ go.work
 # Test files
 cover.out
 cover.html
-
-# Database folder
-db
