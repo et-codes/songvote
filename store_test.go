@@ -50,6 +50,20 @@ func TestUserStore(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "John Doe", user.Name)
 	})
+
+	t.Run("can get all users", func(t *testing.T) {
+		users, err := s.GetUsers()
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(users))
+	})
+
+	t.Run("can delete a user", func(t *testing.T) {
+		err := s.DeleteUser(1)
+		assert.NoError(t, err)
+
+		_, err = s.GetUserByID(1)
+		assert.Error(t, err)
+	})
 }
 
 func TestSongStore(t *testing.T) {

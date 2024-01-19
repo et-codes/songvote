@@ -41,7 +41,9 @@ func (s *Server) ListenAndServe() error {
 	router := mux.NewRouter()
 	router.HandleFunc("/", fs.ServeHTTP).Methods(http.MethodGet)
 	router.HandleFunc("/api/user", s.createUser).Methods(http.MethodPost)
+	router.HandleFunc("/api/user", s.getUsers).Methods(http.MethodGet)
 	router.HandleFunc("/api/user/{id}", s.getUser).Methods(http.MethodGet)
+	router.HandleFunc("/api/user/{id}", s.deleteUser).Methods(http.MethodDelete)
 	router.HandleFunc("/api/login", s.loginUser).Methods(http.MethodPost)
 	router.HandleFunc("/api/logout", s.logoutUser).Methods(http.MethodGet)
 
@@ -49,6 +51,16 @@ func (s *Server) ListenAndServe() error {
 
 	slog.Info("Server listening", "port", port)
 	return http.ListenAndServe(port, s.sessionManager.LoadAndSave(router))
+}
+
+// getUsers returns a list of all users with their ids.
+func (s *Server) getUsers(w http.ResponseWriter, r *http.Request) {
+	users, err := s.store.GetUsers()
+	if err != nil {
+		writeError(w, NewServerError(http.StatusInternalServerError, err.Error()))
+	}
+
+	writeJSON(w, http.StatusOK, users)
 }
 
 // getUser returns the user with the given id.
@@ -64,6 +76,21 @@ func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, user)
+}
+
+// deleteUser deletes the user with the given ID.
+func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
+	if err != nil {
+		writeError(w, NewServerError(http.StatusInternalServerError, err.Error()))
+	}
+
+	if err := s.store.DeleteUser(id); err != nil {
+		slog.Error("error deleting user", "id", id, "error", err.Error())
+		writeError(w, ErrNotFound)
+	}
+
+	writeJSON(w, http.StatusNoContent, nil)
 }
 
 // logoutUser logs out the user by clearing session data.

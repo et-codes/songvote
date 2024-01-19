@@ -66,6 +66,28 @@ func (s *Store) CreateUser(req NewUserRequest) (int64, error) {
 	return id, nil
 }
 
+// GetUsers returns a list of all users.
+func (s *Store) GetUsers() ([]User, error) {
+	users := []User{}
+
+	rows, err := s.db.Query(`SELECT id, name, inactive, vetoes FROM users`)
+	if err != nil {
+		slog.Error("error getting users from db", "error", err)
+		return nil, NewServerError(http.StatusInternalServerError, err.Error())
+	}
+
+	for rows.Next() {
+		user := User{}
+		err := rows.Scan(&user.ID, &user.Name, &user.Inactive, &user.Vetoes)
+		if err != nil {
+			slog.Error("error scanning rows", "error", err)
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
 // GetUserByID returns user data that matches the given ID.
 func (s *Store) GetUserByID(id int64) (*User, error) {
 	user := User{}
@@ -88,6 +110,22 @@ func (s *Store) GetUserByName(username string) (*User, error) {
 		return nil, err
 	}
 	return user, nil
+}
+
+// DeleteUser deletes the user with the given ID.
+func (s *Store) DeleteUser(id int64) error {
+	result, err := s.db.Exec("DELETE FROM users WHERE id = $1", id)
+	if err != nil {
+		slog.Error("error deleting from db", "error", err.Error())
+		return NewServerError(http.StatusInternalServerError, err.Error())
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return nil
 }
 
 // usernameExists returns true if a user with the given name is in the database.

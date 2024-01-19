@@ -7,7 +7,7 @@ const initialVetoes = 1
 type User struct {
 	ID       int64  `json:"id"`
 	Name     string `json:"name"`
-	Password string `json:"password"`
+	Password string `json:"password,omitempty"`
 	Inactive bool   `json:"inactive"`
 	Vetoes   int    `json:"vetoes"`
 }
