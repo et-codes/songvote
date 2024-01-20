@@ -82,33 +82,38 @@ func (s *Store) GetUsers() ([]User, error) {
 		if err != nil {
 			slog.Error("error scanning rows", "error", err)
 		}
-		users = append(users, user)
+		if !user.Inactive {
+			users = append(users, user)
+		}
 	}
 
 	return users, nil
 }
 
-// GetUserByID returns user data that matches the given ID.
+// GetUserByID returns user data that matches the given ID if that user is
+// not flagged as Inactive.
 func (s *Store) GetUserByID(id int64) (*User, error) {
 	user := User{}
 
 	row := s.db.QueryRow("SELECT * FROM users WHERE id = $1", id)
 	err := row.Scan(&user.ID, &user.Name, &user.Password, &user.Inactive, &user.Vetoes)
-	if err != nil {
+	if err != nil || user.Inactive {
 		return nil, ErrNotFound
 	}
 
 	return &user, nil
 }
 
-// GetUserByName returns user data that matches the given username.
+// GetUserByName returns user data that matches the given username if that
+// user is not flagged as Inactive.
 func (s *Store) GetUserByName(username string) (*User, error) {
 	row := s.db.QueryRow("SELECT * FROM users WHERE name = $1", username)
 	user := &User{}
 	err := row.Scan(&user.ID, &user.Name, &user.Password, &user.Inactive, &user.Vetoes)
-	if err != nil {
-		return nil, err
+	if err != nil || user.Inactive {
+		return nil, ErrNotFound
 	}
+
 	return user, nil
 }
 
@@ -116,7 +121,7 @@ func (s *Store) GetUserByName(username string) (*User, error) {
 func (s *Store) UpdateUser(updatedUser *User) error {
 	user, err := s.GetUserByID(updatedUser.ID)
 	if err != nil {
-		slog.Error("error updating user: %v", "error", err.Error())
+		slog.Error("error updating user", "error", err.Error())
 		return ErrNotFound
 	}
 
@@ -167,11 +172,13 @@ func (s *Store) UpdateUser(updatedUser *User) error {
 	return nil
 }
 
-// DeleteUser deletes the user with the given ID.
+// DeleteUser performs a soft delete of the user with the given ID. The user
+// is marked as inactive, and is not included in user search results. Votes,
+// vetoes, and added songs by that user remain in the database.
 func (s *Store) DeleteUser(id int64) error {
-	result, err := s.db.Exec("DELETE FROM users WHERE id = $1", id)
+	result, err := s.db.Exec("UPDATE users SET inactive = $1 WHERE id = $2", true, id)
 	if err != nil {
-		slog.Error("error deleting from db", "error", err.Error())
+		slog.Error("error deleting user", "error", err.Error())
 		return NewServerError(http.StatusInternalServerError, err.Error())
 	}
 

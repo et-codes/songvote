@@ -66,23 +66,25 @@ func TestUserStore(t *testing.T) {
 	})
 
 	t.Run("can update a user", func(t *testing.T) {
-		req := NewUserRequest{"John Doe", "password"}
-		id, _ := s.CreateUser(req)
+		req := NewUserRequest{"John Blow", "password"}
+		id, err := s.CreateUser(req)
+		assert.NoError(t, err)
 
 		updatedUser := User{
 			ID:       id,
 			Name:     "John Dough",
 			Password: "new_password",
-			Inactive: true,
+			Inactive: false,
 			Vetoes:   2,
 		}
 
-		err := s.UpdateUser(&updatedUser)
+		err = s.UpdateUser(&updatedUser)
 		assert.NoError(t, err)
 
-		user, _ := s.GetUserByID(id)
+		user, err := s.GetUserByID(id)
+		assert.NoError(t, err)
 		assert.Equal(t, "John Dough", user.Name)
-		assert.True(t, user.Inactive)
+		assert.False(t, user.Inactive)
 		assert.Equal(t, 2, user.Vetoes)
 	})
 }
