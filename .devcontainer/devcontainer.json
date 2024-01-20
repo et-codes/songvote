@@ -7,14 +7,16 @@
     // Give the container a better name
     "runArgs": [
         "--name",
-        "songvote"
+        "songvote",
+        "--env-file",
+        ".devcontainer/devcontainer.env"
     ],
     // Features to add to the dev container. More info: https://containers.dev/features.
     // "features": {},
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     // "forwardPorts": [],
     // Use 'postCreateCommand' to run commands after the container is created.
-    "postCreateCommand": "git config --global user.email \"ericthornton43@gmail.com\" && git config --global user.name \"et-codes\" && go install github.com/a-h/templ/cmd/templ@latest",
+    "postCreateCommand": "git config --global user.email ${containerEnv:GIT_EMAIL} && git config --global user.name ${containerEnv:GIT_NAME} && go install github.com/a-h/templ/cmd/templ@latest",
     // Configure tool-specific properties.
     "customizations": {
         "vscode": {

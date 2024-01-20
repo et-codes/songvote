@@ -24,3 +24,6 @@ go.work
 # Test files
 cover.out
 cover.html
+
+# Environment variables
+.devcontainer/devcontainer.env
