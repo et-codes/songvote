@@ -5,6 +5,7 @@ lint:
 	@golangci-lint run
 
 build: lint
+	@templ generate
 	@go build -o ${SONGVOTE_BINARY} ${SONGVOTE_SOURCE}/*.go
 
 run: build

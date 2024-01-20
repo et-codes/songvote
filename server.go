@@ -7,10 +7,13 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/a-h/templ"
 	"github.com/alexedwards/scs/sqlite3store"
 	"github.com/alexedwards/scs/v2"
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
+
+	"github.com/et-codes/songvote/templates"
 )
 
 // Server contains configuration for the server.
@@ -36,10 +39,8 @@ func NewServer(port string, store *Store) *Server {
 
 // ListenAndServe starts the web server.
 func (s *Server) ListenAndServe() error {
-	fs := http.FileServer(http.Dir("./static/"))
-
 	router := mux.NewRouter()
-	router.HandleFunc("/", fs.ServeHTTP).Methods(http.MethodGet)
+	router.Handle("/", templ.Handler(templates.Index())).Methods(http.MethodGet)
 	router.HandleFunc("/api/user", s.createUser).Methods(http.MethodPost)
 	router.HandleFunc("/api/user", s.getUsers).Methods(http.MethodGet)
 	router.HandleFunc("/api/user/{id}", s.getUser).Methods(http.MethodGet)
