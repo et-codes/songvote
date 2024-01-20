@@ -64,6 +64,27 @@ func TestUserStore(t *testing.T) {
 		_, err = s.GetUserByID(1)
 		assert.Error(t, err)
 	})
+
+	t.Run("can update a user", func(t *testing.T) {
+		req := NewUserRequest{"John Doe", "password"}
+		id, _ := s.CreateUser(req)
+
+		updatedUser := User{
+			ID:       id,
+			Name:     "John Dough",
+			Password: "new_password",
+			Inactive: true,
+			Vetoes:   2,
+		}
+
+		err := s.UpdateUser(&updatedUser)
+		assert.NoError(t, err)
+
+		user, _ := s.GetUserByID(id)
+		assert.Equal(t, "John Dough", user.Name)
+		assert.True(t, user.Inactive)
+		assert.Equal(t, 2, user.Vetoes)
+	})
 }
 
 func TestSongStore(t *testing.T) {

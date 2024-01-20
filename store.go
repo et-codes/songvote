@@ -112,6 +112,61 @@ func (s *Store) GetUserByName(username string) (*User, error) {
 	return user, nil
 }
 
+// UpdateUser updates user information.
+func (s *Store) UpdateUser(updatedUser *User) error {
+	user, err := s.GetUserByID(updatedUser.ID)
+	if err != nil {
+		slog.Error("error updating user: %v", "error", err.Error())
+		return ErrNotFound
+	}
+
+	if user.Name != updatedUser.Name {
+		// make sure new name doesn't already exist
+		if s.usernameExists(updatedUser.Name) {
+			slog.Error("error updating user: name already exists", "name", updatedUser.Name)
+			return ErrConflict
+		}
+	}
+
+	var result sql.Result
+	if updatedUser.Password != "" {
+		pwd, err := bcrypt.GenerateFromPassword([]byte(updatedUser.Password), bcrypt.DefaultCost)
+		if err != nil {
+			slog.Error("error encrypting password", "error", err.Error())
+			return NewServerError(http.StatusInternalServerError, err.Error())
+		}
+
+		result, err = s.db.Exec(
+			`UPDATE users
+			 SET name = $1, password = $2, inactive = $3, vetoes = $4
+			 WHERE id = $5`,
+			updatedUser.Name, pwd, updatedUser.Inactive, updatedUser.Vetoes, updatedUser.ID,
+		)
+		if err != nil {
+			return NewServerError(http.StatusInternalServerError, err.Error())
+		}
+	} else {
+		result, err = s.db.Exec(
+			`UPDATE users
+			 SET name = $1, inactive = $2, vetoes = $3
+			 WHERE id = $4`,
+			updatedUser.Name, updatedUser.Inactive, updatedUser.Vetoes, updatedUser.ID,
+		)
+		if err != nil {
+			return NewServerError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		slog.Error("error updating user: no rows affected")
+		return ErrNotFound
+	}
+
+	slog.Info("User updated successfully", "user", user.Name)
+	return nil
+}
+
 // DeleteUser deletes the user with the given ID.
 func (s *Store) DeleteUser(id int64) error {
 	result, err := s.db.Exec("DELETE FROM users WHERE id = $1", id)

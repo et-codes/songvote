@@ -44,6 +44,7 @@ func (s *Server) ListenAndServe() error {
 	router.HandleFunc("/api/user", s.getUsers).Methods(http.MethodGet)
 	router.HandleFunc("/api/user/{id}", s.getUser).Methods(http.MethodGet)
 	router.HandleFunc("/api/user/{id}", s.deleteUser).Methods(http.MethodDelete)
+	router.HandleFunc("/api/user/{id}", s.updateUser).Methods(http.MethodPut)
 	router.HandleFunc("/api/login", s.loginUser).Methods(http.MethodPost)
 	router.HandleFunc("/api/logout", s.logoutUser).Methods(http.MethodGet)
 
@@ -73,6 +74,27 @@ func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 	user, err := s.store.GetUserByID(userID)
 	if err != nil {
 		writeError(w, ErrNotFound)
+	}
+
+	writeJSON(w, http.StatusOK, user)
+}
+
+// updateUser updates a user.
+func (s *Server) updateUser(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
+	if err != nil {
+		writeError(w, NewServerError(http.StatusInternalServerError, err.Error()))
+	}
+
+	user := &User{}
+	if err := json.NewDecoder(r.Body).Decode(user); err != nil {
+		writeError(w, NewServerError(http.StatusInternalServerError, err.Error()))
+	}
+	user.ID = id
+
+	if err := s.store.UpdateUser(user); err != nil {
+		serverError := err.(ServerError)
+		writeError(w, serverError)
 	}
 
 	writeJSON(w, http.StatusOK, user)
