@@ -12,8 +12,6 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
-
-	"github.com/et-codes/songvote/templates"
 )
 
 // Server contains configuration for the server.
@@ -40,7 +38,11 @@ func NewServer(port string, store *Store) *Server {
 // ListenAndServe starts the web server.
 func (s *Server) ListenAndServe() error {
 	router := mux.NewRouter()
-	router.Handle("/", templ.Handler(templates.Index())).Methods(http.MethodGet)
+
+	// Template routes
+	router.Handle("/", templ.Handler(index())).Methods(http.MethodGet)
+
+	// API routes
 	router.HandleFunc("/api/user", s.createUser).Methods(http.MethodPost)
 	router.HandleFunc("/api/user", s.getUsers).Methods(http.MethodGet)
 	router.HandleFunc("/api/user/{id}", s.getUser).Methods(http.MethodGet)
@@ -49,8 +51,10 @@ func (s *Server) ListenAndServe() error {
 	router.HandleFunc("/api/login", s.loginUser).Methods(http.MethodPost)
 	router.HandleFunc("/api/logout", s.logoutUser).Methods(http.MethodGet)
 
+	// Middleware
 	router.Use(logRequests)
 
+	// Start the server
 	slog.Info("Server listening", "port", port)
 	return http.ListenAndServe(port, s.sessionManager.LoadAndSave(router))
 }

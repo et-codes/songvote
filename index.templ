@@ -1,0 +1,60 @@
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+templ headTemplate(title string) {
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous">
+        </script>
+		<script src="https://cdn.tailwindcss.com"></script>
+		<title>{ title }</title>
+	</head>
+}
+
+templ headerTemplate(title string) {
+	<div class="m-4">
+		<h1 class="text-2xl text-white">{ title }</h1>
+		<p>Vote for your favorite songs!</p>
+	</div>
+}
+
+templ footerTemplate() {
+	<footer>
+		<div class="text-center">&copy; { fmt.Sprintf("%d", time.Now().Year()) }</div>
+	</footer>
+}
+
+templ loginTemplate() {
+	<form hx-trigger="submit" hx-post="/api/login">
+		<label for="username">Username</label>
+		<input type="text" id="username" name="username" class="border p-2 rounded" required/>
+		<label for="password">Password</label>
+		<input type="password" id="password" name="password" class="border p-2 rounded" required/>
+		<button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Login</button>
+	</form>
+}
+
+templ layout(title string) {
+	<!DOCTYPE html>
+	@headTemplate(title)
+	<html lang="en">
+		<body class="bg-slate-800 text-slate-400 font-sans text-center">
+			@headerTemplate(title)
+			<main>
+				{ children... }
+			</main>
+		</body>
+		@footerTemplate()
+	</html>
+}
+
+templ index() {
+	@layout("SongVote") {
+		@loginTemplate()
+	}
+}

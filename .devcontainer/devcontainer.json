@@ -22,7 +22,8 @@
         "vscode": {
             "extensions": [
                 "ms-vscode.makefile-tools",
-                "a-h.templ"
+                "a-h.templ",
+                "formulahendry.auto-close-tag"
             ]
         }
     },
